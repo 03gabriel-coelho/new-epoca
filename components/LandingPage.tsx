@@ -492,13 +492,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {mockProducts.slice(0, 5).map((product) => (
-                    <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 relative group flex flex-col h-full border border-slate-100">
+                    <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 relative group flex flex-col h-full min-h-[370px] border border-slate-100">
                         {/* Image */}
                         <div 
-                          className="aspect-square mb-4 relative flex items-center justify-center cursor-pointer"
+                          className="h-44 mb-4 relative flex items-center justify-center cursor-pointer"
                           onClick={() => onProductClick(product.id)}
                         >
-                            <img src={product.image_path} alt={product.description} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" />
+                            <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
+                              <img src={product.image_path} alt={product.description} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                            </div>
                             <button className="absolute top-0 right-0 p-2 text-slate-400 hover:text-red-500" onClick={(e) => e.stopPropagation()}>
                                 <Heart className="w-5 h-5" />
                             </button>
@@ -515,7 +517,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
                         {/* Description */}
                         <a 
-                          className="text-sm text-slate-700 hover:underline line-clamp-2 mt-1 mb-4 cursor-pointer"
+                          className="text-sm text-slate-700 hover:underline line-clamp-2 min-h-[40px] mt-1 mb-4 cursor-pointer"
                           onClick={() => onProductClick(product.id)}
                         >
                             {product.description} - {product.department}

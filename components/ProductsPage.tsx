@@ -269,16 +269,18 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
            {filteredProducts.length > 0 ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col border border-transparent hover:border-[#be342e] group">
+                  <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
                       <div 
-                        className="aspect-square mb-4 relative flex items-center justify-center cursor-pointer"
+                        className="h-44 mb-4 relative flex items-center justify-center cursor-pointer"
                         onClick={() => onProductClick(product.id)}
                       >
-                         <img 
-                           src={product.image_path} 
-                           alt={product.description} 
-                           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                         />
+                         <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
+                           <img
+                             src={product.image_path}
+                             alt={product.description}
+                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                           />
+                         </div>
                          <button className="absolute top-0 right-0 p-2 text-slate-300 hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>
                             <Heart className="w-5 h-5" />
                          </button>
