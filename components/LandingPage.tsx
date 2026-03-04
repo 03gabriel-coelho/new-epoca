@@ -19,14 +19,39 @@ interface LandingPageProps {
 }
 
 const VendorTicker = () => {
+  const activeVendors = vendorLogos
+    .filter((vendor) => vendor.ativo === 'S')
+    .sort((a, b) => a.ordem - b.ordem);
+  const getVendorImageSrc = (imageName: string) =>
+    `https://storage.epocaonline.com.br/fornecedores/${imageName}`;
+
   return (
     <div className="w-full bg-white border-y border-slate-200 py-4 overflow-hidden relative">
       <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-white z-10 pointer-events-none"></div>
       <div className="flex w-[200%] animate-[marquee_40s_linear_infinite] items-center">
-        {[...vendorLogos, ...vendorLogos].map((logo, index) => (
-          <div key={index} className="flex-1 flex justify-center items-center min-w-[150px] opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer group">
-            <span className="text-lg font-bold font-serif text-slate-700">{logo}</span>
-          </div>
+        {[...activeVendors, ...activeVendors].map((vendor, index) => (
+          <a
+            key={`${vendor.codmarca}-${index}`}
+            href={vendor.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 flex justify-center items-center min-w-[150px] opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer group px-4"
+            title={vendor.nome}
+          >
+            <img
+              src={getVendorImageSrc(vendor.img)}
+              alt={vendor.nome}
+              className="h-12 max-w-[140px] object-contain"
+              loading="lazy"
+              onError={(event) => {
+                const target = event.currentTarget;
+                target.style.display = 'none';
+                const fallback = target.nextElementSibling as HTMLElement | null;
+                if (fallback) fallback.style.display = 'block';
+              }}
+            />
+            <span className="hidden text-sm font-bold text-slate-700">{vendor.nome}</span>
+          </a>
         ))}
       </div>
       <style>{`

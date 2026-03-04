@@ -14,7 +14,12 @@ interface SuppliersPageProps {
 const SuppliersPage: React.FC<SuppliersPageProps> = ({ onNavigateToHome, onNavigateToClient, cart }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredVendors = vendorLogos.filter(v => v.toLowerCase().includes(searchTerm.toLowerCase()));
+  const getVendorImageSrc = (imageName: string) =>
+    `https://storage.epocaonline.com.br/fornecedores/${imageName}`
+  const filteredVendors = vendorLogos
+    .filter((vendor) => vendor.ativo === 'S')
+    .sort((a, b) => a.ordem - b.ordem)
+    .filter((vendor) => vendor.nome.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -56,21 +61,30 @@ const SuppliersPage: React.FC<SuppliersPageProps> = ({ onNavigateToHome, onNavig
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-           {filteredVendors.map((vendor, idx) => (
-             <div 
-               key={idx} 
-               className="bg-white aspect-video rounded-xl border border-slate-200 flex items-center justify-center hover:border-emerald-400 hover:shadow-lg transition-all duration-300 group cursor-pointer"
+           {filteredVendors.map((vendor) => (
+             <a
+               key={vendor.codmarca}
+               href={vendor.url}
+               target="_blank"
+               rel="noreferrer"
+               className="bg-white aspect-video rounded-xl border border-slate-200 flex items-center justify-center hover:border-emerald-400 hover:shadow-lg transition-all duration-300 group cursor-pointer p-4"
              >
-                <span className="text-xl font-serif font-bold text-slate-400 group-hover:text-emerald-800 transition-colors">
-                  {vendor}
-                </span>
-             </div>
-           ))}
-           {/* Simulate more vendors */}
-           {Array.from({length: 10}).map((_, i) => (
-             <div key={`extra-${i}`} className="bg-white aspect-video rounded-xl border border-slate-200 flex items-center justify-center opacity-50">
-                <span className="text-sm text-slate-300 font-medium">Parceiro {i + 15}</span>
-             </div>
+               <img
+                 src={getVendorImageSrc(vendor.img)}
+                 alt={vendor.nome}
+                 className="max-h-full max-w-full object-contain"
+                 loading="lazy"
+                 onError={(event) => {
+                   const target = event.currentTarget;
+                   target.style.display = 'none';
+                   const fallback = target.nextElementSibling as HTMLElement | null;
+                   if (fallback) fallback.style.display = 'block';
+                 }}
+               />
+               <span className="hidden text-center text-base font-bold text-slate-500 group-hover:text-emerald-700 transition-colors">
+                 {vendor.nome}
+               </span>
+             </a>
            ))}
         </div>
       </main>
