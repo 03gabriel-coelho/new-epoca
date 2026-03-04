@@ -1,108 +1,8 @@
 ﻿
-import { Order, OrderStatus, Product, FinancialTitle, SalesMetric, SalesData, InstitutionalVideo, Customer, AdminUser, ActivityLog } from '../types';
+import { Order, OrderStatus, FinancialTitle, SalesMetric, SalesData, InstitutionalVideo, Customer, AdminUser, ActivityLog } from '../types';
+import { mockProductsFromERP } from './mockProducts';
 
-export const mockProducts: Product[] = [
-  { 
-    id: '1', 
-    winthor_codprod: 101, 
-    description: 'Coca-Cola 2L', 
-    department: 'Bebidas', 
-    price: 8.50, 
-    image_path: 'https://picsum.photos/500/500?random=1',
-    long_description: 'Refrigerante Coca-Cola Garrafa 2L. O sabor original e inconfundÃ­vel. Ideal para compartilhar com a famÃ­lia e amigos.',
-    details: {
-      weight: '2.1 kg',
-      height: '35 cm',
-      width: '10 cm',
-      length: '10 cm',
-      unit: 'UN',
-      ean: '7894900011517',
-      brand: 'Coca-Cola',
-      manufacturer: 'Coca-Cola FEMSA',
-      stock_quantity: 1500
-    }
-  },
-  { 
-    id: '2', 
-    winthor_codprod: 102, 
-    description: 'Heineken Long Neck', 
-    department: 'Bebidas', 
-    price: 6.90, 
-    image_path: 'https://picsum.photos/500/500?random=2',
-    long_description: 'Cerveja Heineken Premium Long Neck 330ml. Puro Malte, refrescante e de alta qualidade.',
-    details: {
-      weight: '0.6 kg',
-      height: '22 cm',
-      width: '6 cm',
-      length: '6 cm',
-      unit: 'UN',
-      ean: '7890001112223',
-      brand: 'Heineken',
-      manufacturer: 'Heineken Brasil',
-      stock_quantity: 5000
-    }
-  },
-  { 
-    id: '3', 
-    winthor_codprod: 201, 
-    description: 'SabÃ£o em PÃ³ Omo 1kg', 
-    department: 'Limpeza', 
-    price: 14.90, 
-    image_path: 'https://picsum.photos/500/500?random=3',
-    long_description: 'SabÃ£o em PÃ³ Omo Lavagem Perfeita 1kg. Remove as manchas mais difÃ­ceis, cuida das cores e deixa um perfume duradouro.',
-    details: {
-      weight: '1.0 kg',
-      height: '18 cm',
-      width: '12 cm',
-      length: '6 cm',
-      unit: 'CX',
-      ean: '7891000200300',
-      brand: 'OMO',
-      manufacturer: 'Unilever',
-      stock_quantity: 800
-    }
-  },
-  { 
-    id: '4', 
-    winthor_codprod: 202, 
-    description: 'Detergente YpÃª', 
-    department: 'Limpeza', 
-    price: 2.50, 
-    image_path: 'https://picsum.photos/500/500?random=4',
-    long_description: 'Detergente LÃ­quido YpÃª Neutro 500ml. EficiÃªncia na limpeza e rendimento que impressiona.',
-    details: {
-      weight: '0.55 kg',
-      height: '20 cm',
-      width: '7 cm',
-      length: '5 cm',
-      unit: 'UN',
-      ean: '7891000400500',
-      brand: 'YpÃª',
-      manufacturer: 'QuÃ­mica Amparo',
-      stock_quantity: 3000
-    }
-  },
-  { 
-    id: '5', 
-    winthor_codprod: 301, 
-    description: 'Conjunto de Copos', 
-    department: 'Bazar', 
-    price: 29.90, 
-    image_path: 'https://picsum.photos/500/500?random=5',
-    long_description: 'Jogo de Copos de Vidro Nadir Figueiredo 6 PeÃ§as. Design clÃ¡ssico e resistente, ideal para o dia a dia.',
-    details: {
-      weight: '1.2 kg',
-      height: '15 cm',
-      width: '25 cm',
-      length: '18 cm',
-      unit: 'CX',
-      ean: '7891000600700',
-      brand: 'Nadir',
-      manufacturer: 'Nadir Figueiredo',
-      stock_quantity: 200
-    }
-  },
-];
+export const mockProducts = mockProductsFromERP;
 
 export const mockOrders: Order[] = [
   { 
@@ -149,7 +49,7 @@ export const mockFinancials: FinancialTitle[] = [
     due_date: '2023-11-05', 
     value: 1250.00, 
     status: 'PENDING',
-    bank_data: { bank_name: 'ITAÃš', registration_id: 'IT-445511', our_number: '109/88771122', registered_at: '2023-10-25T10:00:00Z' }
+    bank_data: { bank_name: 'ITAÚ', registration_id: 'IT-445511', our_number: '109/88771122', registered_at: '2023-10-25T10:00:00Z' }
   },
   { 
     id: 'f2', 
@@ -157,7 +57,7 @@ export const mockFinancials: FinancialTitle[] = [
     due_date: '2023-10-15', 
     value: 500.00, 
     status: 'OVERDUE',
-    bank_data: { bank_name: 'ITAÃš', registration_id: 'IT-445500', our_number: '109/88771100', registered_at: '2023-09-15T10:00:00Z' }
+    bank_data: { bank_name: 'ITAÚ', registration_id: 'IT-445500', our_number: '109/88771100', registered_at: '2023-09-15T10:00:00Z' }
   },
   { 
     id: 'f3', 
@@ -165,7 +65,7 @@ export const mockFinancials: FinancialTitle[] = [
     due_date: '2023-09-10', 
     value: 2100.00, 
     status: 'PAID',
-    bank_data: { bank_name: 'ITAÃš', registration_id: 'IT-444499', our_number: '109/88771099', registered_at: '2023-08-10T10:00:00Z' }
+    bank_data: { bank_name: 'ITAÚ', registration_id: 'IT-444499', our_number: '109/88771099', registered_at: '2023-08-10T10:00:00Z' }
   },
 ];
 
@@ -346,8 +246,8 @@ export const mockCustomers: Customer[] = [
     last_order_date: '2023-10-25',
     is_online: true,
     cart: [
-      { product_id: '1', quantity: 20 },
-      { product_id: '2', quantity: 5 }
+      { product_id: '30481', quantity: 20 },
+      { product_id: '36827', quantity: 5 }
     ]
   },
   { 
@@ -369,7 +269,7 @@ export const mockCustomers: Customer[] = [
     last_order_date: '2023-10-28',
     is_online: true,
     cart: [
-      { product_id: '3', quantity: 10 }
+      { product_id: '8693', quantity: 10 }
     ]
   },
 ];
@@ -385,4 +285,7 @@ export const mockActivities: ActivityLog[] = [
   { id: 'a2', user: 'Ana Souza (Marketing)', action: 'Atualizou Banner "Ofertas Natal"', timestamp: '1 hora atrÃ¡s' },
   { id: 'a3', user: 'Sistema (n8n)', action: 'Sync de Boletos ItaÃº processado', timestamp: '2 horas atrÃ¡s' },
 ];
+
+
+
 

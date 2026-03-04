@@ -1,4 +1,4 @@
-
+﻿
 // Enums mirroring the SQL schema
 export enum UserRole {
   CLIENT = 'client',
@@ -32,7 +32,7 @@ export interface Product {
   id: string;
   winthor_codprod: number;
   description: string;
-  department: 'Bazar' | 'Bebidas' | 'Limpeza';
+  department: string;
   price: number;
   image_path: string;
   details?: TechnicalDetails; // Extended details
@@ -62,9 +62,9 @@ export interface Order {
 }
 
 export interface BankIntegration {
-  bank_name: 'ITAÚ' | 'BRADESCO' | 'SANTANDER';
+  bank_name: 'ITAÃš' | 'BRADESCO' | 'SANTANDER';
   registration_id: string;
-  our_number: string; // Nosso Número
+  our_number: string; // Nosso NÃºmero
   registered_at: string;
 }
 
@@ -124,3 +124,4 @@ export interface ActivityLog {
   action: string;
   timestamp: string;
 }
+
