@@ -49,10 +49,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
       {/* HEADER (Standard) */}
-      <header className="sticky top-0 z-50 bg-[#0071DC] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
-             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#004F9A] text-white rounded-full px-4">
+             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
                <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
              </Button>
              
@@ -62,7 +62,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
              </div>
           </div>
           
-          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#004F9A] rounded-full py-1 text-white relative">
+          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
               <ShoppingCart className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
@@ -89,7 +89,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors">
                         <Heart className="w-6 h-6" />
                      </button>
-                     <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-[#0071DC] transition-colors">
+                     <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-[#be342e] transition-colors">
                         <Share2 className="w-6 h-6" />
                      </button>
                   </div>
@@ -97,7 +97,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                {/* Thumbnail strip simulation */}
                <div className="flex gap-4 mt-6 justify-center">
                   {[1,2,3].map(i => (
-                     <div key={i} className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer ${i === 1 ? 'border-[#0071DC]' : 'border-slate-100 hover:border-slate-300'}`}>
+                     <div key={i} className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer ${i === 1 ? 'border-[#be342e]' : 'border-slate-100 hover:border-slate-300'}`}>
                          <img src={product.image_path} className="max-w-[80%] max-h-[80%]" />
                      </div>
                   ))}
@@ -107,7 +107,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Right Column: Buy Box & Info */}
             <div className="lg:col-span-5 space-y-6">
                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                  <Badge variant="brand" className="mb-2 uppercase text-[10px] tracking-wider bg-blue-50 text-[#0071DC] border-blue-100">Cód: {product.winthor_codprod}</Badge>
+                  <Badge variant="brand" className="mb-2 uppercase text-[10px] tracking-wider bg-blue-50 text-[#be342e] border-blue-100">Cód: {product.winthor_codprod}</Badge>
                   <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 leading-tight">{product.description}</h1>
                   
                   <div className="flex items-center gap-2 mb-6">
@@ -116,7 +116,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      </div>
                      <span className="text-xs text-slate-500">(12 avaliações)</span>
                      <span className="text-slate-300">|</span>
-                     <span className="text-xs text-[#0071DC] font-bold">Marca: {product.details?.brand || 'Genérica'}</span>
+                     <span className="text-xs text-[#be342e] font-bold">Marca: {product.details?.brand || 'Genérica'}</span>
                   </div>
 
                   <div className="mb-6">
@@ -130,7 +130,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <div className="space-y-4">
                      <Button 
                         onClick={() => addToCart(product.id)}
-                        className="w-full h-12 rounded-full bg-[#0071DC] hover:bg-[#004F9A] text-white font-bold text-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
+                        className="w-full h-12 rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white font-bold text-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
                      >
                         <ShoppingCart className="w-5 h-5" />
                         {quantityInCart > 0 ? `Adicionar Mais (${quantityInCart})` : 'Adicionar ao Carrinho'}
@@ -146,11 +146,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                               placeholder="00000-000" 
                               value={cep}
                               onChange={(e) => setCep(e.target.value)}
-                              className="flex-1 h-9 rounded-md border border-slate-300 px-3 text-sm focus:border-[#0071DC] outline-none" 
+                              className="flex-1 h-9 rounded-md border border-slate-300 px-3 text-sm focus:border-[#be342e] outline-none" 
                            />
                            <Button className="h-9 px-4 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-md text-xs font-bold">OK</Button>
                         </div>
-                        <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" className="text-[10px] text-[#0071DC] underline mt-2 block">Não sei meu CEP</a>
+                        <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" className="text-[10px] text-[#be342e] underline mt-2 block">Não sei meu CEP</a>
                      </div>
                   </div>
                </div>
@@ -158,7 +158,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                {/* Quick Specs Card */}
                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                      <Info className="w-5 h-5 text-[#0071DC]" /> Destaques
+                      <Info className="w-5 h-5 text-[#be342e]" /> Destaques
                    </h3>
                    <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-start gap-3">
@@ -199,13 +199,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
            <div className="flex border-b border-slate-200">
               <button 
                 onClick={() => setActiveTab('desc')}
-                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'desc' ? 'border-b-4 border-[#0071DC] text-[#0071DC] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'desc' ? 'border-b-4 border-[#be342e] text-[#be342e] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
                  Descrição do Produto
               </button>
               <button 
                 onClick={() => setActiveTab('specs')}
-                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'specs' ? 'border-b-4 border-[#0071DC] text-[#0071DC] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'specs' ? 'border-b-4 border-[#be342e] text-[#be342e] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
                  Especificações Técnicas
               </button>

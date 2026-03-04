@@ -58,7 +58,7 @@ const NotificationCenter = () => {
       <Tooltip content="Notificações">
         <Button 
           variant="outline" 
-          className="relative h-10 w-10 p-0 rounded-full border-slate-200 hover:bg-slate-100 hover:text-[#0071DC]" 
+          className="relative h-10 w-10 p-0 rounded-full border-slate-200 hover:bg-slate-100 hover:text-[#be342e]" 
           onClick={toggleOpen}
         >
           <Bell className="h-5 w-5 text-slate-600" />
@@ -73,7 +73,7 @@ const NotificationCenter = () => {
            <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
              <h4 className="font-semibold text-sm text-slate-900">Notificações</h4>
              {unreadCount > 0 && (
-                <button onClick={markAllAsRead} className="text-xs font-medium text-[#0071DC] hover:underline">
+                <button onClick={markAllAsRead} className="text-xs font-medium text-[#be342e] hover:underline">
                   Marcar todas como lidas
                 </button>
              )}
@@ -92,7 +92,7 @@ const NotificationCenter = () => {
                     className={`px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group relative cursor-default ${!notification.read ? 'bg-blue-50/30' : ''}`}
                  >
                     <div className="flex gap-3">
-                      <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? 'bg-[#0071DC]' : 'bg-slate-200'}`}></div>
+                      <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? 'bg-[#be342e]' : 'bg-slate-200'}`}></div>
                       <div className="flex-1 space-y-1">
                          <div className="flex justify-between items-start">
                             <span className={`text-sm font-medium ${!notification.read ? 'text-slate-900' : 'text-slate-600'}`}>
@@ -134,7 +134,7 @@ const CreditLimitCard = () => {
   else if (percentage > 50) barColor = "bg-yellow-500";
 
   return (
-    <Card className="col-span-1 md:col-span-1 shadow-md border-t-4 border-t-[#0071DC]">
+    <Card className="col-span-1 md:col-span-1 shadow-md border-t-4 border-t-[#be342e]">
       <CardHeader className="bg-gradient-to-r from-slate-100 via-slate-50 to-white rounded-t-xl border-b border-slate-100/50">
         <CardTitle className="flex justify-between items-center text-lg">
           <span>Limite de Crédito</span>
@@ -218,7 +218,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
                       >
                         <Truck className="w-3 h-3 mr-1" /> Rastrear
                       </Button>
-                      <Button variant="outline" className="h-8 text-xs rounded-full border-[#0071DC] text-[#0071DC] hover:bg-blue-50" onClick={onNavigateToCheckout}>
+                      <Button variant="outline" className="h-8 text-xs rounded-full border-[#be342e] text-[#be342e] hover:bg-blue-50" onClick={onNavigateToCheckout}>
                         Repetir
                       </Button>
                     </div>
@@ -228,7 +228,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
             </tbody>
           </table>
           <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2 text-xs text-slate-400 bg-slate-50/30 rounded-b-xl">
-             <ShieldCheck className="w-4 h-4 text-[#0071DC]" />
+             <ShieldCheck className="w-4 h-4 text-[#be342e]" />
              <span>Transações protegidas por ClearSale Antifraude</span>
           </div>
         </div>
@@ -328,12 +328,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ onNavigateToHome, onN
           <p className="text-muted-foreground">Bem-vindo de volta, Supermercado Exemplo LTDA.</p>
         </div>
         <div className="flex gap-2 items-center">
-          <Button variant="ghost" onClick={onNavigateToHome} className="text-[#0071DC] hover:bg-blue-50 rounded-full">
+          <Button variant="ghost" onClick={onNavigateToHome} className="text-[#be342e] hover:bg-blue-50 rounded-full">
             <Store className="w-4 h-4 mr-2" /> Ir para Loja
           </Button>
           <NotificationCenter />
           <Button variant="outline" className="rounded-full">Falar com Vendedor</Button>
-          <Button className="rounded-full bg-[#0071DC] hover:bg-[#004F9A] text-white" onClick={onNavigateToCheckout}>
+          <Button className="rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white" onClick={onNavigateToCheckout}>
             <ShoppingCart className="w-4 h-4 mr-2" /> Novo Pedido
           </Button>
         </div>

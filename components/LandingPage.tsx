@@ -208,7 +208,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
                 value={cep}
                 onChange={handleCepChange}
                 placeholder="00000-000"
-                className={`w-full h-12 rounded-lg border px-4 pl-11 outline-none focus:ring-2 transition-all font-mono text-lg ${error ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:border-[#0071DC] focus:ring-blue-100'}`}
+                className={`w-full h-12 rounded-lg border px-4 pl-11 outline-none focus:ring-2 transition-all font-mono text-lg ${error ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:border-[#be342e] focus:ring-blue-100'}`}
               />
               <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
             </div>
@@ -218,7 +218,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
           <Button 
             onClick={handleSearch} 
             disabled={loading || cep.length < 8}
-            className="w-full h-12 rounded-full bg-[#0071DC] hover:bg-[#004F9A] text-white font-bold text-base shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full h-12 rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white font-bold text-base shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
             ) : "Confirmar Localização"}
           </Button>
 
-          <button className="w-full text-center text-xs text-[#0071DC] font-bold hover:underline">
+          <button className="w-full text-center text-xs text-[#be342e] font-bold hover:underline">
             Não sei meu CEP
           </button>
         </div>
@@ -289,25 +289,26 @@ const LandingPage: React.FC<LandingPageProps> = ({
       />
 
       {/* WALMART STYLE HEADER */}
-      <header className="bg-[#0071DC] text-white sticky top-0 z-50">
+      <header className="bg-[#be342e] text-white sticky top-0 z-50">
         <div className="container mx-auto px-4 h-20 flex items-center gap-6">
             
             {/* Logo */}
             <div className="flex items-center gap-1 cursor-pointer shrink-0" onClick={() => window.location.reload()}>
-                <span className="text-2xl font-bold tracking-tight">Época</span>
-                <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" />
+                {/* <span className="text-2xl font-bold tracking-tight">Época</span>
+                <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" /> */}
+                <img className="h-12" src="./lib/images/logo1.webp"/>
             </div>
 
             {/* Department Trigger */}
             <button 
-              className="hidden lg:flex items-center gap-2 font-bold hover:bg-[#004F9A] px-4 py-2 rounded-full transition-colors"
+              className="hidden lg:flex items-center gap-2 font-bold hover:bg-[#b70e0c] px-4 py-2 rounded-full transition-colors"
               onClick={onNavigateToProducts}
             >
                 <Grid className="w-5 h-5" />
                 <span>Departamentos</span>
             </button>
             <button 
-              className="hidden lg:flex items-center gap-2 font-bold hover:bg-[#004F9A] px-4 py-2 rounded-full transition-colors"
+              className="hidden lg:flex items-center gap-2 font-bold hover:bg-[#b70e0c] px-4 py-2 rounded-full transition-colors"
               onClick={onNavigateToSuppliers}
             >
                 <Box className="w-5 h-5" />
@@ -359,14 +360,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
                               >
                                   <img src={product.image_path} alt={product.description} className="w-10 h-10 rounded-md object-contain bg-white border border-slate-100" />
                                   <div className="flex-1">
-                                      <p className="text-sm font-bold text-slate-700 group-hover:text-[#0071DC] line-clamp-1">{product.description}</p>
+                                      <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e] line-clamp-1">{product.description}</p>
                                       <div className="flex items-center gap-2 text-xs text-slate-400">
                                          <span>{product.department}</span>
                                          <span>•</span>
                                          <span>Cód: {product.winthor_codprod}</span>
                                       </div>
                                   </div>
-                                  <span className="font-bold text-[#0071DC] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
+                                  <span className="font-bold text-[#be342e] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
                               </li>
                           ))}
                       </ul>
@@ -376,15 +377,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* Right Icons */}
             <div className="flex items-center gap-2 ml-auto shrink-0">
-                <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#004F9A] rounded-full py-1">
+                <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
                     <User className="w-5 h-5 mb-0.5" />
                     <span className="text-[10px] font-bold">Entrar</span>
                 </button>
-                <button onClick={() => {}} className="flex flex-col items-center justify-center px-3 hover:bg-[#004F9A] rounded-full py-1">
+                <button onClick={() => {}} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
                     <Heart className="w-5 h-5 mb-0.5" />
                     <span className="text-[10px] font-bold">Favoritos</span>
                 </button>
-                <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#004F9A] rounded-full py-1 relative">
+                <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 relative">
                     <ShoppingCart className="w-5 h-5 mb-0.5" />
                     <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
@@ -404,20 +405,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
                    className="flex items-center gap-2 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full hover:bg-white cursor-pointer transition-colors shrink-0"
                    onClick={() => setIsLocationModalOpen(true)}
                  >
-                    <MapPin className="w-4 h-4 text-[#0071DC]" />
+                    <MapPin className="w-4 h-4 text-[#be342e]" />
                     <span>Receber em:</span>
-                    <span className="text-[#0071DC] underline">{userLocation}</span>
+                    <span className="text-[#be342e] underline">{userLocation}</span>
                  </div>
                  <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
                  <button onClick={onNavigateToProducts} className="whitespace-nowrap hover:underline">Ofertas da Semana</button>
                  <button onClick={onNavigateToSuppliers} className="whitespace-nowrap hover:underline">Marcas Parceiras</button>
                  <button onClick={onNavigateToInstitutional} className="whitespace-nowrap hover:underline">Institucional</button>
-                 <button onClick={onNavigateToClient} className="whitespace-nowrap hover:underline text-[#0071DC]">Recompra Fácil</button>
+                 <button onClick={onNavigateToClient} className="whitespace-nowrap hover:underline text-[#be342e]">Recompra Fácil</button>
                  <div className="flex-1"></div>
                  <div className="flex items-center gap-4">
                     <button onClick={onNavigateToAdmin} className="whitespace-nowrap text-slate-500 hover:text-slate-800 flex items-center gap-1 group">
-                        <Lock className="w-3 h-3 group-hover:text-[#0071DC]" /> 
-                        <span className="group-hover:text-[#0071DC]">Admin</span>
+                        <Lock className="w-3 h-3 group-hover:text-[#be342e]" /> 
+                        <span className="group-hover:text-[#be342e]">Admin</span>
                     </button>
                  </div>
             </div>
@@ -429,7 +430,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 <input type="text" placeholder="Buscar..." className="w-full h-10 border rounded px-3" />
                 <button onClick={onNavigateToProducts} className="font-bold text-left py-2 border-b">Departamentos</button>
                 <button onClick={onNavigateToSuppliers} className="font-bold text-left py-2 border-b">Fornecedores</button>
-                <button onClick={onNavigateToClient} className="font-bold text-left py-2 border-b text-[#0071DC]">Minha Conta</button>
+                <button onClick={onNavigateToClient} className="font-bold text-left py-2 border-b text-[#be342e]">Minha Conta</button>
             </div>
         )}
       </header>
@@ -447,8 +448,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 { label: "Atacado Online", sub: "Preço de gôndola", icon: Box },
                 { label: "Mix Completo", sub: "+5.000 itens", icon: Grid },
             ].map((item, i) => (
-                <div key={i} className="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 border border-transparent hover:border-[#0071DC] cursor-pointer transition-all">
-                    <div className="text-[#0071DC]"><item.icon className="w-6 h-6" /></div>
+                <div key={i} className="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3 border border-transparent hover:border-[#be342e] cursor-pointer transition-all">
+                    <div className="text-[#be342e]"><item.icon className="w-6 h-6" /></div>
                     <div>
                         <p className="font-bold text-sm leading-tight">{item.label}</p>
                         <p className="text-xs text-slate-500">{item.sub}</p>
@@ -461,7 +462,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <section>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl md:text-2xl font-bold text-slate-800">Ofertas para seu Varejo</h2>
-                <a onClick={onNavigateToProducts} className="text-[#0071DC] text-sm font-medium hover:underline cursor-pointer">Ver tudo</a>
+                <a onClick={onNavigateToProducts} className="text-[#be342e] text-sm font-medium hover:underline cursor-pointer">Ver tudo</a>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -496,7 +497,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                         </a>
 
                         {/* Add Button */}
-                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#0071DC] text-[#0071DC] hover:bg-[#0071DC] hover:text-white font-bold h-9 text-xs">
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-white font-bold h-9 text-xs">
                             Adicionar
                         </Button>
                     </div>
@@ -532,7 +533,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#004F9A] text-white pt-10 pb-6 mt-12 relative">
+      <footer className="bg-[#b70e0c] text-white pt-10 pb-6 mt-12 relative">
          <div className="container mx-auto px-4 text-center md:text-left">
             <div className="grid md:grid-cols-4 gap-8 mb-8">
                 <div>
@@ -563,7 +564,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     <h4 className="font-bold mb-4">Receba Ofertas</h4>
                     <div className="flex bg-white rounded-full p-1">
                         <input type="email" placeholder="Seu e-mail" className="flex-1 bg-transparent px-3 text-slate-900 text-sm focus:outline-none" />
-                        <button className="bg-[#0071DC] text-white rounded-full px-4 py-1 text-sm font-bold">OK</button>
+                        <button className="bg-[#be342e] text-white rounded-full px-4 py-1 text-sm font-bold">OK</button>
                     </div>
                 </div>
             </div>

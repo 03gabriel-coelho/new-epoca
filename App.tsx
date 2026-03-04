@@ -222,7 +222,7 @@ const App = () => {
             <div className="min-h-screen flex animate-in fade-in">
               <aside className="w-64 bg-slate-900 text-slate-300 hidden lg:flex flex-col p-4">
                 <div className="mb-8 px-2 font-bold text-white text-xl cursor-pointer flex items-center gap-1" onClick={navigateToHome}>
-                  Epoca <span className="text-[#0071DC]">B2B</span>
+                  Epoca <span className="text-[#be342e]">B2B</span>
                 </div>
                 <nav className="space-y-1">
                   <a href="#" className="block px-4 py-2 bg-slate-800 text-white rounded-md">Dashboard</a>

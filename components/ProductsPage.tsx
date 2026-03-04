@@ -96,12 +96,12 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 flex flex-col">
       {/* WALMART STYLE HEADER */}
-      <header className="sticky top-0 z-50 bg-[#0071DC] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           
           {/* Brand & Back */}
           <div className="flex items-center gap-6 flex-shrink-0">
-             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#004F9A] text-white rounded-full px-4">
+             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
                <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
              </Button>
              
@@ -169,14 +169,14 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                          >
                             <img src={product.image_path} alt="" className="w-10 h-10 rounded-md object-cover bg-white border border-slate-100" />
                             <div className="flex-1">
-                               <p className="text-sm font-bold text-slate-700 group-hover:text-[#0071DC]">{product.description}</p>
+                               <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e]">{product.description}</p>
                                <div className="flex items-center gap-2 text-xs text-slate-400">
                                   <span>{product.department}</span>
                                   <span>•</span>
                                   <span>Cód: {product.winthor_codprod}</span>
                                </div>
                             </div>
-                            <span className="font-bold text-[#0071DC] text-sm">R$ {product.price.toFixed(2)}</span>
+                            <span className="font-bold text-[#be342e] text-sm">R$ {product.price.toFixed(2)}</span>
                          </li>
                        ))}
                      </ul>
@@ -190,7 +190,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
              )}
           </div>
 
-          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#004F9A] rounded-full py-1 text-white relative">
+          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
               <ShoppingCart className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
@@ -216,8 +216,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                      }}
                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex justify-between items-center group ${
                        selectedCategory === cat && !searchTerm
-                         ? "bg-white text-[#0071DC] border-l-4 border-[#0071DC] shadow-sm" 
-                         : "text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#0071DC]"
+                         ? "bg-white text-[#be342e] border-l-4 border-[#be342e] shadow-sm" 
+                         : "text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#be342e]"
                      }`}
                    >
                      {cat}
@@ -230,7 +230,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                  <p className="font-bold text-lg mb-2 text-slate-800">Ajuda B2B</p>
                  <p className="text-slate-500 text-sm mb-4">Precisa de uma cotação especial para grandes volumes?</p>
                  <Button 
-                   className="w-full bg-[#0071DC] hover:bg-[#004F9A] text-white rounded-full font-bold text-xs h-9"
+                   className="w-full bg-[#be342e] hover:bg-[#b70e0c] text-white rounded-full font-bold text-xs h-9"
                    onClick={() => window.open('https://wa.me/5531999999999', '_blank')}
                  >
                    Falar com Consultor
@@ -245,7 +245,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
               <div>
                 <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                    {searchTerm ? (
-                     <>Resultados para <span className="text-[#0071DC]">"{searchTerm}"</span></>
+                     <>Resultados para <span className="text-[#be342e]">"{searchTerm}"</span></>
                    ) : (
                      selectedCategory
                    )}
@@ -257,7 +257,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                 </p>
               </div>
               <div className="flex gap-2">
-                 <select className="h-10 rounded-full border border-slate-300 bg-white text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0071DC] cursor-pointer shadow-sm text-slate-700 font-medium">
+                 <select className="h-10 rounded-full border border-slate-300 bg-white text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#be342e] cursor-pointer shadow-sm text-slate-700 font-medium">
                     <option>Relevância</option>
                     <option>Menor Preço</option>
                     <option>Maior Preço</option>
@@ -269,7 +269,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
            {filteredProducts.length > 0 ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col border border-transparent hover:border-[#0071DC] group">
+                  <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col border border-transparent hover:border-[#be342e] group">
                       <div 
                         className="aspect-square mb-4 relative flex items-center justify-center cursor-pointer"
                         onClick={() => onProductClick(product.id)}
@@ -301,7 +301,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 
                       <p className="text-[10px] text-slate-400 mb-3 font-mono">CÓD: {product.winthor_codprod}</p>
 
-                      <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#0071DC] text-[#0071DC] hover:bg-[#0071DC] hover:text-white font-bold h-9 text-xs transition-colors">
+                      <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-white font-bold h-9 text-xs transition-colors">
                           Adicionar
                       </Button>
                   </div>
@@ -314,7 +314,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-1">Nenhum resultado encontrado</h3>
                 <p className="text-slate-500 max-w-xs mx-auto mb-6">Não encontramos produtos correspondentes à sua busca em "{selectedCategory}".</p>
-                <Button className="bg-[#0071DC] text-white rounded-full" onClick={clearSearch}>Limpar Filtros</Button>
+                <Button className="bg-[#be342e] text-white rounded-full" onClick={clearSearch}>Limpar Filtros</Button>
              </div>
            )}
         </main>

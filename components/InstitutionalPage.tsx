@@ -14,10 +14,10 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900">
       {/* WALMART STYLE HEADER */}
-      <header className="sticky top-0 z-50 bg-[#0071DC] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#004F9A] text-white rounded-full px-4">
+             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
                <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
              </Button>
              
@@ -36,7 +36,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
       <div className="bg-[#e6f1fc] pt-16 pb-20 rounded-b-[3rem]">
          <div className="container mx-auto px-4 text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <Badge variant="brand" className="mb-6 bg-white text-[#0071DC] border-none shadow-sm px-4 py-1 text-xs uppercase tracking-widest">
+              <Badge variant="brand" className="mb-6 bg-white text-[#be342e] border-none shadow-sm px-4 py-1 text-xs uppercase tracking-widest">
                 Nossa História
               </Badge>
               <h1 className="text-4xl md:text-6xl font-bold text-[#2e2f32] mb-6 leading-tight">
@@ -54,7 +54,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
          <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-3 gap-6">
                <div className="text-center p-8 rounded-2xl bg-white shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">
-                  <div className="w-14 h-14 mx-auto bg-[#e6f1fc] rounded-full flex items-center justify-center text-[#0071DC] mb-6">
+                  <div className="w-14 h-14 mx-auto bg-[#e6f1fc] rounded-full flex items-center justify-center text-[#be342e] mb-6">
                      <Target className="w-7 h-7" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-slate-800">Missão</h3>
@@ -114,7 +114,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
                 </div>
                 
                 <div className="mt-8 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f1fc] rounded-full text-[#0071DC] text-xs font-bold">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#e6f1fc] rounded-full text-[#be342e] text-xs font-bold">
                         <ShieldCheck className="w-4 h-4" />
                         Conteúdo gerenciável via Admin
                     </div>
@@ -132,7 +132,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
                      <Leaf className="w-4 h-4" /> Sustentabilidade
                   </div>
                   <h2 className="text-3xl md:text-5xl font-bold mb-6 text-slate-800 leading-tight">
-                    Compromisso com o <br/> <span className="text-[#0071DC]">Futuro do Planeta</span>
+                    Compromisso com o <br/> <span className="text-[#be342e]">Futuro do Planeta</span>
                   </h2>
                   <div className="space-y-6 text-slate-600 text-lg leading-relaxed">
                      <p>
@@ -163,12 +163,12 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
                <div className="lg:w-1/2 relative">
                   <div className="relative bg-[#F2F2F2] p-10 rounded-3xl border border-slate-100">
                      <h4 className="font-bold text-xl mb-4 flex items-center gap-2 text-slate-800">
-                        <ShieldCheck className="w-6 h-6 text-[#0071DC]" /> Compliance & Ética
+                        <ShieldCheck className="w-6 h-6 text-[#be342e]" /> Compliance & Ética
                      </h4>
                      <p className="text-slate-600 mb-6 leading-relaxed">
                         Operamos em total conformidade com a legislação fiscal e trabalhista. Nosso canal de ética é aberto e garantimos transparência total nas negociações B2B.
                      </p>
-                     <Button className="w-full bg-[#0071DC] hover:bg-[#004F9A] text-white rounded-full h-12">
+                     <Button className="w-full bg-[#be342e] hover:bg-[#b70e0c] text-white rounded-full h-12">
                         Baixar Código de Conduta
                      </Button>
                   </div>
@@ -178,7 +178,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
       </section>
 
       {/* Footer (Matches Landing Page) */}
-      <footer className="bg-[#004F9A] text-white pt-10 pb-6 mt-12">
+      <footer className="bg-[#b70e0c] text-white pt-10 pb-6 mt-12">
          <div className="container mx-auto px-4 text-center md:text-left">
             <div className="grid md:grid-cols-4 gap-8 mb-8">
                 <div>
@@ -206,7 +206,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
                     <h4 className="font-bold mb-4">Receba Ofertas</h4>
                     <div className="flex bg-white rounded-full p-1">
                         <input type="email" placeholder="Seu e-mail" className="flex-1 bg-transparent px-3 text-slate-900 text-sm focus:outline-none" />
-                        <button className="bg-[#0071DC] text-white rounded-full px-4 py-1 text-sm font-bold">OK</button>
+                        <button className="bg-[#be342e] text-white rounded-full px-4 py-1 text-sm font-bold">OK</button>
                     </div>
                 </div>
             </div>
