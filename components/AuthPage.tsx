@@ -50,8 +50,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
       <header className="bg-[#be342e] text-white shadow-md flex-shrink-0">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
             <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                <span className="text-2xl font-bold tracking-tight">Época</span>
-                <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" />
+                <img className="h-12" src="./lib/images/logo1.webp"/>
             </div>
             <Button variant="ghost" onClick={onNavigateToHome} className="text-white hover:bg-[#b70e0c] rounded-full">
                <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Loja

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from './ui/Layout';
+import ProductImage from './ui/ProductImage';
 import { ArrowLeft, CreditCard, Barcode, MapPin, ShieldCheck, CheckCircle, AlertCircle, Plus, Trash2, Minus, ShoppingCart, Loader2, Zap } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { CartItem } from '../types';
@@ -131,10 +132,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                             if (!product) return null;
                             return (
                                 <div key={item.product_id} className="p-4 flex flex-col sm:flex-row items-center gap-4">
-                                    <img 
-                                        src={product.image_path} 
-                                        alt={product.description} 
-                                        className="w-20 h-20 object-contain rounded-md border border-slate-100" 
+                                    <ProductImage
+                                        src={product.image_path}
+                                        alt={product.description}
+                                        className="w-20 h-20 rounded-md border border-slate-100"
+                                        imgClassName="w-full h-full object-contain"
                                     />
                                     <div className="flex-1 text-center sm:text-left">
                                         <h4 className="font-bold text-slate-800 line-clamp-2">{product.description}</h4>
@@ -413,8 +415,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
           <div className="container mx-auto px-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
                  <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                    <span className="text-2xl font-bold tracking-tight text-[#be342e]">Época</span>
-                    <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" />
+                    <img className="h-12" src="./lib/images/logo1.webp"/>
                  </div>
                  <div className="h-6 w-px bg-slate-300 mx-2 hidden md:block"></div>
                  <h1 className="text-lg font-bold text-slate-600 hidden md:block">Checkout Seguro</h1>

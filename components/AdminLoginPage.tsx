@@ -51,8 +51,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
           className="mb-8 text-center"
         >
           <div className="flex items-center justify-center gap-2 mb-4">
-             <span className="text-3xl font-bold text-white tracking-tight">Época</span>
-             <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" />
+             <img className="h-12" src="./lib/images/logo1.webp"/>
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
              <Server className="w-3 h-3" /> Conexão Segura WinThor

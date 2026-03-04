@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
+import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
 import { SalesData, Customer, AdminUser } from '../types';
 import { 
@@ -260,8 +261,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string
   return (
     <div className="w-64 bg-white border-r border-slate-200 flex-col hidden lg:flex h-full">
        <div className="p-6">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Época <span className="text-emerald-600">Admin</span></h2>
-          <p className="text-xs text-slate-500 mt-1">v2.4.0 (Connected to WinThor)</p>
+          <img className="h-12" src="./lib/images/logo1.webp"/>
        </div>
        <nav className="flex-1 px-4 space-y-1">
           {menuItems.map((item) => (
@@ -490,7 +490,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                         <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="px-6 py-3 font-mono text-slate-500">{product.winthor_codprod}</td>
                           <td className="px-6 py-3 font-medium text-slate-900 flex items-center gap-3">
-                             <img src={product.image_path} className="w-8 h-8 rounded object-cover bg-white border border-slate-200" alt="" />
+                             <ProductImage
+                               src={product.image_path}
+                               alt={product.description}
+                               className="w-8 h-8 rounded border border-slate-200"
+                               imgClassName="w-full h-full object-cover"
+                             />
                              {product.description}
                           </td>
                           <td className="px-6 py-3"><Badge variant="default">{product.department}</Badge></td>
@@ -550,7 +555,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                           <tr key={idx} className="border-b border-slate-50">
                                               <td className="px-4 py-3 font-medium">
                                                   <div className="flex items-center gap-2">
-                                                      <img src={product.image_path} className="w-8 h-8 rounded bg-slate-100" />
+                                                      <ProductImage
+                                                        src={product.image_path}
+                                                        alt={product.description}
+                                                        className="w-8 h-8 rounded"
+                                                        imgClassName="w-full h-full object-cover"
+                                                      />
                                                       <span className="line-clamp-1">{product.description}</span>
                                                   </div>
                                               </td>

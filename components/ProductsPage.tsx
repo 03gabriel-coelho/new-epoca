@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Badge, Card, CardContent } from './ui/Layout';
+import ProductImage from './ui/ProductImage';
 import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, History, Zap, Heart } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { CartItem } from '../types';
@@ -106,8 +107,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
              </Button>
              
              <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                <span className="text-xl md:text-2xl font-bold tracking-tight">Época</span>
-                <Zap className="w-5 h-5 md:w-6 md:h-6 text-[#FFC220] fill-[#FFC220]" />
+                <img className="h-12" src="./lib/images/logo1.webp"/>
              </div>
           </div>
           
@@ -167,7 +167,12 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                             onClick={() => handleSuggestionClick(product.description)}
                             className="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
                          >
-                            <img src={product.image_path} alt="" className="w-10 h-10 rounded-md object-cover bg-white border border-slate-100" />
+                            <ProductImage
+                              src={product.image_path}
+                              alt={product.description}
+                              className="w-10 h-10 rounded-md border border-slate-100"
+                              imgClassName="w-full h-full object-cover"
+                            />
                             <div className="flex-1">
                                <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e]">{product.description}</p>
                                <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -275,10 +280,11 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                         onClick={() => onProductClick(product.id)}
                       >
                          <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
-                           <img
+                           <ProductImage
                              src={product.image_path}
                              alt={product.description}
-                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                             className="w-full h-full"
+                             imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                            />
                          </div>
                          <button className="absolute top-0 right-0 p-2 text-slate-300 hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>

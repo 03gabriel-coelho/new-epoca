@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
+import ProductImage from './ui/ProductImage';
 import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2 } from 'lucide-react';
 import { CartItem } from '../types';
 
@@ -383,7 +384,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                   }}
                                   className="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
                               >
-                                  <img src={product.image_path} alt={product.description} className="w-10 h-10 rounded-md object-contain bg-white border border-slate-100" />
+                                  <ProductImage
+                                    src={product.image_path}
+                                    alt={product.description}
+                                    className="w-10 h-10 rounded-md border border-slate-100"
+                                    imgClassName="w-full h-full object-contain"
+                                  />
                                   <div className="flex-1">
                                       <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e] line-clamp-1">{product.description}</p>
                                       <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -499,7 +505,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
                           onClick={() => onProductClick(product.id)}
                         >
                             <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
-                              <img src={product.image_path} alt={product.description} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                              <ProductImage
+                                src={product.image_path}
+                                alt={product.description}
+                                className="w-full h-full"
+                                imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                              />
                             </div>
                             <button className="absolute top-0 right-0 p-2 text-slate-400 hover:text-red-500" onClick={(e) => e.stopPropagation()}>
                                 <Heart className="w-5 h-5" />

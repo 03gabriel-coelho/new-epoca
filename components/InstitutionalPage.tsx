@@ -22,8 +22,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
              </Button>
              
              <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                <span className="text-xl md:text-2xl font-bold tracking-tight">Época</span>
-                <Zap className="w-5 h-5 md:w-6 md:h-6 text-[#FFC220] fill-[#FFC220]" />
+               <img className="h-12" src="./lib/images/logo1.webp"/>
              </div>
           </div>
           <Button onClick={onNavigateToClient} className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full font-bold">

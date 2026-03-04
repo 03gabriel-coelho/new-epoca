@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button, Badge } from './ui/Layout';
+import ProductImage from './ui/ProductImage';
 import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { CartItem } from '../types';
@@ -57,8 +58,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
              </Button>
              
              <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                <span className="text-xl md:text-2xl font-bold tracking-tight">Época</span>
-                <Zap className="w-5 h-5 md:w-6 md:h-6 text-[#FFC220] fill-[#FFC220]" />
+                <img className="h-12" src="./lib/images/logo1.webp"/>
              </div>
           </div>
           
@@ -84,7 +84,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Left Column: Images */}
             <div className="lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                <div className="aspect-square w-full flex items-center justify-center relative group">
-                  <img src={product.image_path} alt={product.description} className="max-h-[500px] object-contain" />
+                  <ProductImage
+                    src={product.image_path}
+                    alt={product.description}
+                    className="w-full h-full"
+                    imgClassName="w-full h-full object-contain"
+                    loading="eager"
+                  />
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
                      <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors">
                         <Heart className="w-6 h-6" />
@@ -98,7 +104,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                <div className="flex gap-4 mt-6 justify-center">
                   {[1,2,3].map(i => (
                      <div key={i} className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer ${i === 1 ? 'border-[#be342e]' : 'border-slate-100 hover:border-slate-300'}`}>
-                         <img src={product.image_path} className="max-w-[80%] max-h-[80%]" />
+                         <ProductImage
+                           src={product.image_path}
+                           alt={product.description}
+                           className="w-full h-full"
+                           imgClassName="w-full h-full object-contain"
+                         />
                      </div>
                   ))}
                </div>
