@@ -4,9 +4,10 @@ import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2 } from 'lucide-react';
-import { CartItem } from '../types';
+import { AuthUser, CartItem } from '../types';
 
 interface LandingPageProps {
+  currentUser: AuthUser | null;
   onNavigateToClient: () => void;
   onNavigateToAdmin: () => void;
   onNavigateToProducts: () => void;
@@ -301,6 +302,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
 };
 
 const LandingPage: React.FC<LandingPageProps> = ({ 
+  currentUser,
   onNavigateToClient, 
   onNavigateToAdmin,
   onNavigateToProducts,
@@ -321,6 +323,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
   const cartTotal = cart.reduce((acc, item) => {
     const product = mockProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
@@ -448,7 +451,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex items-center gap-2 ml-auto shrink-0">
                 <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
                     <User className="w-5 h-5 mb-0.5" />
-                    <span className="text-[10px] font-bold">Entrar</span>
+                    <span className="text-[10px] font-bold">{currentUser ? displayName : 'Entrar'}</span>
                 </button>
                 <button onClick={() => {}} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
                     <Heart className="w-5 h-5 mb-0.5" />

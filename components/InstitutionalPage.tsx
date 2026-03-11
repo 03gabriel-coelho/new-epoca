@@ -4,13 +4,17 @@ import { Button, Badge } from './ui/Layout';
 import { ArrowLeft, Leaf, ShieldCheck, Target, Heart, History, Play, Zap, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { mockInstitutionalVideo } from '../lib/mockData';
+import { AuthUser } from '../types';
 
 interface InstitutionalPageProps {
+  currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
 }
 
-const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome, onNavigateToClient }) => {
+const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ currentUser, onNavigateToHome, onNavigateToClient }) => {
+  const buttonLabel = currentUser ? currentUser.companyName.split(' ')[0] : 'Acessar Portal';
+
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900">
       {/* WALMART STYLE HEADER */}
@@ -26,7 +30,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ onNavigateToHome,
              </div>
           </div>
           <Button onClick={onNavigateToClient} className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full font-bold">
-             Acessar Portal
+             {buttonLabel}
           </Button>
         </div>
       </header>

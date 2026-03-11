@@ -3,16 +3,18 @@ import React, { useState } from 'react';
 import { Button } from './ui/Layout';
 import { ArrowLeft, Search, Truck } from 'lucide-react';
 import { vendorLogos } from '../lib/mockData';
-import { CartItem } from '../types';
+import { AuthUser, CartItem } from '../types';
 
 interface SuppliersPageProps {
+  currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
   cart: CartItem[];
 }
 
-const SuppliersPage: React.FC<SuppliersPageProps> = ({ onNavigateToHome, onNavigateToClient, cart }) => {
+const SuppliersPage: React.FC<SuppliersPageProps> = ({ currentUser, onNavigateToHome, onNavigateToClient, cart }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const buttonLabel = currentUser ? currentUser.companyName.split(' ')[0] : 'Acessar Portal B2B';
 
   const getVendorImageSrc = (imageName: string) =>
     `https://storage.epocaonline.com.br/fornecedores/${imageName}`
@@ -32,7 +34,7 @@ const SuppliersPage: React.FC<SuppliersPageProps> = ({ onNavigateToHome, onNavig
              <h1 className="text-xl font-bold tracking-tight">Nossos Fornecedores</h1>
           </div>
           <Button onClick={onNavigateToClient} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-             Acessar Portal B2B
+             {buttonLabel}
           </Button>
         </div>
       </header>

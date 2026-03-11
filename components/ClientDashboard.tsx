@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import { mockOrders, mockFinancials } from '../lib/mockData';
-import { OrderStatus } from '../types';
+import { AuthUser, OrderStatus } from '../types';
 import { FileText, RefreshCw, AlertCircle, CheckCircle, Clock, Bell, X, ShieldCheck, CreditCard, Truck, Store, ShoppingCart } from 'lucide-react';
 
 // --- Mock Notification Data ---
@@ -315,17 +315,18 @@ const FinancialTitles = () => {
 };
 
 interface ClientDashboardProps {
+  currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToCheckout: () => void;
 }
 
-const ClientDashboard: React.FC<ClientDashboardProps> = ({ onNavigateToHome, onNavigateToCheckout }) => {
+const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateToHome, onNavigateToCheckout }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Área do Cliente</h2>
-          <p className="text-muted-foreground">Bem-vindo de volta, Supermercado Exemplo LTDA.</p>
+          <p className="text-muted-foreground">Bem-vindo de volta, {currentUser?.companyName || 'Cliente B2B'}.</p>
         </div>
         <div className="flex gap-2 items-center">
           <Button variant="ghost" onClick={onNavigateToHome} className="text-[#be342e] hover:bg-blue-50 rounded-full">

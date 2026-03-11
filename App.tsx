@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import ClientDashboard from './components/ClientDashboard';
@@ -12,7 +12,8 @@ import CheckoutPage from './components/CheckoutPage';
 import ProductDetailPage from './components/ProductDetailPage';
 import { Button } from './components/ui/Layout';
 import { User, Globe, Package, Lock } from 'lucide-react';
-import { CartItem } from './types';
+import { AuthUser, CartItem } from './types';
+import { getStoredSession } from './lib/authStorage';
 
 const App = () => {
   const navigate = useNavigate();
@@ -20,8 +21,17 @@ const App = () => {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [nextPathAfterLogin, setNextPathAfterLogin] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedSession = getStoredSession();
+    if (storedSession) {
+      setCurrentUser(storedSession);
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const navigateToHome = () => navigate('/');
 
@@ -67,11 +77,21 @@ const App = () => {
     }
   };
 
+  const handleClientAreaClick = () => {
+    if (isLoggedIn) {
+      navigate('/cliente');
+    } else {
+      setNextPathAfterLogin('/cliente');
+      navigate('/auth');
+    }
+  };
+
   const handleProductClick = (productId: string) => {
     navigate(`/produto/${productId}`);
   };
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
     setIsLoggedIn(true);
     if (nextPathAfterLogin) {
       navigate(nextPathAfterLogin);
@@ -161,7 +181,8 @@ const App = () => {
             <LandingPage
               cart={cart}
               addToCart={addToCart}
-              onNavigateToClient={handleCartClick}
+              currentUser={currentUser}
+              onNavigateToClient={handleClientAreaClick}
               onNavigateToAdmin={handleAdminClick}
               onNavigateToProducts={() => navigate('/produtos')}
               onNavigateToSuppliers={() => navigate('/fornecedores')}
@@ -185,8 +206,9 @@ const App = () => {
             <ProductsPage
               cart={cart}
               addToCart={addToCart}
+              currentUser={currentUser}
               onNavigateToHome={navigateToHome}
-              onNavigateToClient={handleCartClick}
+              onNavigateToClient={handleClientAreaClick}
               onNavigateToCheckout={handleCartClick}
               onProductClick={handleProductClick}
             />
@@ -195,11 +217,11 @@ const App = () => {
         <Route path="/produto/:productId" element={<ProductDetailRoute />} />
         <Route
           path="/fornecedores"
-          element={<SuppliersPage cart={cart} onNavigateToHome={navigateToHome} onNavigateToClient={handleCartClick} />}
+          element={<SuppliersPage cart={cart} currentUser={currentUser} onNavigateToHome={navigateToHome} onNavigateToClient={handleClientAreaClick} />}
         />
         <Route
           path="/institucional"
-          element={<InstitutionalPage onNavigateToHome={navigateToHome} onNavigateToClient={handleCartClick} />}
+          element={<InstitutionalPage currentUser={currentUser} onNavigateToHome={navigateToHome} onNavigateToClient={handleClientAreaClick} />}
         />
         <Route
           path="/checkout"
@@ -238,6 +260,7 @@ const App = () => {
               </aside>
               <main className="flex-1 p-8 overflow-auto">
                 <ClientDashboard
+                  currentUser={currentUser}
                   onNavigateToHome={navigateToHome}
                   onNavigateToCheckout={() => navigate('/checkout')}
                 />

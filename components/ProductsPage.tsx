@@ -2,11 +2,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Badge, Card, CardContent } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, History, Zap, Heart } from 'lucide-react';
+import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, History, Zap, Heart, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
-import { CartItem } from '../types';
+import { AuthUser, CartItem } from '../types';
 
 interface ProductsPageProps {
+  currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
   onNavigateToCheckout: () => void;
@@ -28,6 +29,7 @@ const CATEGORIES = [
 ];
 
 const ProductsPage: React.FC<ProductsPageProps> = ({ 
+  currentUser,
   onNavigateToHome, 
   onNavigateToClient, 
   onNavigateToCheckout,
@@ -42,6 +44,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   const [searchScope, setSearchScope] = useState("ALL"); // 'ALL' or specific category
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
@@ -195,11 +198,17 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
              )}
           </div>
 
-          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
-              <ShoppingCart className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+              <User className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">{displayName}</span>
+            </button>
+            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
+                <ShoppingCart className="w-5 h-5 mb-0.5" />
+                <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
+            </button>
+          </div>
         </div>
       </header>
 

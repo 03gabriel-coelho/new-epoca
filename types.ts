@@ -125,3 +125,13 @@ export interface ActivityLog {
   timestamp: string;
 }
 
+export interface AuthUser {
+  id: string;
+  cnpj: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  password: string;
+  createdAt: string;
+}
+
