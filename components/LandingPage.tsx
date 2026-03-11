@@ -10,6 +10,7 @@ interface LandingPageProps {
   currentUser: AuthUser | null;
   onNavigateToClient: () => void;
   onNavigateToAdmin: () => void;
+  onNavigateToFavorites: () => void;
   onNavigateToProducts: () => void;
   onNavigateToSuppliers: () => void;
   onNavigateToInstitutional: () => void;
@@ -18,6 +19,8 @@ interface LandingPageProps {
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  favoriteIds: string[];
+  toggleFavorite: (productId: string) => void;
 }
 
 const VendorTicker = () => {
@@ -306,6 +309,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   currentUser,
   onNavigateToClient, 
   onNavigateToAdmin,
+  onNavigateToFavorites,
   onNavigateToProducts,
   onNavigateToSuppliers,
   onNavigateToInstitutional,
@@ -313,7 +317,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
   onProductClick,
   cart,
   addToCart,
-  removeFromCart
+  removeFromCart,
+  favoriteIds,
+  toggleFavorite
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -455,7 +461,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     <User className="w-5 h-5 mb-0.5" />
                     <span className="text-[10px] font-bold">{currentUser ? displayName : 'Entrar'}</span>
                 </button>
-                <button onClick={() => {}} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
+                <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1">
                     <Heart className="w-5 h-5 mb-0.5" />
                     <span className="text-[10px] font-bold">Favoritos</span>
                 </button>
@@ -542,6 +548,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {mockProducts.slice(0, 5).map((product) => {
                     const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
+                    const isFavorite = favoriteIds.includes(product.id);
 
                     return (
                     <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 relative group flex flex-col h-full min-h-[370px] border border-slate-100">
@@ -558,8 +565,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                 imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform"
                               />
                             </div>
-                            <button className="absolute top-0 right-0 p-2 text-slate-400 hover:text-red-500" onClick={(e) => e.stopPropagation()}>
-                                <Heart className="w-5 h-5" />
+                            <button
+                              className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(product.id);
+                              }}
+                            >
+                                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                             </button>
                         </div>
                         

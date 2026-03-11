@@ -10,16 +10,19 @@ import InstitutionalPage from './components/InstitutionalPage';
 import AuthPage from './components/AuthPage';
 import CheckoutPage from './components/CheckoutPage';
 import ProductDetailPage from './components/ProductDetailPage';
+import FavoritesPage from './components/FavoritesPage';
 import { Button } from './components/ui/Layout';
 import { User, Globe, Package, Lock } from 'lucide-react';
 import { AuthUser, CartItem } from './types';
 import { clearStoredSession, getStoredSession } from './lib/authStorage';
+import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage';
 
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -33,7 +36,14 @@ const App = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const ownerKey = currentUser?.id || 'guest';
+    setFavoriteIds(getStoredFavorites(ownerKey));
+  }, [currentUser]);
+
   const navigateToHome = () => navigate('/');
+  const navigateToFavorites = () => navigate('/favoritos');
+  const favoriteOwnerKey = currentUser?.id || 'guest';
 
   const handleAdminClick = () => {
     if (isAdminLoggedIn) {
@@ -98,6 +108,17 @@ const App = () => {
     navigate(`/produto/${productId}`);
   };
 
+  const toggleFavorite = (productId: string) => {
+    setFavoriteIds(prev => {
+      const nextFavorites = prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId];
+
+      saveStoredFavorites(favoriteOwnerKey, nextFavorites);
+      return nextFavorites;
+    });
+  };
+
   const handleLoginSuccess = (user: AuthUser) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
@@ -123,12 +144,16 @@ const App = () => {
     return (
       <ProductDetailPage
         productId={productId}
+        currentUser={currentUser}
         cart={cart}
         addToCart={addToCart}
         removeFromCart={removeFromCart}
         onNavigateToHome={navigateToHome}
-        onNavigateToClient={handleCartClick}
+        onNavigateToClient={handleClientAreaClick}
+        onNavigateToFavorites={navigateToFavorites}
         onNavigateToCheckout={handleCartClick}
+        favoriteIds={favoriteIds}
+        toggleFavorite={toggleFavorite}
       />
     );
   };
@@ -154,11 +179,14 @@ const App = () => {
               currentUser={currentUser}
               onNavigateToClient={handleClientAreaClick}
               onNavigateToAdmin={handleAdminClick}
+              onNavigateToFavorites={navigateToFavorites}
               onNavigateToProducts={() => navigate('/produtos')}
               onNavigateToSuppliers={() => navigate('/fornecedores')}
               onNavigateToInstitutional={() => navigate('/institucional')}
               onNavigateToCheckout={handleCartClick}
               onProductClick={handleProductClick}
+              favoriteIds={favoriteIds}
+              toggleFavorite={toggleFavorite}
             />
           }
         />
@@ -180,12 +208,31 @@ const App = () => {
               currentUser={currentUser}
               onNavigateToHome={navigateToHome}
               onNavigateToClient={handleClientAreaClick}
+              onNavigateToFavorites={navigateToFavorites}
               onNavigateToCheckout={handleCartClick}
               onProductClick={handleProductClick}
+              favoriteIds={favoriteIds}
+              toggleFavorite={toggleFavorite}
             />
           }
         />
         <Route path="/produto/:productId" element={<ProductDetailRoute />} />
+        <Route
+          path="/favoritos"
+          element={
+            <FavoritesPage
+              currentUser={currentUser}
+              favoriteIds={favoriteIds}
+              cart={cart}
+              onNavigateToHome={navigateToHome}
+              onNavigateToCheckout={handleCartClick}
+              onProductClick={handleProductClick}
+              addToCart={addToCart}
+              removeFromCart={removeFromCart}
+              toggleFavorite={toggleFavorite}
+            />
+          }
+        />
         <Route
           path="/fornecedores"
           element={<SuppliersPage cart={cart} currentUser={currentUser} onNavigateToHome={navigateToHome} onNavigateToClient={handleClientAreaClick} />}

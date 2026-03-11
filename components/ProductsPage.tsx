@@ -10,11 +10,14 @@ interface ProductsPageProps {
   currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
+  onNavigateToFavorites: () => void;
   onNavigateToCheckout: () => void;
   onProductClick: (id: string) => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  favoriteIds: string[];
+  toggleFavorite: (productId: string) => void;
 }
 
 const CATEGORIES = [
@@ -33,11 +36,14 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   currentUser,
   onNavigateToHome, 
   onNavigateToClient, 
+  onNavigateToFavorites,
   onNavigateToCheckout,
   onProductClick,
   cart,
   addToCart,
-  removeFromCart
+  removeFromCart,
+  favoriteIds,
+  toggleFavorite
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("PROMOÇÕES");
   
@@ -205,6 +211,10 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
               <User className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">{displayName}</span>
             </button>
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+              <Heart className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">Favoritos</span>
+            </button>
             <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
                 <ShoppingCart className="w-5 h-5 mb-0.5" />
                 <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -286,6 +296,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {filteredProducts.map((product) => {
                   const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
+                  const isFavorite = favoriteIds.includes(product.id);
 
                   return (
                   <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
@@ -301,8 +312,14 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                              imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                            />
                          </div>
-                         <button className="absolute top-0 right-0 p-2 text-slate-300 hover:text-red-500 transition-colors" onClick={(e) => e.stopPropagation()}>
-                            <Heart className="w-5 h-5" />
+                         <button
+                           className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-300 hover:text-red-500'}`}
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             toggleFavorite(product.id);
+                           }}
+                         >
+                            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                          </button>
                       </div>
                       

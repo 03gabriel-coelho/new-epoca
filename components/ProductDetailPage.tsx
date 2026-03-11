@@ -2,28 +2,36 @@
 import React, { useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
-import { CartItem } from '../types';
+import { AuthUser, CartItem } from '../types';
 
 interface ProductDetailPageProps {
   productId: string;
+  currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
+  onNavigateToFavorites: () => void;
   onNavigateToCheckout: () => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  favoriteIds: string[];
+  toggleFavorite: (productId: string) => void;
 }
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   productId,
+  currentUser,
   onNavigateToHome,
   onNavigateToClient,
+  onNavigateToFavorites,
   onNavigateToCheckout,
   cart,
   addToCart,
-  removeFromCart
+  removeFromCart,
+  favoriteIds,
+  toggleFavorite
 }) => {
   const product = mockProducts.find(p => p.id === productId);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs'>('desc');
@@ -48,6 +56,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const itemInCart = cart.find(item => item.product_id === product.id);
   const quantityInCart = itemInCart?.quantity || 0;
+  const isFavorite = favoriteIds.includes(product.id);
+  const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
@@ -64,11 +74,21 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
              </div>
           </div>
           
-          <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
-              <ShoppingCart className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+              <User className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">{displayName}</span>
+            </button>
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+              <Heart className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] font-bold">Favoritos</span>
+            </button>
+            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
+                <ShoppingCart className="w-5 h-5 mb-0.5" />
+                <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -94,8 +114,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     loading="eager"
                   />
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
-                     <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors">
-                        <Heart className="w-6 h-6" />
+                     <button
+                       className={`p-2 rounded-full bg-slate-50 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-400 hover:bg-slate-100 hover:text-red-500'}`}
+                       onClick={() => toggleFavorite(product.id)}
+                     >
+                        <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                      </button>
                      <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-[#be342e] transition-colors">
                         <Share2 className="w-6 h-6" />
