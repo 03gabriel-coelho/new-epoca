@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, CheckCircle, Lock, Building2, Mail, Phone, Key, ShieldCheck, User, Zap } from 'lucide-react';
@@ -9,9 +9,52 @@ interface AuthPageProps {
   onNavigateToHome: () => void;
 }
 
+interface OpenCnpjPhone {
+  ddd?: string;
+  numero?: string;
+  is_fax?: boolean;
+}
+
+interface OpenCnpjResponse {
+  cnpj?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  email?: string;
+  telefones?: OpenCnpjPhone[];
+}
+
+const getDigits = (value: string) => value.replace(/\D/g, '');
+
+const formatCnpj = (value: string) => {
+  const digits = getDigits(value).slice(0, 14);
+
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
+const formatPhone = (phone?: OpenCnpjPhone) => {
+  const digits = `${phone?.ddd ?? ''}${phone?.numero ?? ''}`.replace(/\D/g, '');
+
+  if (digits.length === 10) {
+    return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+  }
+
+  if (digits.length === 11) {
+    return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  }
+
+  return digits;
+};
+
 const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('register');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingCnpj, setIsFetchingCnpj] = useState(false);
+  const [cnpjFeedback, setCnpjFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const lastFetchedCnpjRef = useRef<string>('');
 
   // Register Form State
   const [registerData, setRegisterData] = useState({
@@ -22,6 +65,86 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
     password: '',
     confirmPassword: ''
   });
+
+  useEffect(() => {
+    if (activeTab !== 'register') {
+      return;
+    }
+
+    const cnpjDigits = getDigits(registerData.cnpj);
+
+    if (cnpjDigits.length !== 14) {
+      setIsFetchingCnpj(false);
+      setCnpjFeedback(null);
+      if (cnpjDigits.length === 0) {
+        lastFetchedCnpjRef.current = '';
+      }
+      return;
+    }
+
+    if (lastFetchedCnpjRef.current === cnpjDigits) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setIsFetchingCnpj(true);
+      setCnpjFeedback(null);
+
+      try {
+        const response = await fetch(`https://api.opencnpj.org/${cnpjDigits}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('CNPJ não encontrado na base pública.');
+          }
+
+          if (response.status === 429) {
+            throw new Error('Limite de consultas atingido. Tente novamente em instantes.');
+          }
+
+          throw new Error('Não foi possível consultar o CNPJ agora.');
+        }
+
+        const data = (await response.json()) as OpenCnpjResponse;
+        const companyName = data.razao_social || data.nome_fantasia || '';
+        const phone = formatPhone(data.telefones?.find(item => !item.is_fax) || data.telefones?.[0]);
+
+        setRegisterData(prev => ({
+          ...prev,
+          companyName: companyName || prev.companyName,
+          email: data.email || prev.email,
+          phone: phone || prev.phone,
+        }));
+        lastFetchedCnpjRef.current = cnpjDigits;
+        setCnpjFeedback({
+          type: 'success',
+          message: 'Dados da empresa encontrados e preenchidos automaticamente.',
+        });
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        lastFetchedCnpjRef.current = '';
+        setCnpjFeedback({
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Falha ao consultar o CNPJ.',
+        });
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFetchingCnpj(false);
+        }
+      }
+    }, 500);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeTab, registerData.cnpj]);
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,9 +269,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                                 placeholder="00.000.000/0001-00"
                                 className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                                 value={registerData.cnpj}
-                                onChange={e => setRegisterData({...registerData, cnpj: e.target.value})}
+                                onChange={e => setRegisterData({...registerData, cnpj: formatCnpj(e.target.value)})}
                             />
                         </div>
+                        {isFetchingCnpj && (
+                            <p className="text-xs text-slate-500">Consultando dados do CNPJ...</p>
+                        )}
+                        {cnpjFeedback && (
+                            <p className={`text-xs ${cnpjFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                {cnpjFeedback.message}
+                            </p>
+                        )}
                         </div>
                         <div className="grid gap-2">
                         <label className="text-sm font-bold text-slate-700">Razão Social</label>
