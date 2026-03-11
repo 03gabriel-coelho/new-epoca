@@ -80,7 +80,7 @@ const App = () => {
     if (isLoggedIn) {
       navigate('/checkout');
     } else {
-      setNextPathAfterLogin('/checkout');
+      setNextPathAfterLogin(cart.length > 0 ? '/checkout' : null);
       navigate('/auth');
     }
   };
@@ -89,7 +89,7 @@ const App = () => {
     if (isLoggedIn) {
       navigate('/cliente');
     } else {
-      setNextPathAfterLogin('/cliente');
+      setNextPathAfterLogin('/');
       navigate('/auth');
     }
   };
@@ -105,7 +105,7 @@ const App = () => {
       navigate(nextPathAfterLogin);
       setNextPathAfterLogin(null);
     } else {
-      navigate('/cliente');
+      navigate('/');
     }
   };
 

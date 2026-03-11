@@ -414,7 +414,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
        <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-20 flex items-center shadow-sm">
           <div className="container mx-auto px-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                 <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
+                 <div className="rounded-xl flex items-center bg-[#be342e] p-2 gap-1 cursor-pointer" onClick={onNavigateToHome}>
                     <img className="h-12" src="./lib/images/logo1.webp"/>
                  </div>
                  <div className="h-6 w-px bg-slate-300 mx-2 hidden md:block"></div>
