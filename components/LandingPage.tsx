@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2 } from 'lucide-react';
+import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus } from 'lucide-react';
 import { AuthUser, CartItem } from '../types';
 
 interface LandingPageProps {
@@ -17,6 +17,7 @@ interface LandingPageProps {
   onProductClick: (id: string) => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
+  removeFromCart: (productId: string) => void;
 }
 
 const VendorTicker = () => {
@@ -311,7 +312,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToCheckout,
   onProductClick,
   cart,
-  addToCart
+  addToCart,
+  removeFromCart
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -538,7 +540,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {mockProducts.slice(0, 5).map((product) => (
+                {mockProducts.slice(0, 5).map((product) => {
+                    const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
+
+                    return (
                     <div key={product.id} className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 relative group flex flex-col h-full min-h-[370px] border border-slate-100">
                         {/* Image */}
                         <div 
@@ -575,12 +580,31 @@ const LandingPage: React.FC<LandingPageProps> = ({
                             {product.description} - {product.department}
                         </a>
 
-                        {/* Add Button */}
-                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#be342e] font-bold h-9 text-xs">
-                            Adicionar
-                        </Button>
+                        {quantityInCart > 0 ? (
+                            <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                                <button
+                                  onClick={() => removeFromCart(product.id)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                                  aria-label={`Remover uma unidade de ${product.description}`}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
+                                <button
+                                  onClick={() => addToCart(product.id)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                                  aria-label={`Adicionar uma unidade de ${product.description}`}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#be342e] font-bold h-9 text-xs">
+                                Adicionar
+                            </Button>
+                        )}
                     </div>
-                ))}
+                )})}
             </div>
         </section>
 

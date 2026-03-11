@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Badge, Card, CardContent } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, History, Zap, Heart, User } from 'lucide-react';
+import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, History, Zap, Heart, User, Minus, Plus } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
 
@@ -14,6 +14,7 @@ interface ProductsPageProps {
   onProductClick: (id: string) => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
+  removeFromCart: (productId: string) => void;
 }
 
 const CATEGORIES = [
@@ -35,7 +36,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   onNavigateToCheckout,
   onProductClick,
   cart,
-  addToCart
+  addToCart,
+  removeFromCart
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("PROMOÇÕES");
   
@@ -282,7 +284,10 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 
            {filteredProducts.length > 0 ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product) => {
+                  const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
+
+                  return (
                   <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
                       <div 
                         className="h-44 mb-4 relative flex items-center justify-center cursor-pointer"
@@ -318,11 +323,31 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 
                       <p className="text-[10px] text-slate-400 mb-3 font-mono">CÓD: {product.winthor_codprod}</p>
 
-                      <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] font-bold h-9 text-xs transition-colors">
-                          Adicionar
-                      </Button>
+                      {quantityInCart > 0 ? (
+                        <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                          <button
+                            onClick={() => removeFromCart(product.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                            aria-label={`Remover uma unidade de ${product.description}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
+                          <button
+                            onClick={() => addToCart(product.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                            aria-label={`Adicionar uma unidade de ${product.description}`}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] font-bold h-9 text-xs transition-colors">
+                            Adicionar
+                        </Button>
+                      )}
                   </div>
-                ))}
+                )})}
              </div>
            ) : (
              <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200">

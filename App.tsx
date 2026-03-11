@@ -125,6 +125,7 @@ const App = () => {
         productId={productId}
         cart={cart}
         addToCart={addToCart}
+        removeFromCart={removeFromCart}
         onNavigateToHome={navigateToHome}
         onNavigateToClient={handleCartClick}
         onNavigateToCheckout={handleCartClick}
@@ -142,46 +143,6 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 p-4 bg-white/90 backdrop-blur rounded-xl border border-slate-200 shadow-2xl scale-75 origin-bottom-right hover:scale-100 transition-transform hidden md:flex">
-        <p className="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Demo Navigation</p>
-        <Button
-          variant={isActive('/') ? 'primary' : 'outline'}
-          className="w-full justify-start h-8 text-xs"
-          onClick={() => navigate('/')}
-        >
-          <Globe className="w-3 h-3 mr-2" /> Home
-        </Button>
-        <Button
-          variant={isActive('/produtos') ? 'primary' : 'outline'}
-          className="w-full justify-start h-8 text-xs"
-          onClick={() => navigate('/produtos')}
-        >
-          <Package className="w-3 h-3 mr-2" /> Produtos
-        </Button>
-        <div className="h-px bg-slate-200 my-1"></div>
-        <Button
-          variant={isActive('/auth') ? 'primary' : 'outline'}
-          className="w-full justify-start h-8 text-xs"
-          onClick={() => navigate('/auth')}
-        >
-          <Lock className="w-3 h-3 mr-2" /> Login/Register
-        </Button>
-        <Button
-          variant={isActive('/cliente') ? 'primary' : 'outline'}
-          className="w-full justify-start h-8 text-xs"
-          onClick={() => navigate('/cliente')}
-        >
-          <User className="w-3 h-3 mr-2" /> Client Area
-        </Button>
-        <Button
-          variant={isActive('/admin') ? 'primary' : 'outline'}
-          className="w-full justify-start h-8 text-xs"
-          onClick={handleAdminClick}
-        >
-          <Lock className="w-3 h-3 mr-2" /> Admin Area
-        </Button>
-      </div>
-
       <Routes>
         <Route
           path="/"
@@ -189,6 +150,7 @@ const App = () => {
             <LandingPage
               cart={cart}
               addToCart={addToCart}
+              removeFromCart={removeFromCart}
               currentUser={currentUser}
               onNavigateToClient={handleClientAreaClick}
               onNavigateToAdmin={handleAdminClick}
@@ -214,6 +176,7 @@ const App = () => {
             <ProductsPage
               cart={cart}
               addToCart={addToCart}
+              removeFromCart={removeFromCart}
               currentUser={currentUser}
               onNavigateToHome={navigateToHome}
               onNavigateToClient={handleClientAreaClick}

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { CartItem } from '../types';
 
@@ -13,6 +13,7 @@ interface ProductDetailPageProps {
   onNavigateToCheckout: () => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
+  removeFromCart: (productId: string) => void;
 }
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
@@ -21,7 +22,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   onNavigateToClient,
   onNavigateToCheckout,
   cart,
-  addToCart
+  addToCart,
+  removeFromCart
 }) => {
   const product = mockProducts.find(p => p.id === productId);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs'>('desc');
@@ -139,13 +141,36 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </div>
 
                   <div className="space-y-4">
-                     <Button 
-                        onClick={() => addToCart(product.id)}
-                        className="w-full h-12 rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white font-bold text-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
-                     >
-                        <ShoppingCart className="w-5 h-5" />
-                        {quantityInCart > 0 ? `Adicionar Mais (${quantityInCart})` : 'Adicionar ao Carrinho'}
-                     </Button>
+                     {quantityInCart > 0 ? (
+                        <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-3 py-2">
+                           <button
+                             onClick={() => removeFromCart(product.id)}
+                             className="flex h-10 w-10 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                             aria-label={`Remover uma unidade de ${product.description}`}
+                           >
+                             <Minus className="w-5 h-5" />
+                           </button>
+                           <div className="flex items-center gap-2 text-[#be342e]">
+                             <ShoppingCart className="w-5 h-5" />
+                             <span className="text-lg font-bold">{quantityInCart}</span>
+                           </div>
+                           <button
+                             onClick={() => addToCart(product.id)}
+                             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                             aria-label={`Adicionar uma unidade de ${product.description}`}
+                           >
+                             <Plus className="w-5 h-5" />
+                           </button>
+                        </div>
+                     ) : (
+                        <Button 
+                           onClick={() => addToCart(product.id)}
+                           className="w-full h-12 rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white font-bold text-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
+                        >
+                           <ShoppingCart className="w-5 h-5" />
+                           Adicionar ao Carrinho
+                        </Button>
+                     )}
                      
                      <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                         <p className="text-xs font-bold text-slate-700 uppercase mb-2 flex items-center gap-2">
