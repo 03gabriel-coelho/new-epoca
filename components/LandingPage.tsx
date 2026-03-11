@@ -1,6 +1,5 @@
-
+﻿
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -65,30 +64,51 @@ const VendorTicker = () => {
   );
 };
 
-const MainCarousel = ({ onNavigateToClient }: { onNavigateToClient: () => void }) => {
+const MainCarousel = ({
+  onNavigateToClient,
+  onNavigateToProducts
+}: {
+  onNavigateToClient: () => void;
+  onNavigateToProducts: () => void;
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const getFeaturedProduct = (department: string, suppliers: string[]) => {
+    const bySupplier = mockProducts.find((product) =>
+      product.department.toUpperCase().includes(department) &&
+      suppliers.some((supplier) => product.details?.manufacturer?.toUpperCase().includes(supplier))
+    );
+
+    return bySupplier || mockProducts.find((product) => product.department.toUpperCase().includes(department));
+  };
 
   const banners = [
     {
       id: 1,
-      desktop: "https://placehold.co/1600x600/0071DC/ffffff?text=Ofertas+B2B+Exclusivas",
-      mobile: "https://placehold.co/800x600/0071DC/ffffff?text=Ofertas+Mobile",
-      title: "Preços de Atacado",
-      subtitle: "Abasteça seu estoque com economia real."
+      badge: 'MERCEARIA',
+      title: 'Mix essencial para mercearia',
+      subtitle: 'Giro alto com Cargill, Mondelez e itens de reposicao diaria.',
+      theme: 'from-[#be342e] via-[#d1453f] to-[#e25d57]',
+      featuredProduct: getFeaturedProduct('MERCEARIA', ['CARGILL', 'MONDELEZ', 'UNILEVER']),
+      cta: 'Ver Mercearia'
     },
     {
       id: 2,
-      desktop: "https://placehold.co/1600x600/FFC220/000000?text=Festival+de+Bebidas",
-      mobile: "https://placehold.co/800x600/FFC220/000000?text=Bebidas",
-      title: "Festival de Bebidas",
-      subtitle: "Descontos progressivos para grandes volumes."
+      badge: 'LIMPEZA',
+      title: 'Limpeza com fornecedores estrategicos',
+      subtitle: 'Portfolio com SC Johnson e Reckitt para reforcar margem e sortimento.',
+      theme: 'from-[#0f766e] via-[#0d9488] to-[#14b8a6]',
+      featuredProduct: getFeaturedProduct('LIMPEZA', ['SCJOHNSON', 'RECKITT']),
+      cta: 'Ver Limpeza'
     },
     {
       id: 3,
-      desktop: "https://placehold.co/1600x600/e6f1fc/0071DC?text=Higiene+e+Limpeza",
-      mobile: "https://placehold.co/800x600/e6f1fc/0071DC?text=Limpeza",
-      title: "Higiene & Limpeza",
-      subtitle: "Marcas líderes direto da indústria."
+      badge: 'BOMBONIERE',
+      title: 'Bomboniere de alto giro',
+      subtitle: 'Destaques de impulso com Riclan e marcas fortes no checkout.',
+      theme: 'from-[#7c2d12] via-[#9a3412] to-[#c2410c]',
+      featuredProduct: getFeaturedProduct('BOMBONIERE', ['RICLAN', 'MONDELEZ']),
+      cta: 'Ver Bomboniere'
     }
   ];
 
@@ -101,52 +121,70 @@ const MainCarousel = ({ onNavigateToClient }: { onNavigateToClient: () => void }
   };
 
   useEffect(() => {
-    const timer = setInterval(nextSlide, 6000);
+    const timer = setInterval(() => {
+      if (!document.hidden) {
+        nextSlide();
+      }
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden shadow-lg group bg-white">
       <div className="relative w-full aspect-[21/9] md:aspect-[3/1] lg:h-[400px]">
-        <AnimatePresence mode='wait'>
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute inset-0 w-full h-full cursor-pointer"
-            onClick={onNavigateToClient}
-          >
-            <picture>
-              <source media="(max-width: 768px)" srcSet={banners[currentIndex].mobile} />
-              <img 
-                src={banners[currentIndex].desktop} 
-                alt={banners[currentIndex].title}
-                className="w-full h-full object-cover"
-              />
-            </picture>
-            
-            <div className="absolute top-1/2 left-8 md:left-20 -translate-y-1/2 max-w-lg z-10">
-               <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-white/50">
-                  <h2 className="text-3xl md:text-5xl font-bold mb-2 text-slate-900 tracking-tight">{banners[currentIndex].title}</h2>
-                  <p className="text-lg text-slate-700 mb-6 font-medium">{banners[currentIndex].subtitle}</p>
-                  <Button onClick={onNavigateToClient} className="bg-brand-blue text-white hover:bg-brand-dark rounded-full px-8 h-12 text-base shadow-none border-2 border-transparent hover:border-brand-light">
-                    Comprar Agora
-                  </Button>
-               </div>
+        <div
+          className={`absolute inset-0 w-full h-full bg-gradient-to-r ${banners[currentIndex].theme} cursor-pointer transition-colors duration-300`}
+          onClick={onNavigateToProducts}
+        >
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative h-full w-full grid md:grid-cols-2 items-center gap-6 p-6 md:p-10 lg:p-14">
+            <div className="text-white max-w-xl">
+              <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur px-3 py-1 text-xs font-bold tracking-wider mb-4">
+                {banners[currentIndex].badge}
+              </span>
+              <h2 className="text-2xl md:text-4xl font-bold mb-3 tracking-tight leading-tight">
+                {banners[currentIndex].title}
+              </h2>
+              <p className="text-sm md:text-base text-white/90 mb-6">
+                {banners[currentIndex].subtitle}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={onNavigateToProducts}
+                  className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full px-6 h-11 text-sm"
+                >
+                  {banners[currentIndex].cta} <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button
+                  onClick={onNavigateToClient}
+                  className="bg-white/15 hover:bg-white/25 text-white border border-white/40 rounded-full px-6 h-11 text-sm"
+                >
+                  Comprar no B2B
+                </Button>
+              </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+            <div className="hidden md:flex justify-end">
+              <div className="w-[260px] lg:w-[320px] h-[260px] lg:h-[320px] bg-white rounded-2xl shadow-2xl p-4 border border-white/70">
+                <ProductImage
+                  src={banners[currentIndex].featuredProduct?.image_path}
+                  alt={banners[currentIndex].featuredProduct?.description || banners[currentIndex].title}
+                  className="w-full h-full rounded-xl"
+                  imgClassName="w-full h-full object-contain"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <button 
+      <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white text-brand-blue p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
-      <button 
+      <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 -translate-y-1/2 bg-white text-brand-blue p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100"
       >
@@ -187,7 +225,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
   const handleSearch = async () => {
     const cleanCep = cep.replace('-', '');
     if (cleanCep.length !== 8) {
-      setError('Digite um CEP válido com 8 dígitos.');
+      setError('Digite um CEP vÃ¡lido com 8 dÃ­gitos.');
       return;
     }
 
@@ -197,7 +235,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
       const data = await response.json();
 
       if (data.erro) {
-        setError('CEP não encontrado.');
+        setError('CEP nÃ£o encontrado.');
       } else {
         onLocationSelect(`${data.localidade} - ${data.uf}`);
         onClose();
@@ -222,7 +260,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
         </div>
         
         <p className="text-slate-500 text-sm mb-6">
-          Insira seu CEP para ver a disponibilidade de produtos e prazos de entrega para sua região.
+          Insira seu CEP para ver a disponibilidade de produtos e prazos de entrega para sua regiÃ£o.
         </p>
 
         <div className="space-y-4">
@@ -250,11 +288,11 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
               <div className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" /> Buscando...
               </div>
-            ) : "Confirmar Localização"}
+            ) : "Confirmar LocalizaÃ§Ã£o"}
           </Button>
 
           <button className="w-full text-center text-xs text-[#be342e] font-bold hover:underline">
-            Não sei meu CEP
+            NÃ£o sei meu CEP
           </button>
         </div>
       </div>
@@ -320,7 +358,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             
             {/* Logo */}
             <div className="flex items-center gap-1 cursor-pointer shrink-0" onClick={() => window.location.reload()}>
-                {/* <span className="text-2xl font-bold tracking-tight">Época</span>
+                {/* <span className="text-2xl font-bold tracking-tight">Ã‰poca</span>
                 <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" /> */}
                 <img className="h-12" src="./lib/images/logo1.webp"/>
             </div>
@@ -394,8 +432,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                       <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e] line-clamp-1">{product.description}</p>
                                       <div className="flex items-center gap-2 text-xs text-slate-400">
                                          <span>{product.department}</span>
-                                         <span>•</span>
-                                         <span>Cód: {product.winthor_codprod}</span>
+                                         <span>â€¢</span>
+                                         <span>CÃ³d: {product.winthor_codprod}</span>
                                       </div>
                                   </div>
                                   <span className="font-bold text-[#be342e] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
@@ -469,7 +507,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       <main className="container mx-auto px-4 py-6 space-y-8">
         
         {/* Hero Section (Contained) */}
-        <MainCarousel onNavigateToClient={onNavigateToClient} />
+        <MainCarousel onNavigateToClient={onNavigateToClient} onNavigateToProducts={onNavigateToProducts} />
 
         {/* Benefits Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -535,7 +573,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                         </a>
 
                         {/* Add Button */}
-                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-white font-bold h-9 text-xs">
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#be342e] font-bold h-9 text-xs">
                             Adicionar
                         </Button>
                     </div>
@@ -550,19 +588,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <section className="grid md:grid-cols-2 gap-4">
             <div className="bg-[#e6f1fc] rounded-2xl p-8 flex flex-col justify-center items-start min-h-[250px] relative overflow-hidden group">
                  <div className="relative z-10">
-                    <Badge variant="brand" className="mb-2 bg-white">Sazonal</Badge>
-                    <h3 className="text-2xl font-bold mb-2">Prepare-se para o Natal</h3>
-                    <p className="mb-6 text-slate-600 max-w-xs">Panetones, vinhos e cestas com preços travados até Dezembro.</p>
-                    <Button onClick={onNavigateToProducts} className="rounded-full bg-white text-slate-900 hover:bg-slate-100">Conferir Estoque</Button>
+                    <Badge variant="brand" className="mb-2 bg-white">Campanha Sazonal</Badge>
+                    <h3 className="text-2xl font-bold mb-2">Especial de Pascoa</h3>
+                    <p className="mb-6 text-slate-600 max-w-xs">Reforce bomboniere e mercearia com itens de alto giro para a Semana Santa.</p>
+                    <Button onClick={onNavigateToProducts} className="rounded-full text-[#be342e] bg-white text-slate-900 hover:bg-slate-100">Montar Pedido</Button>
                  </div>
-                 <img src="https://placehold.co/400x400/e6f1fc/0071DC?text=Natal" className="absolute bottom-0 right-0 w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:scale-110 transition-transform" />
+                 <img src="https://placehold.co/420x420/e6f1fc/be342e?text=Pascoa" className="absolute bottom-0 right-0 w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:scale-110 transition-transform" />
             </div>
             <div className="bg-slate-900 rounded-2xl p-8 flex flex-col justify-center items-start min-h-[250px] relative overflow-hidden group text-white">
                  <div className="relative z-10">
-                    <Badge variant="warning" className="mb-2 border-none">Oportunidade</Badge>
-                    <h3 className="text-2xl font-bold mb-2">Ponta de Estoque</h3>
-                    <p className="mb-6 text-slate-300 max-w-xs">Itens próximos ao vencimento com até 70% de desconto.</p>
-                    <Button onClick={onNavigateToProducts} className="rounded-full bg-[#FFC220] text-slate-900 hover:bg-yellow-400 border-none">Ver Lista</Button>
+                    <Badge variant="warning" className="mb-2 border-none">Abastecimento Inteligente</Badge>
+                    <h3 className="text-2xl font-bold mb-2">Reposicao de Alto Giro</h3>
+                    <p className="mb-6 text-slate-300 max-w-xs">Mercearia, limpeza e perfumaria com condicoes comerciais para recompra rapida.</p>
+                    <Button onClick={onNavigateToProducts} className="rounded-full bg-[#FFC220] text-slate-900 hover:bg-yellow-400 border-none">Ver Departamentos</Button>
                  </div>
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
             </div>
