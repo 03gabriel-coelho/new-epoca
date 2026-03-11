@@ -56,6 +56,10 @@ export const saveStoredSession = (user: AuthUser | null) => {
   browserWindow.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
 };
 
+export const clearStoredSession = () => {
+  saveStoredSession(null);
+};
+
 export const registerStoredUser = (user: AuthUser) => {
   const users = getStoredUsers();
   const normalizedCnpj = user.cnpj.replace(/\D/g, '');

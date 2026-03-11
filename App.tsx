@@ -13,7 +13,7 @@ import ProductDetailPage from './components/ProductDetailPage';
 import { Button } from './components/ui/Layout';
 import { User, Globe, Package, Lock } from 'lucide-react';
 import { AuthUser, CartItem } from './types';
-import { getStoredSession } from './lib/authStorage';
+import { clearStoredSession, getStoredSession } from './lib/authStorage';
 
 const App = () => {
   const navigate = useNavigate();
@@ -45,6 +45,14 @@ const App = () => {
 
   const handleAdminLogout = () => {
     setIsAdminLoggedIn(false);
+    navigateToHome();
+  };
+
+  const handleClientLogout = () => {
+    clearStoredSession();
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+    setNextPathAfterLogin(null);
     navigateToHome();
   };
 
@@ -253,7 +261,7 @@ const App = () => {
                   <a href="#" className="block px-4 py-2 hover:bg-slate-800 rounded-md">Catalogo</a>
                 </nav>
                 <div className="mt-auto pt-4 border-t border-slate-800">
-                  <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-white" onClick={navigateToHome}>
+                  <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-white" onClick={handleClientLogout}>
                     Sair
                   </Button>
                 </div>
