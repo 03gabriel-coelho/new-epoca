@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, Heart, User, Minus, Plus } from 'lucide-react';
@@ -50,6 +51,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   favoriteIds,
   toggleFavorite
 }) => {
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string>('PROMOCOES');
   const [sortOrder, setSortOrder] = useState<'RELEVANCE' | 'LOWEST_PRICE' | 'HIGHEST_PRICE' | 'BEST_SELLERS'>('RELEVANCE');
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +76,20 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const departmentParam = params.get('departamento')?.toUpperCase();
+
+    if (departmentParam && CATEGORIES.includes(departmentParam)) {
+      setSelectedCategory(departmentParam);
+      setSearchTerm('');
+      setSearchScope('ALL');
+      return;
+    }
+
+    setSelectedCategory('PROMOCOES');
+  }, [location.search]);
 
   const suggestions = mockProducts.filter(product => {
     if (!searchTerm) {

@@ -43,6 +43,11 @@ const App = () => {
 
   const navigateToHome = () => navigate('/');
   const navigateToFavorites = () => navigate('/favoritos');
+  const navigateToProducts = () => navigate('/produtos');
+  const navigateToDepartment = (department: string) => {
+    const params = new URLSearchParams({ departamento: department });
+    navigate(`/produtos?${params.toString()}`);
+  };
   const favoriteOwnerKey = currentUser?.id || 'guest';
 
   const handleAdminClick = () => {
@@ -180,7 +185,8 @@ const App = () => {
               onNavigateToClient={handleClientAreaClick}
               onNavigateToAdmin={handleAdminClick}
               onNavigateToFavorites={navigateToFavorites}
-              onNavigateToProducts={() => navigate('/produtos')}
+              onNavigateToProducts={navigateToProducts}
+              onNavigateToDepartment={navigateToDepartment}
               onNavigateToSuppliers={() => navigate('/fornecedores')}
               onNavigateToInstitutional={() => navigate('/institucional')}
               onNavigateToCheckout={handleCartClick}

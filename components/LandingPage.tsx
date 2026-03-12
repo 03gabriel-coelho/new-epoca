@@ -15,6 +15,7 @@ interface LandingPageProps {
   onNavigateToAdmin: () => void;
   onNavigateToFavorites: () => void;
   onNavigateToProducts: () => void;
+  onNavigateToDepartment: (department: string) => void;
   onNavigateToSuppliers: () => void;
   onNavigateToInstitutional: () => void;
   onNavigateToCheckout: () => void;
@@ -284,6 +285,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToAdmin,
   onNavigateToFavorites,
   onNavigateToProducts,
+  onNavigateToDepartment,
   onNavigateToSuppliers,
   onNavigateToInstitutional,
   onNavigateToCheckout,
@@ -295,6 +297,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   toggleFavorite
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<string>('');
 
@@ -309,6 +312,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
     const product = mockProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
+  const departments = Array.from(new Set(mockProducts.map((product) => product.department)))
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -326,6 +332,21 @@ const LandingPage: React.FC<LandingPageProps> = ({
     setUserLocation(detectedCep);
   }, []);
 
+  useEffect(() => {
+    if (!isDepartmentsOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDepartmentsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isDepartmentsOpen]);
+
   const suggestions = mockProducts.filter(p => {
     if (!searchTerm) return false;
     return p.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -334,6 +355,62 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
+      {isDepartmentsOpen && (
+        <div className="fixed inset-0 z-[70] hidden lg:block">
+          <button
+            type="button"
+            aria-label="Fechar menu de departamentos"
+            className="absolute inset-0 bg-slate-950/35 backdrop-blur-[1px]"
+            onClick={() => setIsDepartmentsOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 h-full w-[360px] bg-white text-slate-900 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#be342e]">Navegue por categoria</p>
+                <h2 className="text-2xl font-bold text-slate-900">Departamentos</h2>
+              </div>
+              <button
+                type="button"
+                className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                onClick={() => setIsDepartmentsOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex h-[calc(100%-88px)] flex-col">
+              <div className="border-b border-slate-100 p-4">
+                <Button
+                  onClick={() => {
+                    setIsDepartmentsOpen(false);
+                    onNavigateToProducts();
+                  }}
+                  className="h-11 w-full rounded-full bg-[#FFC220] text-slate-900 hover:bg-yellow-400"
+                >
+                  Ver todos os produtos
+                </Button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-3 py-3">
+                {departments.map((department) => (
+                  <button
+                    key={department}
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-[#fff4f3] hover:text-[#be342e]"
+                    onClick={() => {
+                      setIsDepartmentsOpen(false);
+                      onNavigateToDepartment(department);
+                    }}
+                  >
+                    <span>{department}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
       
       <LocationModal 
         isOpen={isLocationModalOpen} 
@@ -356,7 +433,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             {/* Department Trigger */}
             <button 
               className="hidden lg:flex items-center gap-2 font-bold hover:bg-[#b70e0c] px-4 py-2 rounded-full transition-colors"
-              onClick={onNavigateToProducts}
+              onClick={() => setIsDepartmentsOpen(true)}
             >
                 <Grid className="w-5 h-5" />
                 <span>Departamentos</span>
