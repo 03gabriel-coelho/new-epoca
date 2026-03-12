@@ -267,11 +267,11 @@ const LocationModal = ({
               <div className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" /> Buscando...
               </div>
-            ) : "Confirmar LocalizaÃ§Ã£o"}
+            ) : "Confirmar Localização"}
           </Button>
 
           <button className="w-full text-center text-xs text-[#be342e] font-bold hover:underline">
-            NÃ£o sei meu CEP
+            Não sei meu CEP
           </button>
         </div>
       </div>
@@ -688,11 +688,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="bg-[#e6f1fc] rounded-2xl p-8 flex flex-col justify-center items-start min-h-[250px] relative overflow-hidden group">
                  <div className="relative z-10">
                     <Badge variant="brand" className="mb-2 bg-white">Campanha Sazonal</Badge>
-                    <h3 className="text-2xl font-bold mb-2">Especial de Pascoa</h3>
+                    <h3 className="text-2xl font-bold mb-2">Especial de Páscoa</h3>
                     <p className="mb-6 text-slate-600 max-w-xs">Reforce bomboniere e mercearia com itens de alto giro para a Semana Santa.</p>
                     <Button onClick={onNavigateToProducts} className="rounded-full text-[#be342e] bg-white text-slate-900 hover:bg-slate-100">Montar Pedido</Button>
                  </div>
-                 <img src="https://placehold.co/420x420/e6f1fc/be342e?text=Pascoa" className="absolute bottom-0 right-0 w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:scale-110 transition-transform" />
+                 <img src="https://placehold.co/420x420/e6f1fc/be342e?text=Páscoa" className="absolute bottom-0 right-0 w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:scale-110 transition-transform" />
             </div>
             <div className="bg-slate-900 rounded-2xl p-8 flex flex-col justify-center items-start min-h-[250px] relative overflow-hidden group text-white">
                  <div className="relative z-10">

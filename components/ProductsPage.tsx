@@ -29,7 +29,7 @@ const CATEGORIES = [
   'MERCEARIA',
   'PAPELARIA',
   'PERFUMARIA',
-  'PROMOCOES'
+  'PROMOÇÕES'
 ];
 
 const getBestSellerScore = (product: Product) => {
@@ -52,7 +52,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   toggleFavorite
 }) => {
   const location = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState<string>('PROMOCOES');
+  const [selectedCategory, setSelectedCategory] = useState<string>('PROMOÇÕES');
   const [sortOrder, setSortOrder] = useState<'RELEVANCE' | 'LOWEST_PRICE' | 'HIGHEST_PRICE' | 'BEST_SELLERS'>('RELEVANCE');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchScope, setSearchScope] = useState('ALL');
@@ -88,7 +88,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
       return;
     }
 
-    setSelectedCategory('PROMOCOES');
+    setSelectedCategory('PROMOÇÕES');
   }, [location.search]);
 
   const suggestions = mockProducts.filter(product => {
@@ -111,7 +111,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
       return matchesTerm && matchesScope;
     }
 
-    return selectedCategory === 'PROMOCOES' || product.department.toUpperCase() === selectedCategory;
+    return selectedCategory === 'PROMOÇÕES' || product.department.toUpperCase() === selectedCategory;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
