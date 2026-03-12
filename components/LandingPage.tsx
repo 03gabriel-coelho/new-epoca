@@ -167,10 +167,27 @@ const MainCarousel = ({
   );
 };
 
-const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean, onClose: () => void, onLocationSelect: (loc: string) => void }) => {
-  const [cep, setCep] = useState('');
+const LocationModal = ({
+  isOpen,
+  onClose,
+  onLocationSelect,
+  initialCep
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  onLocationSelect: (cep: string) => void,
+  initialCep: string
+}) => {
+  const [cep, setCep] = useState(initialCep);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setCep(initialCep);
+      setError('');
+    }
+  }, [initialCep, isOpen]);
 
   const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -198,7 +215,7 @@ const LocationModal = ({ isOpen, onClose, onLocationSelect }: { isOpen: boolean,
       if (data.erro) {
         setError('CEP nÃ£o encontrado.');
       } else {
-        onLocationSelect(`${data.localidade} - ${data.uf}`);
+        onLocationSelect(cleanCep.replace(/^(\d{5})(\d{3})$/, '$1-$2'));
         onClose();
       }
     } catch (err) {
@@ -279,7 +296,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [userLocation, setUserLocation] = useState<string>("Informe seu CEP");
+  const [userLocation, setUserLocation] = useState<string>('');
 
   // Search State
   const [searchTerm, setSearchTerm] = useState("");
@@ -304,6 +321,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const detectedCep = '32150-240';
+    setUserLocation(detectedCep);
+  }, []);
+
   const suggestions = mockProducts.filter(p => {
     if (!searchTerm) return false;
     return p.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -317,6 +339,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         isOpen={isLocationModalOpen} 
         onClose={() => setIsLocationModalOpen(false)} 
         onLocationSelect={setUserLocation}
+        initialCep={userLocation}
       />
 
       {/* WALMART STYLE HEADER */}
@@ -438,12 +461,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="bg-[#e6f1fc] text-slate-800 py-2 border-b border-white/50">
             <div className="container mx-auto px-4 flex items-center gap-6 overflow-x-auto text-xs font-bold scrollbar-hide">
                  <div 
-                   className="flex items-center gap-2 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full hover:bg-white cursor-pointer transition-colors shrink-0"
+                   className="flex items-center gap-3 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full hover:bg-white cursor-pointer transition-colors shrink-0"
                    onClick={() => setIsLocationModalOpen(true)}
                  >
                     <MapPin className="w-4 h-4 text-[#be342e]" />
                     <span>Receber em:</span>
-                    <span className="text-[#be342e] underline">{userLocation}</span>
+                    <span className="text-[#be342e]">{userLocation || 'Buscando CEP...'}</span>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-[#be342e]">
+                      Alterar
+                    </span>
                  </div>
                  <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
                  <button onClick={onNavigateToProducts} className="whitespace-nowrap hover:underline">Ofertas da Semana</button>
