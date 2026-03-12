@@ -5,6 +5,9 @@ import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus } from 'lucide-react';
 import { AuthUser, CartItem } from '../types';
+import bannerTopo1 from '../lib/images/banner_topo_1.webp';
+import bannerTopo2 from '../lib/images/banner_topo_2.webp';
+import bannerTopo3 from '../lib/images/banner_topo_3.webp';
 
 interface LandingPageProps {
   currentUser: AuthUser | null;
@@ -70,50 +73,27 @@ const VendorTicker = () => {
 };
 
 const MainCarousel = ({
-  onNavigateToClient,
   onNavigateToProducts
 }: {
-  onNavigateToClient: () => void;
   onNavigateToProducts: () => void;
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const getFeaturedProduct = (department: string, suppliers: string[]) => {
-    const bySupplier = mockProducts.find((product) =>
-      product.department.toUpperCase().includes(department) &&
-      suppliers.some((supplier) => product.details?.manufacturer?.toUpperCase().includes(supplier))
-    );
-
-    return bySupplier || mockProducts.find((product) => product.department.toUpperCase().includes(department));
-  };
-
   const banners = [
     {
       id: 1,
-      badge: 'MERCEARIA',
-      title: 'Mix essencial para mercearia',
-      subtitle: 'Giro alto com Cargill, Mondelez e itens de reposicao diaria.',
-      theme: 'from-[#be342e] via-[#d1453f] to-[#e25d57]',
-      featuredProduct: getFeaturedProduct('MERCEARIA', ['CARGILL', 'MONDELEZ', 'UNILEVER']),
-      cta: 'Ver Mercearia'
+      image: bannerTopo1,
+      alt: 'Banner principal Epoca 1'
     },
     {
       id: 2,
-      badge: 'LIMPEZA',
-      title: 'Limpeza com fornecedores estrategicos',
-      subtitle: 'Portfolio com SC Johnson e Reckitt para reforcar margem e sortimento.',
-      theme: 'from-[#0f766e] via-[#0d9488] to-[#14b8a6]',
-      featuredProduct: getFeaturedProduct('LIMPEZA', ['SCJOHNSON', 'RECKITT']),
-      cta: 'Ver Limpeza'
+      image: bannerTopo2,
+      alt: 'Banner principal Epoca 2'
     },
     {
       id: 3,
-      badge: 'BOMBONIERE',
-      title: 'Bomboniere de alto giro',
-      subtitle: 'Destaques de impulso com Riclan e marcas fortes no checkout.',
-      theme: 'from-[#7c2d12] via-[#9a3412] to-[#c2410c]',
-      featuredProduct: getFeaturedProduct('BOMBONIERE', ['RICLAN', 'MONDELEZ']),
-      cta: 'Ver Bomboniere'
+      image: bannerTopo3,
+      alt: 'Banner principal Epoca 3'
     }
   ];
 
@@ -137,49 +117,25 @@ const MainCarousel = ({
   return (
     <div className="relative w-full rounded-2xl overflow-hidden shadow-lg group bg-white">
       <div className="relative w-full aspect-[21/9] md:aspect-[3/1] lg:h-[400px]">
-        <div
-          className={`absolute inset-0 w-full h-full bg-gradient-to-r ${banners[currentIndex].theme} cursor-pointer transition-colors duration-300`}
+        <button
+          type="button"
+          className="absolute inset-0 w-full h-full cursor-pointer"
           onClick={onNavigateToProducts}
         >
-          <div className="absolute inset-0 bg-black/20" />
-          <div className="relative h-full w-full grid md:grid-cols-2 items-center gap-6 p-6 md:p-10 lg:p-14">
-            <div className="text-white max-w-xl">
-              <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur px-3 py-1 text-xs font-bold tracking-wider mb-4">
-                {banners[currentIndex].badge}
-              </span>
-              <h2 className="text-2xl md:text-4xl font-bold mb-3 tracking-tight leading-tight">
-                {banners[currentIndex].title}
-              </h2>
-              <p className="text-sm md:text-base text-white/90 mb-6">
-                {banners[currentIndex].subtitle}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  onClick={onNavigateToProducts}
-                  className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full px-6 h-11 text-sm"
-                >
-                  {banners[currentIndex].cta} <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
-                  onClick={onNavigateToClient}
-                  className="bg-white/15 hover:bg-white/25 text-white border border-white/40 rounded-full px-6 h-11 text-sm"
-                >
-                  Comprar no B2B
-                </Button>
-              </div>
-            </div>
-            <div className="hidden md:flex justify-end">
-              <div className="w-[260px] lg:w-[320px] h-[260px] lg:h-[320px] bg-white rounded-2xl shadow-2xl p-4 border border-white/70">
-                <ProductImage
-                  src={banners[currentIndex].featuredProduct?.image_path}
-                  alt={banners[currentIndex].featuredProduct?.description || banners[currentIndex].title}
-                  className="w-full h-full rounded-xl"
-                  imgClassName="w-full h-full object-contain"
-                  loading="eager"
-                />
-              </div>
-            </div>
-          </div>
+          <img
+            src={banners[currentIndex].image}
+            alt={banners[currentIndex].alt}
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        </button>
+        <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
+          <Button
+            onClick={onNavigateToProducts}
+            className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full px-6 h-11 text-sm shadow-lg"
+          >
+            Ver produtos <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </div>
 
@@ -518,7 +474,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       <main className="container mx-auto px-4 py-6 space-y-8">
         
         {/* Hero Section (Contained) */}
-        <MainCarousel onNavigateToClient={onNavigateToClient} onNavigateToProducts={onNavigateToProducts} />
+        <MainCarousel onNavigateToProducts={onNavigateToProducts} />
 
         {/* Benefits Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
