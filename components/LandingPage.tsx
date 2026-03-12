@@ -582,7 +582,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         {/* Benefits Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-                { label: "Entrega Expressa", sub: "Em até 24h", icon: Truck },
+                { label: "Entrega Expressa", sub: "Em até 24h*", icon: Truck },
                 { label: "Compra Segura", sub: "Dados protegidos", icon: ShieldCheck },
                 { label: "Atacado Online", sub: "Preço de gôndola", icon: Box },
                 { label: "Mix Completo", sub: "+5.000 itens", icon: Grid },
@@ -744,7 +744,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
             </div>
             <div className="border-t border-blue-400/30 pt-6 text-xs text-blue-200 flex flex-col md:flex-row justify-between items-center pb-12 md:pb-0">
-                <p>© 2024 Época Online. Todos os direitos reservados.</p>
+                <div className="space-y-1 text-center md:text-left">
+                    <p>© 2024 Época Online. Todos os direitos reservados.</p>
+                    <p>* Entrega Expressa disponivel para operacoes em Minas Gerais.</p>
+                </div>
                 <div className="flex gap-4 mt-2 md:mt-0">
                     <span>Privacidade</span>
                     <span>Termos de Uso</span>

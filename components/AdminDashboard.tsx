@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
-import { SalesData, Customer, AdminUser } from '../types';
+import { SalesData, Customer, AdminUser, Product } from '../types';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip 
@@ -249,6 +249,102 @@ const VideoUploadManagement = () => {
     )
 }
 
+const ProductImageEditModal = ({
+  product,
+  imageDraft,
+  onImageDraftChange,
+  onClose,
+  onSave,
+  onFileChange
+}: {
+  product: Product;
+  imageDraft: string;
+  onImageDraftChange: (value: string) => void;
+  onClose: () => void;
+  onSave: () => void;
+  onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+    <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95">
+      <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Catalogo ERP</p>
+          <h3 className="text-2xl font-bold text-slate-900">Editar imagem do produto</h3>
+          <p className="mt-1 text-sm text-slate-500">{product.description}</p>
+        </div>
+        <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="grid gap-6 p-6 md:grid-cols-[280px,1fr]">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Preview</p>
+          <div className="flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white p-4">
+            <ProductImage
+              src={imageDraft}
+              alt={product.description}
+              className="h-full w-full"
+              imgClassName="h-full w-full object-contain"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold text-slate-700">URL da imagem</label>
+              <input
+                type="text"
+                value={imageDraft}
+                onChange={(event) => onImageDraftChange(event.target.value)}
+                placeholder="https://exemplo.com/imagem-do-produto.webp"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              />
+              <p className="text-xs text-slate-500">Cole uma URL publica ou envie um arquivo para simular a troca da imagem.</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-slate-300 p-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-emerald-50 p-2 text-emerald-600">
+                <ImageIcon className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-slate-900">Enviar nova imagem</p>
+                <p className="mt-1 text-sm text-slate-500">Arquivos locais sao usados apenas no prototipo e atualizam o preview imediatamente.</p>
+              </div>
+            </div>
+            <label className="mt-4 flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl bg-slate-50 text-center transition-colors hover:bg-slate-100">
+              <span className="text-sm font-semibold text-slate-700">Selecionar arquivo</span>
+              <span className="mt-1 text-xs text-slate-500">PNG, JPG ou WEBP</span>
+              <input type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+            </label>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Codigo</p>
+                <p className="mt-1 font-semibold text-slate-900">{product.winthor_codprod}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Departamento</p>
+                <p className="mt-1 font-semibold text-slate-900">{product.department}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button onClick={onSave} disabled={!imageDraft.trim()}>Salvar imagem</Button>
+      </div>
+    </div>
+  </div>
+);
+
 const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }) => {
   const menuItems = [
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
@@ -298,6 +394,10 @@ interface AdminDashboardProps {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productImageDraft, setProductImageDraft] = useState('');
   
   // States for Customer Management Tab
   const [userTab, setUserTab] = useState<'clients' | 'admins'>('clients');
@@ -317,6 +417,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
     item.date.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.amount.toString().includes(searchTerm)
   );
+
+  const filteredProducts = products.filter((product) => {
+      const query = productSearchTerm.trim().toLowerCase();
+      if (!query) return true;
+
+      const searchableFields = [
+          product.description,
+          product.department,
+          product.winthor_codprod.toString(),
+          product.details?.manufacturer,
+          product.details?.brand,
+          product.details?.ean
+      ]
+        .filter(Boolean)
+        .map((value) => value!.toLowerCase());
+
+      return searchableFields.some((value) => value.includes(query));
+  });
 
   const handleCreateClient = (e: React.FormEvent) => {
       e.preventDefault();
@@ -346,6 +464,37 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
       setAdmins([...admins, admin]);
       setIsCreatingUser(false);
       setNewAdmin({ name: '', email: '', role: 'SALES' });
+  };
+
+  const handleOpenProductEditor = (product: Product) => {
+      setEditingProduct(product);
+      setProductImageDraft(product.image_path);
+  };
+
+  const handleCloseProductEditor = () => {
+      setEditingProduct(null);
+      setProductImageDraft('');
+  };
+
+  const handleProductImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const previewUrl = URL.createObjectURL(file);
+      setProductImageDraft(previewUrl);
+  };
+
+  const handleSaveProductImage = () => {
+      if (!editingProduct || !productImageDraft.trim()) return;
+
+      setProducts(prev =>
+          prev.map(product =>
+              product.id === editingProduct.id
+                  ? { ...product, image_path: productImageDraft.trim() }
+                  : product
+          )
+      );
+      handleCloseProductEditor();
   };
 
   const renderContent = () => {
@@ -469,11 +618,48 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
       case 'products':
         return (
           <div className="space-y-6 animate-in fade-in">
-             <div className="flex justify-between items-center">
+             <div className="hidden">
                 <h2 className="text-2xl font-bold">Catálogo de Produtos</h2>
                 <Button>Sincronizar WinThor</Button>
              </div>
+             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">CatÃ¡logo de Produtos</h2>
+                  <p className="text-sm text-slate-500">Busque por nome, cÃ³digo, departamento, fabricante, marca ou EAN.</p>
+                </div>
+                <div className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row lg:items-center">
+                  <div className="relative w-full lg:w-[420px]">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                      placeholder="Pesquisar no catÃ¡logo ERP..."
+                      className="h-11 w-full rounded-full border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    {productSearchTerm && (
+                      <button
+                        onClick={() => setProductSearchTerm('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Button>Sincronizar WinThor</Button>
+                </div>
+             </div>
              <Card>
+                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 text-sm">
+                  <span className="font-medium text-slate-500">
+                    {filteredProducts.length} produto{filteredProducts.length === 1 ? '' : 's'} encontrado{filteredProducts.length === 1 ? '' : 's'}
+                  </span>
+                  {productSearchTerm && (
+                    <span className="text-xs text-slate-400">
+                      Filtro ativo: <span className="font-semibold text-slate-600">{productSearchTerm}</span>
+                    </span>
+                  )}
+                </div>
                 <CardContent className="p-0">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
@@ -486,7 +672,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                       </tr>
                     </thead>
                     <tbody>
-                      {mockProducts.map(product => (
+                      {filteredProducts.map(product => (
                         <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="px-6 py-3 font-mono text-slate-500">{product.winthor_codprod}</td>
                           <td className="px-6 py-3 font-medium text-slate-900 flex items-center gap-3">
@@ -501,10 +687,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                           <td className="px-6 py-3"><Badge variant="default">{product.department}</Badge></td>
                           <td className="px-6 py-3 text-slate-900 font-bold">R$ {product.price.toFixed(2)}</td>
                           <td className="px-6 py-3 text-right">
-                             <Button variant="ghost" className="h-8 text-xs">Editar</Button>
+                             <Button variant="ghost" className="h-8 text-xs" onClick={() => handleOpenProductEditor(product)}>Editar</Button>
                           </td>
                         </tr>
                       ))}
+                      {filteredProducts.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                            Nenhum produto encontrado para a pesquisa informada.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </CardContent>
@@ -808,6 +1001,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
   return (
     <div className="h-screen flex bg-slate-50 overflow-hidden font-sans text-slate-900">
+       {editingProduct && (
+          <ProductImageEditModal
+            product={editingProduct}
+            imageDraft={productImageDraft}
+            onImageDraftChange={setProductImageDraft}
+            onClose={handleCloseProductEditor}
+            onSave={handleSaveProductImage}
+            onFileChange={handleProductImageFileChange}
+          />
+       )}
        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onNavigateToHome} />
        <main className="flex-1 overflow-auto p-8 relative">
           {renderContent()}
