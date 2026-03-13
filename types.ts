@@ -62,7 +62,7 @@ export interface Order {
 }
 
 export interface BankIntegration {
-  bank_name: 'ITAÃš' | 'BRADESCO' | 'SANTANDER';
+  bank_name: 'ITAÚ' | 'BRADESCO' | 'SANTANDER';
   registration_id: string;
   our_number: string; // Nosso NÃºmero
   registered_at: string;
