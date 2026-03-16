@@ -35,6 +35,7 @@ export interface Product {
   department: string;
   price: number;
   image_path: string;
+  gallery_images?: string[];
   details?: TechnicalDetails; // Extended details
   long_description?: string;
 }

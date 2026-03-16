@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import PixBadge from './ui/PixBadge';
@@ -59,6 +59,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const quantityInCart = itemInCart?.quantity || 0;
   const isFavorite = favoriteIds.includes(product.id);
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
+  const productImages = product.gallery_images?.length ? product.gallery_images : [product.image_path];
+  const [selectedImage, setSelectedImage] = useState(productImages[0]);
+
+  useEffect(() => {
+    setSelectedImage(productImages[0]);
+  }, [product.id]);
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
@@ -106,9 +112,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Images */}
             <div className="lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-               <div className="aspect-square w-full flex items-center justify-center relative group">
+               <div className="aspect-square w-full h-[390px] flex items-center justify-center relative group">
                   <ProductImage
-                    src={product.image_path}
+                    src={selectedImage}
                     alt={product.description}
                     className="w-full h-full"
                     imgClassName="w-full h-full object-contain"
@@ -126,17 +132,22 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      </button>
                   </div>
                </div>
-               {/* Thumbnail strip simulation */}
+               {/* Thumbnail strip */}
                <div className="flex gap-4 mt-6 justify-center">
-                  {[1,2,3].map(i => (
-                     <div key={i} className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer ${i === 1 ? 'border-[#be342e]' : 'border-slate-100 hover:border-slate-300'}`}>
+                  {productImages.map((image, index) => (
+                     <button
+                       type="button"
+                       key={`${product.id}-${index}`}
+                       onClick={() => setSelectedImage(image)}
+                       className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer overflow-hidden ${selectedImage === image ? 'border-[#be342e]' : 'border-slate-100 hover:border-slate-300'}`}
+                     >
                          <ProductImage
-                           src={product.image_path}
+                           src={image}
                            alt={product.description}
                            className="w-full h-full"
                            imgClassName="w-full h-full object-contain"
                          />
-                     </div>
+                     </button>
                   ))}
                </div>
             </div>

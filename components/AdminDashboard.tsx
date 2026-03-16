@@ -263,9 +263,44 @@ const ProductImageEditModal = ({
   onClose: () => void;
   onSave: () => void;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}) => (
+}) => {
+  const slotLabels = ['FOTO_CAPA', 'IMAGE2', 'IMAGE3', 'IMAGE4', 'IMAGE5'];
+  const initialSlots = slotLabels.map((label, index) => ({
+    label,
+    image: product.gallery_images?.[index] || (index === 0 ? imageDraft || product.image_path : ''),
+  }));
+  const [selectedSlot, setSelectedSlot] = useState(0);
+  const [slotDrafts, setSlotDrafts] = useState(initialSlots);
+  const activeSlot = slotDrafts[selectedSlot];
+  const previewImage = activeSlot?.image || product.image_path;
+
+  const handleSlotDraftChange = (value: string) => {
+    setSlotDrafts((prev) =>
+      prev.map((slot, index) => (index === selectedSlot ? { ...slot, image: value } : slot))
+    );
+
+    if (selectedSlot === 0) {
+      onImageDraftChange(value);
+    }
+  };
+
+  const handleSlotFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onFileChange(event);
+
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setSlotDrafts((prev) =>
+      prev.map((slot, index) => (index === selectedSlot ? { ...slot, image: localPreview } : slot))
+    );
+  };
+
+  return (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
-    <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95">
+    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95">
       <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Catalogo ERP</p>
@@ -277,31 +312,75 @@ const ProductImageEditModal = ({
         </button>
       </div>
 
-      <div className="grid gap-6 p-6 md:grid-cols-[280px,1fr]">
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid gap-6 p-6 xl:grid-cols-[320px,1fr]">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Preview</p>
-          <div className="flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="flex aspect-square max-h-[320px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-4">
             <ProductImage
-              src={imageDraft}
+              src={previewImage}
               alt={product.description}
               className="h-full w-full"
               imgClassName="h-full w-full object-contain"
             />
           </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-xs">
+              <span className="font-bold text-slate-600">{activeSlot.label}</span>
+              <Badge variant="success" className="border border-emerald-200 bg-emerald-50 text-emerald-700">Ativa</Badge>
+            </div>
+            <p className="text-xs text-slate-500">
+              Simulacao visual da galeria do produto no ERP com capa principal e imagens complementares.
+            </p>
+          </div>
         </div>
 
         <div className="space-y-5">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <label className="text-sm font-semibold text-slate-700">Galeria ERP</label>
+              <span className="text-xs font-medium text-slate-400">5 posicoes de imagem</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+              {slotDrafts.map((slot, index) => (
+                <button
+                  key={slot.label}
+                  type="button"
+                  onClick={() => setSelectedSlot(index)}
+                  className={`rounded-2xl border p-2 text-left transition-all ${
+                    selectedSlot === index
+                      ? 'border-emerald-400 bg-white shadow-sm'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <div className="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-slate-50">
+                    <ProductImage
+                      src={slot.image || product.image_path}
+                      alt={`${product.description} ${slot.label}`}
+                      className="h-full w-full"
+                      imgClassName="h-full w-full object-contain"
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-700">{slot.label}</p>
+                  <p className="mt-1 text-[10px] text-slate-400">
+                    {slot.image ? 'Configurada' : 'Disponivel'}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="grid gap-2">
-              <label className="text-sm font-semibold text-slate-700">URL da imagem</label>
+              <label className="text-sm font-semibold text-slate-700">URL da imagem selecionada</label>
               <input
                 type="text"
-                value={imageDraft}
-                onChange={(event) => onImageDraftChange(event.target.value)}
+                value={activeSlot.image}
+                onChange={(event) => handleSlotDraftChange(event.target.value)}
                 placeholder="https://exemplo.com/imagem-do-produto.webp"
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
               />
-              <p className="text-xs text-slate-500">Cole uma URL publica ou envie um arquivo para atualizar a imagem.</p>
+              <p className="text-xs text-slate-500">Cole uma URL publica para a {activeSlot.label.toLowerCase()} ou selecione um arquivo.</p>
             </div>
           </div>
 
@@ -318,12 +397,31 @@ const ProductImageEditModal = ({
             <label className="mt-4 flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl bg-slate-50 text-center transition-colors hover:bg-slate-100">
               <span className="text-sm font-semibold text-slate-700">Selecionar arquivo</span>
               <span className="mt-1 text-xs text-slate-500">PNG, JPG ou WEBP</span>
-              <input type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+              <input type="file" accept="image/*" className="hidden" onChange={handleSlotFileChange} />
             </label>
           </div>
 
           <div className="rounded-2xl border border-slate-200 p-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Mapa de campos do ERP</p>
+              <Badge variant="default" className="bg-slate-100 text-slate-700">Simulado</Badge>
+            </div>
+            <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+              {slotDrafts.map((slot, index) => (
+                <div key={slot.label} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{slot.label}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {index === 0 ? 'Imagem principal do produto' : `Imagem complementar ${index}`}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${slot.image ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                    {slot.image ? 'Preenchido' : 'Sem imagem'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Codigo</p>
                 <p className="mt-1 font-semibold text-slate-900">{product.winthor_codprod}</p>
@@ -335,15 +433,17 @@ const ProductImageEditModal = ({
             </div>
           </div>
         </div>
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
         <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-        <Button onClick={onSave} disabled={!imageDraft.trim()}>Salvar imagem</Button>
+        <Button onClick={onSave} disabled={!slotDrafts[0]?.image?.trim()}>Salvar galeria</Button>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }) => {
   const menuItems = [

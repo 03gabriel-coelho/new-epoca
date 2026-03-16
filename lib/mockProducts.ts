@@ -15,6 +15,10 @@ type RawMockProduct = {
   ALTURA?: number | null;
   PESO?: number | null;
   FOTO_CAPA?: string | null;
+  IMAGE2?: string | null;
+  IMAGE3?: string | null;
+  IMAGE4?: string | null;
+  IMAGE5?: string | null;
   DEPARTAMENTO?: string | null;
   ESTOQUE?: number | null;
 };
@@ -31,6 +35,16 @@ const toImageUrl = (imageName?: string | null) => {
 
 export const mockProductsFromERP: Product[] = (rawMockProducts as RawMockProduct[]).map((item) => {
   const price = item.OFERTA && item.OFERTA > 0 ? item.OFERTA : item.PVENDA;
+  const galleryImages = [
+    item.FOTO_CAPA,
+    item.IMAGE2,
+    item.IMAGE3,
+    item.IMAGE4,
+    item.IMAGE5,
+  ]
+    .filter((imageName): imageName is string => Boolean(imageName))
+    .map((imageName) => toImageUrl(imageName))
+    .filter((imageUrl, index, array) => array.indexOf(imageUrl) === index);
 
   return {
     id: String(item.CODPROD),
@@ -39,6 +53,7 @@ export const mockProductsFromERP: Product[] = (rawMockProducts as RawMockProduct
     department: (item.DEPARTAMENTO || 'GERAL').trim(),
     price,
     image_path: toImageUrl(item.FOTO_CAPA),
+    gallery_images: galleryImages,
     long_description: item.DADOSTECNICOS || item.NOME,
     details: {
       weight: toWeight(item.PESO),
