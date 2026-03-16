@@ -139,4 +139,10 @@ export interface AuthUser {
   email2?: string;
   fullAddress?: string;
   referencePoint?: string;
+  zipCode?: string;
+  street?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  city?: string;
+  state?: string;
 }

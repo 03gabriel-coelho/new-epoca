@@ -54,9 +54,25 @@ interface ClientProfileFormData {
   telefone2: string;
   email1: string;
   email2: string;
-  enderecoCompleto: string;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento: string;
+  cidade: string;
+  estado: string;
   pontoReferencia: string;
 }
+
+const DEFAULT_ZIP_CODE = '32150-240';
+
+const formatZipCode = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 5) {
+    return digits;
+  }
+
+  return digits.replace(/^(\d{5})(\d)/, '$1-$2');
+};
 
 const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFormData => ({
   cnpj: currentUser?.cnpj || '12.345.678/0001-90',
@@ -66,7 +82,12 @@ const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFor
   telefone2: currentUser?.phone2 || '(31) 98888-7777',
   email1: currentUser?.email || 'compras@cliente.com.br',
   email2: currentUser?.email2 || 'financeiro@cliente.com.br',
-  enderecoCompleto: currentUser?.fullAddress || 'Av. dos Parceiros, 1500 - Centro, Belo Horizonte - MG, 30110-000',
+  cep: currentUser?.zipCode || DEFAULT_ZIP_CODE,
+  logradouro: currentUser?.street || 'Av. dos Parceiros',
+  numero: currentUser?.addressNumber || '1500',
+  complemento: currentUser?.addressComplement || '',
+  cidade: currentUser?.city || 'Belo Horizonte',
+  estado: currentUser?.state || 'MG',
   pontoReferencia: currentUser?.referencePoint || 'Ao lado da praca principal'
 });
 
@@ -413,6 +434,7 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
   const [formData, setFormData] = useState<ClientProfileFormData>(() => buildInitialProfileData(currentUser));
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isFetchingZipCode, setIsFetchingZipCode] = useState(false);
 
   useEffect(() => {
     setFormData(buildInitialProfileData(currentUser));
@@ -424,6 +446,40 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
     setFormData((prev) => ({ ...prev, [field]: value }));
     setSaveStatus('idle');
     setFeedbackMessage('');
+  };
+
+  const handleZipCodeChange = async (value: string) => {
+    const formattedZipCode = formatZipCode(value);
+    updateField('cep', formattedZipCode);
+
+    if (formattedZipCode.replace(/\D/g, '').length !== 8) {
+      return;
+    }
+
+    setIsFetchingZipCode(true);
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${formattedZipCode.replace(/\D/g, '')}/json/`);
+      const data = await response.json();
+
+      if (data?.erro) {
+        throw new Error('CEP nao encontrado.');
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        cep: formattedZipCode,
+        logradouro: data.logradouro || prev.logradouro,
+        cidade: data.localidade || prev.cidade,
+        estado: data.uf || prev.estado,
+      }));
+      setFeedbackMessage('Endereco preenchido automaticamente a partir do CEP.');
+    } catch (error) {
+      setSaveStatus('error');
+      setFeedbackMessage(error instanceof Error ? error.message : 'Falha ao consultar o CEP.');
+    } finally {
+      setIsFetchingZipCode(false);
+    }
   };
 
   const handleSave = () => {
@@ -446,8 +502,14 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
           phone2: formData.telefone2,
           email: formData.email1,
           email2: formData.email2,
-          fullAddress: formData.enderecoCompleto,
+          fullAddress: `${formData.logradouro}, ${formData.numero}${formData.complemento ? ` - ${formData.complemento}` : ''}, ${formData.cidade} - ${formData.estado}, ${formData.cep}`,
           referencePoint: formData.pontoReferencia,
+          zipCode: formData.cep,
+          street: formData.logradouro,
+          addressNumber: formData.numero,
+          addressComplement: formData.complemento,
+          city: formData.cidade,
+          state: formData.estado,
         });
 
         onCurrentUserUpdate?.(updatedUser);
@@ -487,15 +549,52 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
           <ProfileField label="Email 2" value={formData.email2} onChange={(value) => updateField('email2', value)} icon={Mail} type="email" placeholder="financeiro@empresa.com.br" />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_1fr]">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <ProfileField
-            label="Endereco Completo"
-            value={formData.enderecoCompleto}
-            onChange={(value) => updateField('enderecoCompleto', value)}
+            label="CEP"
+            value={formData.cep}
+            onChange={handleZipCodeChange}
             icon={MapPin}
-            multiline
-            placeholder="Rua, numero, bairro, cidade, estado e CEP"
+            placeholder="00000-000"
           />
+          <ProfileField
+            label="Rua / Logradouro"
+            value={formData.logradouro}
+            onChange={(value) => updateField('logradouro', value)}
+            icon={MapPin}
+            placeholder="Rua, avenida, etc."
+          />
+          <ProfileField
+            label="Numero"
+            value={formData.numero}
+            onChange={(value) => updateField('numero', value)}
+            icon={Building2}
+            placeholder="Numero"
+          />
+          <ProfileField
+            label="Complemento"
+            value={formData.complemento}
+            onChange={(value) => updateField('complemento', value)}
+            icon={Building2}
+            placeholder="Sala, bloco, apartamento"
+          />
+          <ProfileField
+            label="Cidade"
+            value={formData.cidade}
+            onChange={(value) => updateField('cidade', value)}
+            icon={MapPin}
+            placeholder="Cidade"
+          />
+          <ProfileField
+            label="Estado"
+            value={formData.estado}
+            onChange={(value) => updateField('estado', value)}
+            icon={MapPin}
+            placeholder="UF"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
           <ProfileField
             label="Ponto de Referencia"
             value={formData.pontoReferencia}
@@ -511,6 +610,11 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
             Os dados fiscais ficam bloqueados nesta tela. Para alteracoes cadastrais, fale com seu consultor Epoca.
           </p>
           <div className="flex items-center gap-3">
+            {isFetchingZipCode && (
+              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                Buscando endereco pelo CEP...
+              </span>
+            )}
             {saveStatus !== 'idle' && (
               <span
                 className={`rounded-full px-3 py-1 text-xs font-bold ${
