@@ -72,7 +72,7 @@ export const registerStoredUser = (user: AuthUser) => {
   });
 
   if (alreadyExists) {
-    throw new Error('Já existe uma empresa cadastrada com este CNPJ ou email.');
+    throw new Error('Ja existe uma empresa cadastrada com este CNPJ ou email.');
   }
 
   const nextUsers = [...users, user];
@@ -92,7 +92,7 @@ export const loginStoredUser = (identifier: string, password: string) => {
   });
 
   if (!user) {
-    throw new Error('Credenciais inválidas. Use um cadastro salvo nesta demonstração.');
+    throw new Error('Credenciais invalidas. Confira os dados informados e tente novamente.');
   }
 
   saveStoredSession(user);
@@ -104,7 +104,7 @@ export const updateStoredUser = (userId: string, updates: Partial<AuthUser>) => 
   const existingUser = users.find((storedUser) => storedUser.id === userId);
 
   if (!existingUser) {
-    throw new Error('Usuario nao encontrado no armazenamento local.');
+    throw new Error('Usuario nao encontrado.');
   }
 
   const nextUser: AuthUser = {

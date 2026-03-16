@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
+import PixBadge from './ui/PixBadge';
 import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus } from 'lucide-react';
 import { AuthUser, CartItem } from '../types';
 import bannerTopo1 from '../lib/images/banner_topo_1.webp';
@@ -93,6 +94,7 @@ interface LandingPageProps {
   onNavigateToAdmin: () => void;
   onNavigateToFavorites: () => void;
   onNavigateToProducts: () => void;
+  onNavigateToCombos: () => void;
   onNavigateToDepartment: (department: string) => void;
   onNavigateToSuppliers: () => void;
   onNavigateToInstitutional: () => void;
@@ -363,6 +365,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToAdmin,
   onNavigateToFavorites,
   onNavigateToProducts,
+  onNavigateToCombos,
   onNavigateToDepartment,
   onNavigateToSuppliers,
   onNavigateToInstitutional,
@@ -611,7 +614,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                          <span>CÃ³d: {product.winthor_codprod}</span>
                                       </div>
                                   </div>
-                                  <span className="font-bold text-[#be342e] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
+                                  <div className="text-right">
+                                    <span className="font-bold text-[#be342e] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
+                                    <div className="mt-1">
+                                      <PixBadge />
+                                    </div>
+                                  </div>
                               </li>
                           ))}
                       </ul>
@@ -658,6 +666,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                  </div>
                  <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
                  <button onClick={onNavigateToProducts} className="whitespace-nowrap hover:underline">Ofertas da Semana</button>
+                 <button onClick={onNavigateToCombos} className="whitespace-nowrap hover:underline">Combos</button>
                  <button onClick={onNavigateToSuppliers} className="whitespace-nowrap hover:underline">Marcas Parceiras</button>
                  <button onClick={onNavigateToInstitutional} className="whitespace-nowrap hover:underline">Institucional</button>
                  <button onClick={onNavigateToClient} className="whitespace-nowrap hover:underline text-[#be342e]">Recompra Fácil</button>
@@ -676,6 +685,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="md:hidden absolute top-full left-0 w-full bg-white text-slate-900 border-b shadow-xl p-4 flex flex-col gap-4 z-50">
                 <input type="text" placeholder="Buscar..." className="w-full h-10 border rounded px-3" />
                 <button onClick={onNavigateToProducts} className="font-bold text-left py-2 border-b">Departamentos</button>
+                <button onClick={onNavigateToCombos} className="font-bold text-left py-2 border-b">Combos</button>
                 <button onClick={onNavigateToSuppliers} className="font-bold text-left py-2 border-b">Fornecedores</button>
                 <button onClick={onNavigateToClient} className="font-bold text-left py-2 border-b text-[#be342e]">Minha Conta</button>
             </div>
@@ -749,7 +759,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                 <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
                                 <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
                             </div>
-                            <span className="text-[10px] text-slate-500">cada</span>
+                            <div className="mt-1">
+                              <PixBadge label="no PIX" />
+                            </div>
                         </div>
 
                         {/* Description */}

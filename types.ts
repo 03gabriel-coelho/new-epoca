@@ -39,9 +39,48 @@ export interface Product {
   long_description?: string;
 }
 
+export interface ComboItem {
+  product_id: string;
+  quantity: number;
+}
+
+export type ComboRuleType = 'discount_percentage' | 'buy_x_get_y' | 'combo_bundle' | 'value_threshold_bonus';
+
+export interface ComboSelectionGroup {
+  id: string;
+  label: string;
+  helper_text?: string;
+  required_quantity: number;
+  eligible_product_ids: string[];
+}
+
+export interface Combo {
+  id: string;
+  rule_code: number;
+  rule_type: ComboRuleType;
+  name: string;
+  description: string;
+  benefit_label: string;
+  discount_percentage?: number;
+  minimum_quantity?: number | null;
+  minimum_value?: number | null;
+  qualifying_items: ComboItem[];
+  selection_groups?: ComboSelectionGroup[];
+  reward_items?: ComboItem[];
+  image_product_ids: string[];
+  category: string;
+  prize_text?: string;
+  valid_until?: string;
+}
+
 export interface CartItem {
   product_id: string;
   quantity: number;
+  combo_breakdown?: {
+    combo_id: string;
+    role: 'trigger' | 'reward';
+    quantity: number;
+  }[];
 }
 
 export interface FraudAnalysis {

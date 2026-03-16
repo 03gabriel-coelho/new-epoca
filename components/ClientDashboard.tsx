@@ -514,10 +514,10 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
 
         onCurrentUserUpdate?.(updatedUser);
         setSaveStatus('saved');
-        setFeedbackMessage('Dados salvos com sucesso no armazenamento local.');
+        setFeedbackMessage('Dados salvos com sucesso.');
       } catch (error) {
         setSaveStatus('error');
-        setFeedbackMessage(error instanceof Error ? error.message : 'Falha ao salvar os dados no armazenamento local.');
+        setFeedbackMessage(error instanceof Error ? error.message : 'Falha ao salvar os dados.');
       }
     }, 1200);
   };

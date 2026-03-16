@@ -1,21 +1,24 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import ClientDashboard, { ClientProfilePage } from './components/ClientDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
 import ProductsPage from './components/ProductsPage';
+import CombosPage from './components/CombosPage';
 import SuppliersPage from './components/SuppliersPage';
 import InstitutionalPage from './components/InstitutionalPage';
 import AuthPage from './components/AuthPage';
 import CheckoutPage from './components/CheckoutPage';
 import ProductDetailPage from './components/ProductDetailPage';
+import ComboDetailPage from './components/ComboDetailPage';
 import FavoritesPage from './components/FavoritesPage';
 import { Button } from './components/ui/Layout';
-import { User, Globe, Package, Lock } from 'lucide-react';
 import { AuthUser, CartItem } from './types';
 import { clearStoredSession, getStoredSession } from './lib/authStorage';
 import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage';
+import { mockCombos } from './lib/mockCombos';
+import { ComboSelections, createDefaultComboSelections, resolveComboQualifyingItems } from './lib/comboUtils';
 
 const App = () => {
   const navigate = useNavigate();
@@ -27,6 +30,63 @@ const App = () => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [nextPathAfterLogin, setNextPathAfterLogin] = useState<string | null>(null);
+
+  const upsertCartItem = (
+    items: CartItem[],
+    productId: string,
+    quantityDelta: number,
+    comboEntry?: { combo_id: string; role: 'trigger' | 'reward'; quantity: number }
+  ) => {
+    const existingIndex = items.findIndex((item) => item.product_id === productId);
+
+    if (existingIndex < 0) {
+      if (quantityDelta <= 0) {
+        return items;
+      }
+
+      return [
+        ...items,
+        {
+          product_id: productId,
+          quantity: quantityDelta,
+          combo_breakdown: comboEntry ? [comboEntry] : [],
+        },
+      ];
+    }
+
+    const existingItem = items[existingIndex];
+    const nextQuantity = existingItem.quantity + quantityDelta;
+    const nextBreakdown = [...(existingItem.combo_breakdown || [])];
+
+    if (comboEntry) {
+      const breakdownIndex = nextBreakdown.findIndex(
+        (entry) => entry.combo_id === comboEntry.combo_id && entry.role === comboEntry.role
+      );
+
+      if (breakdownIndex >= 0) {
+        nextBreakdown[breakdownIndex] = {
+          ...nextBreakdown[breakdownIndex],
+          quantity: nextBreakdown[breakdownIndex].quantity + comboEntry.quantity,
+        };
+      } else {
+        nextBreakdown.push(comboEntry);
+      }
+    }
+
+    if (nextQuantity <= 0) {
+      return items.filter((_, index) => index !== existingIndex);
+    }
+
+    return items.map((item, index) =>
+      index === existingIndex
+        ? {
+            ...item,
+            quantity: nextQuantity,
+            combo_breakdown: nextBreakdown,
+          }
+        : item
+    );
+  };
 
   useEffect(() => {
     const storedSession = getStoredSession();
@@ -44,6 +104,7 @@ const App = () => {
   const navigateToHome = () => navigate('/');
   const navigateToFavorites = () => navigate('/favoritos');
   const navigateToProducts = () => navigate('/produtos');
+  const navigateToCombos = () => navigate('/combos');
   const navigateToDepartment = (department: string) => {
     const params = new URLSearchParams({ departamento: department });
     navigate(`/produtos?${params.toString()}`);
@@ -73,21 +134,134 @@ const App = () => {
 
   const addToCart = (productId: string) => {
     setCart(prev => {
-      const existing = prev.find(item => item.product_id === productId);
-      if (existing) {
-        return prev.map(item => item.product_id === productId ? { ...item, quantity: item.quantity + 1 } : item);
-      }
-      return [...prev, { product_id: productId, quantity: 1 }];
+      return upsertCartItem(prev, productId, 1);
     });
   };
 
   const removeFromCart = (productId: string) => {
     setCart(prev => {
       const existing = prev.find(item => item.product_id === productId);
-      if (existing && existing.quantity > 1) {
-        return prev.map(item => item.product_id === productId ? { ...item, quantity: item.quantity - 1 } : item);
+      if (!existing) {
+        return prev;
       }
-      return prev.filter(item => item.product_id !== productId);
+
+      const rewardEntries = (existing.combo_breakdown || []).filter((entry) => entry.role === 'reward');
+      const triggerEntries = (existing.combo_breakdown || []).filter((entry) => entry.role === 'trigger');
+      const rewardQuantity = rewardEntries.reduce((total, entry) => total + entry.quantity, 0);
+      const triggerQuantity = triggerEntries.reduce((total, entry) => total + entry.quantity, 0);
+      const regularQuantity = Math.max(existing.quantity - rewardQuantity - triggerQuantity, 0);
+
+      if (regularQuantity > 0) {
+        return upsertCartItem(prev, productId, -1);
+      }
+
+      if (triggerEntries.length > 0) {
+        const triggerEntry = triggerEntries[0];
+        return prev
+          .map((item) => {
+            if (item.product_id !== productId) {
+              return item;
+            }
+
+            const nextBreakdown = (item.combo_breakdown || [])
+              .map((entry) =>
+                entry.combo_id === triggerEntry.combo_id && entry.role === 'trigger'
+                  ? { ...entry, quantity: entry.quantity - 1 }
+                  : entry
+              )
+              .filter((entry) => entry.quantity > 0);
+
+            return {
+              ...item,
+              quantity: item.quantity - 1,
+              combo_breakdown: nextBreakdown,
+            };
+          })
+          .filter((item) => item.quantity > 0);
+      }
+
+      if (rewardEntries.length > 0) {
+        const rewardEntry = rewardEntries[0];
+        return prev
+          .map((item) => {
+            if (item.product_id !== productId) {
+              return item;
+            }
+
+            const nextBreakdown = (item.combo_breakdown || [])
+              .map((entry) =>
+                entry.combo_id === rewardEntry.combo_id && entry.role === 'reward'
+                  ? { ...entry, quantity: entry.quantity - 1 }
+                  : entry
+              )
+              .filter((entry) => entry.quantity > 0);
+
+            return {
+              ...item,
+              quantity: item.quantity - 1,
+              combo_breakdown: nextBreakdown,
+            };
+          })
+          .filter((item) => item.quantity > 0);
+      }
+
+      return prev;
+    });
+  };
+
+  const addComboToCart = (comboId: string, selections?: ComboSelections) => {
+    const combo = mockCombos.find((entry) => entry.id === comboId);
+    if (!combo) {
+      return;
+    }
+
+    setCart((prev) => {
+      let nextCart = [...prev];
+
+      resolveComboQualifyingItems(combo, selections || createDefaultComboSelections(combo)).forEach((comboItem) => {
+        nextCart = upsertCartItem(nextCart, comboItem.product_id, comboItem.quantity, {
+          combo_id: combo.id,
+          role: 'trigger',
+          quantity: comboItem.quantity,
+        });
+      });
+
+      (combo.reward_items || []).forEach((comboItem) => {
+        nextCart = upsertCartItem(nextCart, comboItem.product_id, comboItem.quantity, {
+          combo_id: combo.id,
+          role: 'reward',
+          quantity: comboItem.quantity,
+        });
+      });
+
+      return nextCart;
+    });
+  };
+
+  const removeComboFromCart = (comboId: string) => {
+    const combo = mockCombos.find((entry) => entry.id === comboId);
+    if (!combo) {
+      return;
+    }
+
+    setCart((prev) => {
+      return prev
+        .map((item) => {
+          const removedQuantity = (item.combo_breakdown || [])
+            .filter((entry) => entry.combo_id === combo.id)
+            .reduce((total, entry) => total + entry.quantity, 0);
+
+          if (removedQuantity <= 0) {
+            return item;
+          }
+
+          return {
+            ...item,
+            quantity: item.quantity - removedQuantity,
+            combo_breakdown: (item.combo_breakdown || []).filter((entry) => entry.combo_id !== combo.id),
+          };
+        })
+        .filter((item) => item.quantity > 0);
     });
   };
 
@@ -111,6 +285,10 @@ const App = () => {
 
   const handleProductClick = (productId: string) => {
     navigate(`/produto/${productId}`);
+  };
+
+  const handleComboClick = (comboId: string) => {
+    navigate(`/combo/${comboId}`);
   };
 
   const toggleFavorite = (productId: string) => {
@@ -163,6 +341,29 @@ const App = () => {
         onNavigateToCheckout={handleCartClick}
         favoriteIds={favoriteIds}
         toggleFavorite={toggleFavorite}
+      />
+    );
+  };
+
+  const ComboDetailRoute = () => {
+    const { comboId } = useParams();
+    if (!comboId) {
+      return <Navigate to="/combos" replace />;
+    }
+
+    return (
+      <ComboDetailPage
+        comboId={comboId}
+        currentUser={currentUser}
+        cart={cart}
+        favoriteIds={favoriteIds}
+        onNavigateToHome={navigateToHome}
+        onNavigateToClient={handleClientAreaClick}
+        onNavigateToFavorites={navigateToFavorites}
+        onNavigateToCheckout={handleCartClick}
+        onProductClick={handleProductClick}
+        addComboToCart={addComboToCart}
+        removeComboFromCart={removeComboFromCart}
       />
     );
   };
@@ -221,6 +422,7 @@ const App = () => {
               onNavigateToAdmin={handleAdminClick}
               onNavigateToFavorites={navigateToFavorites}
               onNavigateToProducts={navigateToProducts}
+              onNavigateToCombos={navigateToCombos}
               onNavigateToDepartment={navigateToDepartment}
               onNavigateToSuppliers={() => navigate('/fornecedores')}
               onNavigateToInstitutional={() => navigate('/institucional')}
@@ -257,7 +459,25 @@ const App = () => {
             />
           }
         />
+        <Route
+          path="/combos"
+          element={
+            <CombosPage
+              currentUser={currentUser}
+              cart={cart}
+              favoriteIds={favoriteIds}
+              onNavigateToHome={navigateToHome}
+              onNavigateToClient={handleClientAreaClick}
+              onNavigateToFavorites={navigateToFavorites}
+              onNavigateToCheckout={handleCartClick}
+              onComboClick={handleComboClick}
+              addComboToCart={addComboToCart}
+              removeComboFromCart={removeComboFromCart}
+            />
+          }
+        />
         <Route path="/produto/:productId" element={<ProductDetailRoute />} />
+        <Route path="/combo/:comboId" element={<ComboDetailRoute />} />
         <Route
           path="/favoritos"
           element={

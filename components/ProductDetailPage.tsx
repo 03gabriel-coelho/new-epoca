@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
+import PixBadge from './ui/PixBadge';
 import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
@@ -160,7 +161,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <span className="text-4xl font-bold text-slate-900">R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         <span className="text-sm text-slate-500">/{product.details?.unit || 'un'}</span>
                      </div>
-                     <p className="text-xs text-green-600 font-bold mt-1">5% de desconto no PIX ou Boleto</p>
+                     <div className="mt-2">
+                        <PixBadge label="preco valido no PIX" className="text-[11px]" />
+                     </div>
                   </div>
 
                   <div className="space-y-4">

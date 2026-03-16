@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
-import { CreditCard, Barcode, MapPin, ShieldCheck, CheckCircle, AlertCircle, Plus, Trash2, Minus, ShoppingCart, Loader2, Zap, Copy, QrCode } from 'lucide-react';
+import { CreditCard, Barcode, MapPin, ShieldCheck, CheckCircle, AlertCircle, Plus, Trash2, Minus, ShoppingCart, Loader2, Zap, Copy, QrCode, Gift, Tags, Percent } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
+import { mockCombos } from '../lib/mockCombos';
 import { CartItem } from '../types';
+import {
+  getAppliedComboQualifyingItemsFromCart,
+  getAppliedComboRewardItemsFromCart,
+  getCartComboDiscountValue,
+  getCartComboRewardValue,
+  getComboQuantityInCart,
+  getComboSummaryLabel,
+  mapComboItemsWithProducts,
+} from '../lib/comboUtils';
 
 interface CheckoutPageProps {
   onNavigateToHome: () => void;
@@ -25,29 +35,104 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
   const [pixPaid, setPixPaid] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
 
-  const cartTotal = cart.reduce((acc, item) => {
+  const productSubtotal = cart.reduce((acc, item) => {
     const product = mockProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
 
-  const totalWithFreight = cartTotal + freightCost;
+  const appliedCombos = useMemo(() => {
+    return mockCombos
+      .map((combo) => {
+        const appliedCount = getComboQuantityInCart(combo, cart);
+        if (appliedCount <= 0) {
+          return null;
+        }
+
+        const qualifyingItems = mapComboItemsWithProducts(getAppliedComboQualifyingItemsFromCart(combo, cart), mockProducts);
+        const rewardItems = mapComboItemsWithProducts(getAppliedComboRewardItemsFromCart(combo, cart), mockProducts);
+        const discountValue = getCartComboDiscountValue(combo, mockProducts, cart);
+        const rewardValue = getCartComboRewardValue(combo, mockProducts, cart);
+
+        return {
+          combo,
+          appliedCount,
+          qualifyingItems,
+          rewardItems,
+          discountValue,
+          rewardValue,
+          savingsValue: Number((discountValue + rewardValue).toFixed(2)),
+        };
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+  }, [cart]);
+
+  const rewardQuantitiesByProductId = useMemo(() => {
+    const quantities = new Map<string, number>();
+
+    appliedCombos.forEach((appliedCombo) => {
+      appliedCombo.rewardItems.forEach((item) => {
+        quantities.set(item.product.id, (quantities.get(item.product.id) || 0) + item.quantity);
+      });
+    });
+
+    return quantities;
+  }, [appliedCombos]);
+
+  const recordedRewardQuantitiesByProductId = useMemo(() => {
+    const quantities = new Map<string, number>();
+
+    cart.forEach((item) => {
+      (item.combo_breakdown || [])
+        .filter((entry) => entry.role === 'reward')
+        .forEach((entry) => {
+          quantities.set(item.product_id, (quantities.get(item.product_id) || 0) + entry.quantity);
+        });
+    });
+
+    return quantities;
+  }, [cart]);
+
+  const getDisplayQuantity = (item: CartItem) => {
+    const appliedRewardQuantity = rewardQuantitiesByProductId.get(item.product_id) || 0;
+    const recordedRewardQuantity = recordedRewardQuantitiesByProductId.get(item.product_id) || 0;
+    const virtualRewardExtra = Math.max(appliedRewardQuantity - recordedRewardQuantity, 0);
+
+    return item.quantity + virtualRewardExtra;
+  };
+
+  const displayItemCount = cart.reduce((total, item) => total + getDisplayQuantity(item), 0);
+
+  const comboSavingsTotal = appliedCombos.reduce((total, combo) => total + combo.savingsValue, 0);
+  const pixTotal = Math.max(productSubtotal - comboSavingsTotal, 0) + freightCost;
+  const paymentAdjustmentRate =
+    paymentMethod === 'CREDIT_CARD' ? 0.035 :
+    paymentMethod === 'TWO_CARDS' ? 0.045 :
+    paymentMethod === 'BOLETO' ? 0.02 :
+    0;
+  const paymentAdjustmentLabel =
+    paymentMethod === 'CREDIT_CARD' ? 'Acrescimo do cartao' :
+    paymentMethod === 'TWO_CARDS' ? 'Acrescimo dos cartoes' :
+    paymentMethod === 'BOLETO' ? 'Taxa do boleto' :
+    'Pagamento via PIX';
+  const paymentAdjustedTotal = Number((pixTotal * (1 + paymentAdjustmentRate)).toFixed(2));
+  const paymentAdjustmentValue = Number((paymentAdjustedTotal - pixTotal).toFixed(2));
 
   useEffect(() => {
     if (!card1Amount) {
-      setCard1Amount((totalWithFreight / 2).toFixed(2));
+      setCard1Amount((paymentAdjustedTotal / 2).toFixed(2));
     }
-  }, [totalWithFreight, card1Amount]);
+  }, [paymentAdjustedTotal, card1Amount]);
 
   useEffect(() => {
     setPixCopied(false);
     setPixPaid(false);
     setIsProcessingPix(false);
-  }, [paymentMethod, totalWithFreight]);
+  }, [paymentMethod, paymentAdjustedTotal]);
 
-  const card2Amount = (totalWithFreight - (parseFloat(card1Amount) || 0)).toFixed(2);
-  const pixCode = `00020126580014BR.GOV.BCB.PIX0136epoca-b2b-${cart.length || 1}-${totalWithFreight.toFixed(2).replace('.', '')}520400005303986540${totalWithFreight.toFixed(2).length}${totalWithFreight.toFixed(2)}5802BR5925EPOCA DISTRIBUICAO LTDA6009SAO PAULO62070503***6304ABCD`;
+  const card2Amount = (paymentAdjustedTotal - (parseFloat(card1Amount) || 0)).toFixed(2);
+  const pixCode = `00020126580014BR.GOV.BCB.PIX0136epoca-b2b-${cart.length || 1}-${pixTotal.toFixed(2).replace('.', '')}520400005303986540${pixTotal.toFixed(2).length}${pixTotal.toFixed(2)}5802BR5925EPOCA DISTRIBUICAO LTDA6009SAO PAULO62070503***6304ABCD`;
 
-  const calculateSimulatedFreight = (uf: string) => {
+  const calculateFreight = (uf: string) => {
     const southeast = ['SP', 'RJ', 'MG', 'ES'];
     const south = ['PR', 'SC', 'RS'];
 
@@ -89,7 +174,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
       const state = data.state;
 
       setAddress(`${street}${neighborhood}${city}/${state}`);
-      calculateSimulatedFreight(state);
+      calculateFreight(state);
     } catch (error) {
       console.log('BrasilAPI failed, trying ViaCEP...', error);
 
@@ -109,7 +194,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
         const state = data.uf;
 
         setAddress(`${street}${neighborhood}${city}/${state}`);
-        calculateSimulatedFreight(state);
+        calculateFreight(state);
       } catch (viaCepError) {
         console.error('ViaCEP lookup failed', viaCepError);
         setFreightError('Servico de CEP indisponivel no momento.');
@@ -161,6 +246,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                   return null;
                 }
 
+                const displayQuantity = getDisplayQuantity(item);
+
                 return (
                   <div key={item.product_id} className="p-4 flex flex-col sm:flex-row items-center gap-4">
                     <ProductImage
@@ -172,7 +259,15 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                     <div className="flex-1 text-center sm:text-left">
                       <h4 className="font-bold text-slate-800 line-clamp-2">{product.description}</h4>
                       <p className="text-xs text-slate-500 mb-1">Cod: {product.winthor_codprod}</p>
+                      {rewardQuantitiesByProductId.get(product.id) ? (
+                        <div className="mb-2 flex flex-wrap gap-2">
+                          <Badge className="bg-[#fff4f3] text-[#be342e] border border-[#f3c1bd]">
+                            <Gift className="mr-1 h-3 w-3" /> {rewardQuantitiesByProductId.get(product.id)} un em premio
+                          </Badge>
+                        </div>
+                      ) : null}
                       <p className="text-[#be342e] font-bold">R$ {product.price.toFixed(2)} / un</p>
+                      <p className="text-[10px] text-slate-400">Preco base em PIX</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center border border-slate-300 rounded-full h-10 w-32 justify-between px-1">
@@ -182,7 +277,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                         >
                           {item.quantity === 1 ? <Trash2 className="w-4 h-4 text-red-500" /> : <Minus className="w-4 h-4" />}
                         </button>
-                        <span className="font-bold text-slate-900">{item.quantity}</span>
+                        <span className="font-bold text-slate-900">{displayQuantity}</span>
                         <button
                           onClick={() => addToCart(item.product_id)}
                           className="w-8 h-8 rounded-full bg-[#be342e] hover:bg-[#b70e0c] flex items-center justify-center text-white transition-colors"
@@ -210,6 +305,74 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
           )}
         </CardContent>
       </Card>
+
+      {appliedCombos.length > 0 && (
+        <Card className="border-none shadow-sm">
+          <CardHeader className="bg-[#fff4f3] border-b border-[#f3d2cf]">
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <Tags className="text-[#be342e]" /> Combos aplicados ao pedido
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-6">
+            {appliedCombos.map((appliedCombo) => (
+              <div key={appliedCombo.combo.id} className="rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className="bg-[#FFC220] text-slate-900 border-none">{appliedCombo.combo.benefit_label}</Badge>
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                        {getComboSummaryLabel(appliedCombo.combo)}
+                      </span>
+                    </div>
+                    <h4 className="mt-2 font-bold text-slate-900">{appliedCombo.combo.name}</h4>
+                    <p className="mt-1 text-sm text-slate-500">Aplicado {appliedCombo.appliedCount}x neste pedido.</p>
+                  </div>
+                  <div className="rounded-2xl bg-green-50 px-4 py-3 text-right">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-green-700">Beneficio total</p>
+                    <p className="mt-1 text-lg font-bold text-green-700">
+                      R$ {appliedCombo.savingsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Produtos gatilho</p>
+                    <div className="space-y-2">
+                      {appliedCombo.qualifyingItems.map((item) => (
+                        <p key={`${appliedCombo.combo.id}-${item.product.id}`} className="text-sm text-slate-700">
+                          <span className="font-semibold">{item.quantity}x</span> {item.product.description}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Premio / Beneficio</p>
+                    <div className="space-y-2">
+                      {appliedCombo.rewardItems.length > 0 ? (
+                        appliedCombo.rewardItems.map((item) => (
+                          <p key={`${appliedCombo.combo.id}-reward-${item.product.id}`} className="text-sm text-slate-700">
+                            <span className="font-semibold">{item.quantity}x</span> {item.product.description}
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-sm text-slate-700">{appliedCombo.combo.benefit_label}</p>
+                      )}
+                      {appliedCombo.discountValue > 0 && (
+                        <p className="flex items-center gap-2 text-sm font-semibold text-green-700">
+                          <Percent className="h-4 w-4" />
+                          Desconto aplicado: R$ {appliedCombo.discountValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end">
         <Button
@@ -404,13 +567,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                     ))}
                   </div>
                   <p className="text-xs font-bold text-slate-700 mt-4">Escaneie o QR Code</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Pagamento identificado na hora nesta simulacao.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Pagamento identificado automaticamente apos a confirmacao.</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-bold text-slate-800">Pague com PIX</p>
-                    <p className="text-sm text-slate-500 mt-1">Abra o app do banco, copie o codigo abaixo e conclua o pagamento.</p>
+                    <p className="text-sm text-slate-500 mt-1">Abra o app do banco, copie o codigo abaixo e conclua o pagamento no valor de PIX.</p>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -441,7 +604,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                         </>
                       ) : (
                         <>
-                          <Zap className="w-4 h-4 mr-2" /> Simular pagamento PIX
+                          <Zap className="w-4 h-4 mr-2" /> Confirmar pagamento PIX
                         </>
                       )}
                     </Button>
@@ -452,7 +615,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                     <p className="text-xs mt-1">
                       {pixPaid
                         ? 'O valor foi reconhecido e o pedido ja pode ser finalizado.'
-                        : 'Nesta demonstracao, clique em "Simular pagamento PIX" para concluir a compra.'}
+                        : 'Clique em "Confirmar pagamento PIX" para concluir a compra.'}
                     </p>
                   </div>
                 </div>
@@ -501,7 +664,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereco:</span> {address}</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Previsao:</span> 3 dias uteis</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pagamento:</span> {paymentMethod === 'PIX' ? 'PIX' : paymentMethod === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
-        <p className="text-sm text-slate-600"><span className="font-bold">Total Pago:</span> R$ {totalWithFreight.toFixed(2)}</p>
+        <p className="text-sm text-slate-600"><span className="font-bold">Total Pago:</span> R$ {paymentAdjustedTotal.toFixed(2)}</p>
       </div>
 
       <div className="flex justify-center gap-4">
@@ -558,13 +721,38 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                 <h3 className="font-bold text-lg mb-4 text-slate-800">Resumo do Pedido</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Subtotal ({cart.reduce((acc, item) => acc + item.quantity, 0)} itens)</span>
-                    <span className="font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span className="text-slate-500">Subtotal ({displayItemCount} itens)</span>
+                    <span className="font-bold">R$ {productSubtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Total em PIX</span>
+                    <span className="font-bold">R$ {pixTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  {appliedCombos.length > 0 && (
+                    <div className="rounded-xl border border-green-100 bg-green-50 p-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-green-700">Beneficios de combos</span>
+                        <span className="font-bold text-green-700">- R$ {comboSavingsTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="mt-2 space-y-1">
+                        {appliedCombos.map((appliedCombo) => (
+                          <p key={appliedCombo.combo.id} className="text-xs text-green-700">
+                            {appliedCombo.combo.name}: R$ {appliedCombo.savingsValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-500">Frete</span>
                     <span className="font-bold">{freightCost ? `R$ ${freightCost.toFixed(2)}` : '--'}</span>
                   </div>
+                  {paymentMethod !== 'PIX' && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">{paymentAdjustmentLabel}</span>
+                      <span className="font-bold">R$ {paymentAdjustmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
                   {freightCost === 0 && (
                     <p className="text-xs text-orange-500 bg-orange-50 p-2 rounded">
                       Informe o CEP na proxima etapa.
@@ -572,7 +760,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                   )}
                   <div className="border-t border-slate-100 pt-3 flex justify-between text-lg">
                     <span className="font-bold text-slate-800">Total</span>
-                    <span className="font-bold text-[#be342e]">R$ {totalWithFreight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-[#be342e]">R$ {paymentAdjustedTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
 

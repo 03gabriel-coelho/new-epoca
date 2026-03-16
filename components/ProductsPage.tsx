@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
+import PixBadge from './ui/PixBadge';
 import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, Heart, User, Minus, Plus } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem, Product } from '../types';
@@ -215,7 +216,12 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                             <span>Cod: {product.winthor_codprod}</span>
                           </div>
                         </div>
-                        <span className="font-bold text-[#be342e] text-sm">R$ {product.price.toFixed(2)}</span>
+                        <div className="text-right">
+                          <span className="font-bold text-[#be342e] text-sm">R$ {product.price.toFixed(2)}</span>
+                          <div className="mt-1">
+                            <PixBadge />
+                          </div>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -350,7 +356,9 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                         <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
                         <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
                       </div>
-                      <span className="text-[10px] text-slate-500">cada</span>
+                      <div className="mt-1">
+                        <PixBadge label="no PIX" />
+                      </div>
                     </div>
 
                     <a className="text-sm text-slate-700 hover:underline line-clamp-2 mt-2 mb-4 cursor-pointer min-h-[40px]" onClick={() => onProductClick(product.id)}>

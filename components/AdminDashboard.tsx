@@ -301,7 +301,7 @@ const ProductImageEditModal = ({
                 placeholder="https://exemplo.com/imagem-do-produto.webp"
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
               />
-              <p className="text-xs text-slate-500">Cole uma URL publica ou envie um arquivo para simular a troca da imagem.</p>
+              <p className="text-xs text-slate-500">Cole uma URL publica ou envie um arquivo para atualizar a imagem.</p>
             </div>
           </div>
 
@@ -312,7 +312,7 @@ const ProductImageEditModal = ({
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-slate-900">Enviar nova imagem</p>
-                <p className="mt-1 text-sm text-slate-500">Arquivos locais sao usados apenas no prototipo e atualizam o preview imediatamente.</p>
+                <p className="mt-1 text-sm text-slate-500">Arquivos locais atualizam o preview imediatamente.</p>
               </div>
             </div>
             <label className="mt-4 flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl bg-slate-50 text-center transition-colors hover:bg-slate-100">
