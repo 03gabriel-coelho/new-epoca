@@ -172,6 +172,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
           id: '123',
           cnpj: registerData.cnpj,
           companyName: registerData.companyName,
+          tradeName: registerData.companyName,
+          legalName: registerData.companyName,
           email: registerData.email,
           phone: registerData.phone,
           password: registerData.password,

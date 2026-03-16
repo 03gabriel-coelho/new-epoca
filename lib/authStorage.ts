@@ -98,3 +98,31 @@ export const loginStoredUser = (identifier: string, password: string) => {
   saveStoredSession(user);
   return user;
 };
+
+export const updateStoredUser = (userId: string, updates: Partial<AuthUser>) => {
+  const users = getStoredUsers();
+  const existingUser = users.find((storedUser) => storedUser.id === userId);
+
+  if (!existingUser) {
+    throw new Error('Usuario nao encontrado no armazenamento local.');
+  }
+
+  const nextUser: AuthUser = {
+    ...existingUser,
+    ...updates,
+    id: existingUser.id,
+    cnpj: existingUser.cnpj,
+    password: existingUser.password,
+    createdAt: existingUser.createdAt,
+  };
+
+  const nextUsers = users.map((storedUser) => (storedUser.id === userId ? nextUser : storedUser));
+  saveStoredUsers(nextUsers);
+
+  const currentSession = getStoredSession();
+  if (currentSession?.id === userId) {
+    saveStoredSession(nextUser);
+  }
+
+  return nextUser;
+};

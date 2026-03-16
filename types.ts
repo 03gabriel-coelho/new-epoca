@@ -133,5 +133,10 @@ export interface AuthUser {
   phone: string;
   password: string;
   createdAt: string;
+  tradeName?: string;
+  legalName?: string;
+  phone2?: string;
+  email2?: string;
+  fullAddress?: string;
+  referencePoint?: string;
 }
-

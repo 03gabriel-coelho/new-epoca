@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
-import ClientDashboard from './components/ClientDashboard';
+import ClientDashboard, { ClientProfilePage } from './components/ClientDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
 import ProductsPage from './components/ProductsPage';
@@ -140,6 +140,10 @@ const App = () => {
     navigate('/admin');
   };
 
+  const handleCurrentUserUpdate = (user: AuthUser) => {
+    setCurrentUser(user);
+  };
+
   const ProductDetailRoute = () => {
     const { productId } = useParams();
     if (!productId) {
@@ -163,13 +167,44 @@ const App = () => {
     );
   };
 
-  const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-
-    return location.pathname.startsWith(path);
-  };
+  const ClientAreaLayout = () => (
+    <div className="min-h-screen flex animate-in fade-in">
+      <aside className="hidden w-64 flex-col bg-slate-900 p-4 text-slate-300 lg:flex">
+        <div className="mb-8 flex cursor-pointer items-center gap-1 px-2 text-xl font-bold text-white" onClick={navigateToHome}>
+          Epoca <span className="text-[#be342e]">B2B</span>
+        </div>
+        <nav className="space-y-1">
+          <NavLink
+            to="/cliente/dashboard"
+            className={({ isActive }) =>
+              `block rounded-md px-4 py-2 transition-colors ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-800'}`
+            }
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/cliente/dados"
+            className={({ isActive }) =>
+              `block rounded-md px-4 py-2 transition-colors ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-800'}`
+            }
+          >
+            Dados do Cliente
+          </NavLink>
+          <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Meus Pedidos</a>
+          <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Financeiro</a>
+          <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Catalogo</a>
+        </nav>
+        <div className="mt-auto border-t border-slate-800 pt-4">
+          <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-white" onClick={handleClientLogout}>
+            Sair
+          </Button>
+        </div>
+      </aside>
+      <main className="flex-1 overflow-auto p-8">
+        <Outlet />
+      </main>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -262,36 +297,31 @@ const App = () => {
             )
           }
         />
-        <Route
-          path="/cliente"
-          element={
-            <div className="min-h-screen flex animate-in fade-in">
-              <aside className="w-64 bg-slate-900 text-slate-300 hidden lg:flex flex-col p-4">
-                <div className="mb-8 px-2 font-bold text-white text-xl cursor-pointer flex items-center gap-1" onClick={navigateToHome}>
-                  Epoca <span className="text-[#be342e]">B2B</span>
-                </div>
-                <nav className="space-y-1">
-                  <a href="#" className="block px-4 py-2 bg-slate-800 text-white rounded-md">Dashboard</a>
-                  <a href="#" className="block px-4 py-2 hover:bg-slate-800 rounded-md">Meus Pedidos</a>
-                  <a href="#" className="block px-4 py-2 hover:bg-slate-800 rounded-md">Financeiro</a>
-                  <a href="#" className="block px-4 py-2 hover:bg-slate-800 rounded-md">Catalogo</a>
-                </nav>
-                <div className="mt-auto pt-4 border-t border-slate-800">
-                  <Button variant="ghost" className="w-full justify-start text-slate-400 hover:text-white" onClick={handleClientLogout}>
-                    Sair
-                  </Button>
-                </div>
-              </aside>
-              <main className="flex-1 p-8 overflow-auto">
-                <ClientDashboard
-                  currentUser={currentUser}
-                  onNavigateToHome={navigateToHome}
-                  onNavigateToCheckout={() => navigate('/checkout')}
-                />
-              </main>
-            </div>
-          }
-        />
+        <Route path="/cliente" element={isLoggedIn ? <ClientAreaLayout /> : <Navigate to="/auth" replace />}>
+          <Route index element={<Navigate to="/cliente/dashboard" replace />} />
+          <Route
+            path="dashboard"
+            element={
+              <ClientDashboard
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/checkout')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+          <Route
+            path="dados"
+            element={
+              <ClientProfilePage
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/checkout')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+        </Route>
         <Route
           path="/admin"
           element={

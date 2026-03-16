@@ -1,11 +1,28 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import { mockOrders, mockFinancials } from '../lib/mockData';
 import { AuthUser, OrderStatus } from '../types';
-import { FileText, RefreshCw, AlertCircle, CheckCircle, Clock, Bell, X, ShieldCheck, CreditCard, Truck, Store, ShoppingCart } from 'lucide-react';
+import { updateStoredUser } from '../lib/authStorage';
+import {
+  FileText,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Bell,
+  X,
+  ShieldCheck,
+  CreditCard,
+  Truck,
+  Store,
+  ShoppingCart,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Save
+} from 'lucide-react';
 
-// --- Mock Notification Data ---
 interface Notification {
   id: string;
   title: string;
@@ -16,107 +33,132 @@ interface Notification {
 }
 
 const initialNotifications: Notification[] = [
-  { id: '1', title: 'Pedido Faturado', message: 'Seu pedido #50231 foi faturado e saiu para entrega.', time: '2 min atrás', type: 'success', read: false },
-  { id: '2', title: 'Oferta Relâmpago', message: '5% de desconto em toda a linha de Limpeza até as 18h.', time: '1 hora atrás', type: 'info', read: false },
-  { id: '3', title: 'Boleto Próximo ao Vencimento', message: 'O título #102030 vence em 2 dias. Evite juros.', time: '3 horas atrás', type: 'warning', read: true },
-  { id: '4', title: 'Novo Produto Disponível', message: 'A linha premium de vinhos chilenos acabou de chegar.', time: '1 dia atrás', type: 'info', read: true },
+  { id: '1', title: 'Pedido Faturado', message: 'Seu pedido #50231 foi faturado e saiu para entrega.', time: '2 min atras', type: 'success', read: false },
+  { id: '2', title: 'Oferta Relampago', message: '5% de desconto em toda a linha de Limpeza ate as 18h.', time: '1 hora atras', type: 'info', read: false },
+  { id: '3', title: 'Boleto Proximo ao Vencimento', message: 'O titulo #102030 vence em 2 dias. Evite juros.', time: '3 horas atras', type: 'warning', read: true },
+  { id: '4', title: 'Novo Produto Disponivel', message: 'A linha premium de vinhos chilenos acabou de chegar.', time: '1 dia atras', type: 'info', read: true }
 ];
 
-// --- Components Specific to Client Dashboard ---
+interface ClientDashboardProps {
+  currentUser: AuthUser | null;
+  onNavigateToHome: () => void;
+  onNavigateToCheckout: () => void;
+  onCurrentUserUpdate?: (user: AuthUser) => void;
+}
+
+interface ClientProfileFormData {
+  cnpj: string;
+  nomeFantasia: string;
+  razaoSocial: string;
+  telefone1: string;
+  telefone2: string;
+  email1: string;
+  email2: string;
+  enderecoCompleto: string;
+  pontoReferencia: string;
+}
+
+const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFormData => ({
+  cnpj: currentUser?.cnpj || '12.345.678/0001-90',
+  nomeFantasia: currentUser?.tradeName || currentUser?.companyName || 'Cliente B2B',
+  razaoSocial: currentUser?.legalName || currentUser?.companyName || 'Cliente B2B LTDA',
+  telefone1: currentUser?.phone || '(31) 3333-4444',
+  telefone2: currentUser?.phone2 || '(31) 98888-7777',
+  email1: currentUser?.email || 'compras@cliente.com.br',
+  email2: currentUser?.email2 || 'financeiro@cliente.com.br',
+  enderecoCompleto: currentUser?.fullAddress || 'Av. dos Parceiros, 1500 - Centro, Belo Horizonte - MG, 30110-000',
+  pontoReferencia: currentUser?.referencePoint || 'Ao lado da praca principal'
+});
 
 const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
 
-  const toggleOpen = () => setIsOpen(!isOpen);
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const deleteNotification = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <Tooltip content="Notificações">
-        <Button 
-          variant="outline" 
-          className="relative h-10 w-10 p-0 rounded-full border-slate-200 hover:bg-slate-100 hover:text-[#be342e]" 
-          onClick={toggleOpen}
+      <Tooltip content="Notificacoes">
+        <Button
+          variant="outline"
+          className="relative h-10 w-10 rounded-full border-slate-200 p-0 hover:bg-slate-100 hover:text-[#be342e]"
+          onClick={() => setIsOpen((prev) => !prev)}
         >
-          <Bell className="h-5 w-5 text-slate-600" />
+          <Bell className="h-5 w-5 text-slate-600 fixed"/>
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-white transform translate-x-[-2px] translate-y-[2px]"></span>
+            <span className="absolute right-0 top-0 h-3 w-3 translate-x-[-2px] translate-y-[2px] rounded-full border-2 border-white bg-red-500" />
           )}
         </Button>
       </Tooltip>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-           <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-             <h4 className="font-semibold text-sm text-slate-900">Notificações</h4>
-             {unreadCount > 0 && (
-                <button onClick={markAllAsRead} className="text-xs font-medium text-[#be342e] hover:underline">
-                  Marcar todas como lidas
-                </button>
-             )}
-           </div>
-           
-           <div className="max-h-[400px] overflow-y-auto scrollbar-hide py-2">
-             {notifications.length === 0 ? (
-               <div className="p-8 text-center text-sm text-slate-500 flex flex-col items-center">
-                 <Bell className="h-8 w-8 text-slate-200 mb-2" />
-                 <p>Nenhuma notificação.</p>
-               </div>
-             ) : (
-               notifications.map(notification => (
-                 <div 
-                    key={notification.id} 
-                    className={`px-4 py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group relative cursor-default ${!notification.read ? 'bg-blue-50/30' : ''}`}
-                 >
-                    <div className="flex gap-3">
-                      <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? 'bg-[#be342e]' : 'bg-slate-200'}`}></div>
-                      <div className="flex-1 space-y-1">
-                         <div className="flex justify-between items-start">
-                            <span className={`text-sm font-medium ${!notification.read ? 'text-slate-900' : 'text-slate-600'}`}>
-                              {notification.title}
-                            </span>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">{notification.time}</span>
-                         </div>
-                         <p className="text-xs text-slate-500 leading-relaxed pr-6">{notification.message}</p>
+        <div className="absolute right-0 z-50 mt-2 w-80 origin-top-right animate-in zoom-in-95 rounded-xl border border-slate-100 bg-white shadow-2xl duration-200 sm:w-96">
+          <div className="flex items-center justify-between rounded-t-xl border-b border-slate-50 bg-slate-50/50 p-4">
+            <h4 className="text-sm font-semibold text-slate-900">Notificacoes</h4>
+            {unreadCount > 0 && (
+              <button
+                onClick={() => setNotifications((prev) => prev.map((item) => ({ ...item, read: true })))}
+                className="text-xs font-medium text-[#be342e] hover:underline"
+              >
+                Marcar todas como lidas
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-[400px] overflow-y-auto py-2 scrollbar-hide">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center p-8 text-center text-sm text-slate-500">
+                <Bell className="mb-2 h-8 w-8 text-slate-200" />
+                <p>Nenhuma notificacao.</p>
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`group relative cursor-default border-b border-slate-50 px-4 py-3 transition-colors last:border-0 hover:bg-slate-50 ${!notification.read ? 'bg-blue-50/30' : ''}`}
+                >
+                  <div className="flex gap-3">
+                    <div className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${!notification.read ? 'bg-[#be342e]' : 'bg-slate-200'}`} />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-start justify-between">
+                        <span className={`text-sm font-medium ${!notification.read ? 'text-slate-900' : 'text-slate-600'}`}>
+                          {notification.title}
+                        </span>
+                        <span className="ml-2 whitespace-nowrap text-[10px] text-slate-400">{notification.time}</span>
                       </div>
+                      <p className="pr-6 text-xs leading-relaxed text-slate-500">{notification.message}</p>
                     </div>
-                    
-                    <button 
-                      onClick={(e) => deleteNotification(notification.id, e)}
-                      className="absolute right-2 top-2 p-1 text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                 </div>
-               ))
-             )}
-           </div>
-           <div className="p-2 border-t border-slate-50 bg-slate-50/50 rounded-b-xl text-center">
-             <button className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors">Ver histórico completo</button>
-           </div>
+                  </div>
+
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setNotifications((prev) => prev.filter((item) => item.id !== notification.id));
+                    }}
+                    className="absolute right-2 top-2 p-1 text-slate-300 opacity-0 transition-opacity hover:text-slate-500 group-hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="rounded-b-xl border-t border-slate-50 bg-slate-50/50 p-2 text-center">
+            <button className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-900">Ver historico completo</button>
+          </div>
         </div>
       )}
     </div>
@@ -128,35 +170,31 @@ const CreditLimitCard = () => {
   const used = 12400;
   const percentage = (used / limit) * 100;
 
-  // Determine color based on threshold (Green < 50%, Yellow < 80%, Red > 80%)
-  let barColor = "bg-green-500";
-  if (percentage > 80) barColor = "bg-red-500";
-  else if (percentage > 50) barColor = "bg-yellow-500";
+  let barColor = 'bg-green-500';
+  if (percentage > 80) barColor = 'bg-red-500';
+  else if (percentage > 50) barColor = 'bg-yellow-500';
 
   return (
-    <Card className="col-span-1 md:col-span-1 shadow-md border-t-4 border-t-[#be342e]">
-      <CardHeader className="bg-gradient-to-r from-slate-100 via-slate-50 to-white rounded-t-xl border-b border-slate-100/50">
-        <CardTitle className="flex justify-between items-center text-lg">
-          <span>Limite de Crédito</span>
+    <Card className="col-span-1 border-t-4 border-t-[#be342e] shadow-md md:col-span-1">
+      <CardHeader className="rounded-t-xl border-b border-slate-100/50 bg-gradient-to-r from-slate-100 via-slate-50 to-white">
+        <CardTitle className="flex items-center justify-between text-lg">
+          <span>Limite de Credito</span>
           <span className="text-sm font-normal text-slate-500">Atualizado agora</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 mt-2">
+        <div className="mt-2 space-y-2">
           <div className="flex justify-between text-sm font-medium">
             <span>Utilizado: R$ {used.toLocaleString('pt-BR')}</span>
             <span className="text-slate-500">Total: R$ {limit.toLocaleString('pt-BR')}</span>
           </div>
-          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-            <div 
-              className={`h-full transition-all duration-1000 ease-out ${barColor}`} 
-              style={{ width: `${percentage}%` }}
-            />
+          <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className={`h-full transition-all duration-1000 ease-out ${barColor}`} style={{ width: `${percentage}%` }} />
           </div>
-          <p className="text-xs text-slate-500 pt-1">
-            {100 - percentage < 10 ? 
-              "Atenção: Seu limite está próximo do fim." : 
-              "Você possui limite disponível para novas compras."}
+          <p className="pt-1 text-xs text-slate-500">
+            {100 - percentage < 10
+              ? 'Atencao: Seu limite esta proximo do fim.'
+              : 'Voce possui limite disponivel para novas compras.'}
           </p>
         </div>
       </CardContent>
@@ -164,33 +202,30 @@ const CreditLimitCard = () => {
   );
 };
 
-interface OrdersTableProps {
-  onNavigateToCheckout: () => void;
-}
-
-const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
+const OrdersTable: React.FC<{ onNavigateToCheckout: () => void }> = ({ onNavigateToCheckout }) => {
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
-      case OrderStatus.LIBERADO: return <Badge variant="success">Liberado</Badge>;
-      case OrderStatus.BLOQUEADO: return <Badge variant="destructive">Bloqueado</Badge>;
-      case OrderStatus.FATURADO: return <Badge variant="default">Faturado</Badge>; // Blueish/Dark
-      case OrderStatus.ABERTO: return <Badge variant="warning">Em Aberto</Badge>;
-      default: return <Badge>{status}</Badge>;
+      case OrderStatus.LIBERADO:
+        return <Badge variant="success">Liberado</Badge>;
+      case OrderStatus.BLOQUEADO:
+        return <Badge variant="destructive">Bloqueado</Badge>;
+      case OrderStatus.FATURADO:
+        return <Badge variant="default">Faturado</Badge>;
+      case OrderStatus.ABERTO:
+        return <Badge variant="warning">Em Aberto</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
 
-  const handleTrackOrder = (orderId: string) => {
-    alert(`Rastreamento do pedido ${orderId} aberto.`);
-  };
-
   return (
-    <Card className="col-span-1 md:col-span-2 shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-slate-100 via-slate-50 to-white rounded-t-xl border-b border-slate-100/50">
+    <Card className="col-span-1 shadow-sm md:col-span-2">
+      <CardHeader className="rounded-t-xl border-b border-slate-100/50 bg-gradient-to-r from-slate-100 via-slate-50 to-white">
         <CardTitle>Meus Pedidos Recentes</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <div className="relative w-full overflow-auto">
-          <table className="w-full caption-bottom text-sm text-left">
+          <table className="w-full caption-bottom text-left text-sm">
             <thead className="[&_tr]:border-b bg-slate-50/50">
               <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Nº Pedido (RCA)</th>
@@ -198,7 +233,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Itens</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor Total</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground text-right">Ações</th>
+                <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">Acoes</th>
               </tr>
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
@@ -211,14 +246,18 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
                   <td className="p-6 align-middle">{getStatusBadge(order.status)}</td>
                   <td className="p-6 align-middle text-right">
                     <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        className="h-8 text-xs text-slate-500 hover:text-slate-900 rounded-full"
-                        onClick={() => handleTrackOrder(order.id)}
+                      <Button
+                        variant="ghost"
+                        className="h-8 rounded-full text-xs text-slate-500 hover:text-slate-900"
+                        onClick={() => alert(`Rastreamento do pedido ${order.id} aberto.`)}
                       >
-                        <Truck className="w-3 h-3 mr-1" /> Rastrear
+                        <Truck className="mr-1 h-3 w-3" /> Rastrear
                       </Button>
-                      <Button variant="outline" className="h-8 text-xs rounded-full border-[#be342e] text-[#be342e] hover:bg-blue-50" onClick={onNavigateToCheckout}>
+                      <Button
+                        variant="outline"
+                        className="h-8 rounded-full border-[#be342e] text-xs text-[#be342e] hover:bg-blue-50"
+                        onClick={onNavigateToCheckout}
+                      >
                         Repetir
                       </Button>
                     </div>
@@ -227,9 +266,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
               ))}
             </tbody>
           </table>
-          <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2 text-xs text-slate-400 bg-slate-50/30 rounded-b-xl">
-             <ShieldCheck className="w-4 h-4 text-[#be342e]" />
-             <span>Transações protegidas por ClearSale Antifraude</span>
+          <div className="flex items-center justify-end gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50/30 p-4 text-xs text-slate-400">
+            <ShieldCheck className="h-4 w-4 text-[#be342e]" />
+            <span>Transacoes protegidas por ClearSale Antifraude</span>
           </div>
         </div>
       </CardContent>
@@ -240,28 +279,19 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ onNavigateToCheckout }) => {
 const FinancialTitles = () => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handleGetBoleto = (id: string) => {
-    setLoadingId(id);
-    // Simulation of n8n webhook call latency -> Itaú API
-    setTimeout(() => {
-      setLoadingId(null);
-      alert(`[INTEGRAÇÃO ITAÚ]\nSolicitação enviada via n8n.\nBoleto registrado no Itaú Shopline.\nPDF gerado com sucesso.`);
-    }, 1500);
-  };
-
   return (
-    <Card className="col-span-1 md:col-span-3 shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-slate-100 via-slate-50 to-white rounded-t-xl border-b border-slate-100/50">
+    <Card className="col-span-1 shadow-sm md:col-span-3">
+      <CardHeader className="rounded-t-xl border-b border-slate-100/50 bg-gradient-to-r from-slate-100 via-slate-50 to-white">
         <CardTitle className="flex items-center gap-2">
-            Central Financeira
-            <span className="text-xs font-normal text-slate-400 ml-2 flex items-center gap-1">
-                <CreditCard className="w-3 h-3" /> Integração Banco Itaú
-            </span>
+          Central Financeira
+          <span className="ml-2 flex items-center gap-1 text-xs font-normal text-slate-400">
+            <CreditCard className="h-3 w-3" /> Integracao Banco Itau
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-         <div className="relative w-full overflow-auto">
-          <table className="w-full caption-bottom text-sm text-left">
+        <div className="relative w-full overflow-auto">
+          <table className="w-full caption-bottom text-left text-sm">
             <thead className="[&_tr]:border-b bg-slate-50/50">
               <tr className="border-b">
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Documento</th>
@@ -269,7 +299,7 @@ const FinancialTitles = () => {
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Banco</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground text-right">2ª Via</th>
+                <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">2a Via</th>
               </tr>
             </thead>
             <tbody>
@@ -279,27 +309,35 @@ const FinancialTitles = () => {
                   <td className="p-6 align-middle">{new Date(title.due_date).toLocaleDateString('pt-BR')}</td>
                   <td className="p-6 align-middle">R$ {title.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="p-6 align-middle">
-                     {title.bank_data?.bank_name === 'ITAÚ' ? (
-                         <div className="flex items-center gap-1">
-                             <span className="w-2 h-2 rounded-full bg-orange-500"></span> Itaú
-                         </div>
-                     ) : 'Outros'}
+                    {title.bank_data?.bank_name === 'ITAÚ' ? (
+                      <div className="flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full bg-orange-500" /> Itau
+                      </div>
+                    ) : (
+                      'Outros'
+                    )}
                   </td>
                   <td className="p-6 align-middle">
-                    {title.status === 'PAID' && <div className="flex items-center text-green-600"><CheckCircle className="w-4 h-4 mr-1"/> Pago</div>}
-                    {title.status === 'OVERDUE' && <div className="flex items-center text-red-600"><AlertCircle className="w-4 h-4 mr-1"/> Vencido</div>}
-                    {title.status === 'PENDING' && <div className="flex items-center text-yellow-600"><Clock className="w-4 h-4 mr-1"/> A Vencer</div>}
+                    {title.status === 'PAID' && <div className="flex items-center text-green-600"><CheckCircle className="mr-1 h-4 w-4" /> Pago</div>}
+                    {title.status === 'OVERDUE' && <div className="flex items-center text-red-600"><AlertCircle className="mr-1 h-4 w-4" /> Vencido</div>}
+                    {title.status === 'PENDING' && <div className="flex items-center text-yellow-600"><Clock className="mr-1 h-4 w-4" /> A Vencer</div>}
                   </td>
                   <td className="p-6 align-middle text-right">
                     {title.status !== 'PAID' && (
-                      <Tooltip content="Gerar 2ª via Itaú (API)">
-                        <Button 
-                            variant="ghost" 
-                            className="h-8 w-8 p-0 rounded-full" 
-                            onClick={() => handleGetBoleto(title.id)}
-                            disabled={loadingId === title.id}
+                      <Tooltip content="Gerar 2a via Itau (API)">
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 rounded-full p-0"
+                          onClick={() => {
+                            setLoadingId(title.id);
+                            setTimeout(() => {
+                              setLoadingId(null);
+                              alert('[INTEGRACAO ITAU]\nSolicitacao enviada via n8n.\nBoleto registrado no Itau Shopline.\nPDF gerado com sucesso.');
+                            }, 1500);
+                          }}
+                          disabled={loadingId === title.id}
                         >
-                            {loadingId === title.id ? <RefreshCw className="h-4 w-4 animate-spin"/> : <FileText className="h-4 w-4" />}
+                          {loadingId === title.id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                         </Button>
                       </Tooltip>
                     )}
@@ -314,37 +352,250 @@ const FinancialTitles = () => {
   );
 };
 
-interface ClientDashboardProps {
-  currentUser: AuthUser | null;
-  onNavigateToHome: () => void;
-  onNavigateToCheckout: () => void;
-}
+const ProfileField = ({
+  label,
+  value,
+  onChange,
+  icon: Icon,
+  disabled = false,
+  type = 'text',
+  placeholder,
+  multiline = false
+}: {
+  label: string;
+  value: string;
+  onChange?: (value: string) => void;
+  icon: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
+  type?: string;
+  placeholder?: string;
+  multiline?: boolean;
+}) => {
+  const sharedClassName = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all ${
+    disabled
+      ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500'
+      : 'border-slate-200 bg-white text-slate-900 focus:border-[#be342e] focus:ring-4 focus:ring-[#be342e]/10'
+  }`;
+
+  return (
+    <label className="space-y-2">
+      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</span>
+      <div className="relative">
+        <Icon className={`absolute left-3 top-3.5 h-4 w-4 ${disabled ? 'text-slate-400' : 'text-[#be342e]'}`} />
+        {multiline ? (
+          <textarea
+            value={value}
+            onChange={(event) => onChange?.(event.target.value)}
+            disabled={disabled}
+            placeholder={placeholder}
+            rows={4}
+            className={`${sharedClassName} min-h-[112px] resize-none pl-10`}
+          />
+        ) : (
+          <input
+            type={type}
+            value={value}
+            onChange={(event) => onChange?.(event.target.value)}
+            disabled={disabled}
+            placeholder={placeholder}
+            className={`${sharedClassName} h-12 pl-10`}
+          />
+        )}
+      </div>
+    </label>
+  );
+};
+
+const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserUpdate?: (user: AuthUser) => void }> = ({
+  currentUser,
+  onCurrentUserUpdate
+}) => {
+  const [formData, setFormData] = useState<ClientProfileFormData>(() => buildInitialProfileData(currentUser));
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+
+  useEffect(() => {
+    setFormData(buildInitialProfileData(currentUser));
+    setSaveStatus('idle');
+    setFeedbackMessage('');
+  }, [currentUser]);
+
+  const updateField = (field: keyof ClientProfileFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setSaveStatus('idle');
+    setFeedbackMessage('');
+  };
+
+  const handleSave = () => {
+    if (!currentUser) {
+      setSaveStatus('error');
+      setFeedbackMessage('Nao foi possivel identificar o usuario logado.');
+      return;
+    }
+
+    setSaveStatus('saving');
+    setFeedbackMessage('Salvando dados...');
+
+    window.setTimeout(() => {
+      try {
+        const updatedUser = updateStoredUser(currentUser.id, {
+          companyName: formData.nomeFantasia || currentUser.companyName,
+          tradeName: formData.nomeFantasia,
+          legalName: formData.razaoSocial,
+          phone: formData.telefone1,
+          phone2: formData.telefone2,
+          email: formData.email1,
+          email2: formData.email2,
+          fullAddress: formData.enderecoCompleto,
+          referencePoint: formData.pontoReferencia,
+        });
+
+        onCurrentUserUpdate?.(updatedUser);
+        setSaveStatus('saved');
+        setFeedbackMessage('Dados salvos com sucesso no armazenamento local.');
+      } catch (error) {
+        setSaveStatus('error');
+        setFeedbackMessage(error instanceof Error ? error.message : 'Falha ao salvar os dados no armazenamento local.');
+      }
+    }, 1200);
+  };
+
+  return (
+    <Card className="overflow-hidden border-slate-200 shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#fff4f3] via-white to-slate-50">
+        <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#be342e] text-white">
+            <Building2 className="h-5 w-5" />
+          </span>
+          Dados do Cliente
+        </CardTitle>
+        <p className="text-sm text-slate-500">
+          Mantenha os contatos e o endereco da empresa atualizados para agilizar atendimento e entrega.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6 p-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <ProfileField label="CNPJ" value={formData.cnpj} icon={Building2} disabled />
+          <ProfileField label="Nome Fantasia" value={formData.nomeFantasia} icon={Building2} disabled />
+          <ProfileField label="Razao Social" value={formData.razaoSocial} icon={Building2} disabled />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ProfileField label="Telefone 1" value={formData.telefone1} onChange={(value) => updateField('telefone1', value)} icon={Phone} placeholder="(00) 0000-0000" />
+          <ProfileField label="Telefone 2" value={formData.telefone2} onChange={(value) => updateField('telefone2', value)} icon={Phone} placeholder="(00) 00000-0000" />
+          <ProfileField label="Email 1" value={formData.email1} onChange={(value) => updateField('email1', value)} icon={Mail} type="email" placeholder="compras@empresa.com.br" />
+          <ProfileField label="Email 2" value={formData.email2} onChange={(value) => updateField('email2', value)} icon={Mail} type="email" placeholder="financeiro@empresa.com.br" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[2fr_1fr]">
+          <ProfileField
+            label="Endereco Completo"
+            value={formData.enderecoCompleto}
+            onChange={(value) => updateField('enderecoCompleto', value)}
+            icon={MapPin}
+            multiline
+            placeholder="Rua, numero, bairro, cidade, estado e CEP"
+          />
+          <ProfileField
+            label="Ponto de Referencia"
+            value={formData.pontoReferencia}
+            onChange={(value) => updateField('pontoReferencia', value)}
+            icon={MapPin}
+            multiline
+            placeholder="Ex.: Portao lateral, esquina com..."
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 md:flex-row md:items-center md:justify-between">
+          <p className="text-sm text-slate-500">
+            Os dados fiscais ficam bloqueados nesta tela. Para alteracoes cadastrais, fale com seu consultor Epoca.
+          </p>
+          <div className="flex items-center gap-3">
+            {saveStatus !== 'idle' && (
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-bold ${
+                  saveStatus === 'saved'
+                    ? 'bg-green-100 text-green-700'
+                    : saveStatus === 'saving'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {feedbackMessage}
+              </span>
+            )}
+            <Button
+              className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
+              onClick={handleSave}
+              disabled={saveStatus === 'saving'}
+            >
+              {saveStatus === 'saving' ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Salvar dados
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ClientHeader: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateToHome, onNavigateToCheckout }) => (
+  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 className="text-3xl font-bold tracking-tight text-slate-900">Area do Cliente</h2>
+      <p className="text-muted-foreground">Bem-vindo de volta, {currentUser?.companyName || 'Cliente B2B'}.</p>
+    </div>
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full text-[#be342e] hover:bg-blue-50">
+        <Store className="mr-2 h-4 w-4" /> Ir para Loja
+      </Button>
+      <NotificationCenter />
+      <Button variant="outline" className="rounded-full">Falar com Vendedor</Button>
+      <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+        <ShoppingCart className="mr-2 h-4 w-4" /> Novo Pedido
+      </Button>
+    </div>
+  </div>
+);
 
 const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateToHome, onNavigateToCheckout }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Área do Cliente</h2>
-          <p className="text-muted-foreground">Bem-vindo de volta, {currentUser?.companyName || 'Cliente B2B'}.</p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <Button variant="ghost" onClick={onNavigateToHome} className="text-[#be342e] hover:bg-blue-50 rounded-full">
-            <Store className="w-4 h-4 mr-2" /> Ir para Loja
-          </Button>
-          <NotificationCenter />
-          <Button variant="outline" className="rounded-full">Falar com Vendedor</Button>
-          <Button className="rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white" onClick={onNavigateToCheckout}>
-            <ShoppingCart className="w-4 h-4 mr-2" /> Novo Pedido
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <CreditLimitCard />
         <OrdersTable onNavigateToCheckout={onNavigateToCheckout} />
         <FinancialTitles />
       </div>
+    </div>
+  );
+};
+
+export const ClientProfilePage: React.FC<ClientDashboardProps> = ({
+  currentUser,
+  onNavigateToHome,
+  onNavigateToCheckout,
+  onCurrentUserUpdate
+}) => {
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+      <ClientProfileCard currentUser={currentUser} onCurrentUserUpdate={onCurrentUserUpdate} />
     </div>
   );
 };
