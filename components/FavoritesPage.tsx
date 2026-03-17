@@ -4,6 +4,7 @@ import ProductImage from './ui/ProductImage';
 import { ArrowLeft, Heart, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
+import Logo from "../lib/images/logo1.webp";
 
 interface FavoritesPageProps {
   currentUser: AuthUser | null;
@@ -45,7 +46,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
               <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
             </Button>
             <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-              <img className="h-12" src="./lib/images/logo1.webp" />
+              <img className="h-12" src={Logo} />
             </div>
           </div>
 

@@ -9,6 +9,7 @@ import { AuthUser, CartItem } from '../types';
 import bannerTopo1 from '../lib/images/banner_topo_1.webp';
 import bannerTopo2 from '../lib/images/banner_topo_2.webp';
 import bannerTopo3 from '../lib/images/banner_topo_3.webp';
+import Logo from "../lib/images/logo1.webp";
 
 const DEFAULT_ZIP_CODE = '32150-240';
 
@@ -538,7 +539,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex items-center gap-1 cursor-pointer shrink-0" onClick={() => window.location.reload()}>
                 {/* <span className="text-2xl font-bold tracking-tight">Ã‰poca</span>
                 <Zap className="w-6 h-6 text-[#FFC220] fill-[#FFC220]" /> */}
-                <img className="h-12" src="./lib/images/logo1.webp"/>
+                <img className="h-12" src={Logo}/>
             </div>
 
             {/* Department Trigger */}

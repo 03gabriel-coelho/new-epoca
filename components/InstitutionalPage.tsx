@@ -5,6 +5,7 @@ import { ArrowLeft, Leaf, ShieldCheck, Target, Heart, History, Play, Zap, Check 
 import { motion } from 'framer-motion';
 import { mockInstitutionalVideo } from '../lib/mockData';
 import { AuthUser } from '../types';
+import Logo from "../lib/images/logo1.webp";
 
 interface InstitutionalPageProps {
   currentUser: AuthUser | null;
@@ -26,7 +27,7 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ currentUser, onNa
              </Button>
              
              <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-               <img className="h-12" src="./lib/images/logo1.webp"/>
+               <img className="h-12" src={Logo}/>
              </div>
           </div>
           <Button onClick={onNavigateToClient} className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full font-bold">

@@ -6,6 +6,7 @@ import PixBadge from './ui/PixBadge';
 import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, Heart, User, Minus, Plus } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem, Product } from '../types';
+import Logo from "../lib/images/logo1.webp";
 
 interface ProductsPageProps {
   currentUser: AuthUser | null;
@@ -200,7 +201,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
             </Button>
 
             <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-              <img className="h-12" src="./lib/images/logo1.webp" />
+              <img className="h-12" src={Logo} />
             </div>
           </div>
 

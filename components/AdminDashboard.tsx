@@ -13,6 +13,7 @@ import {
   LayoutDashboard, ShoppingBag, Users, FileText, Settings, LogOut,
   TrendingUp, AlertTriangle, ShieldCheck, Activity, Server, CreditCard, Video, Plus, UserPlus, Eye, Globe
 } from 'lucide-react';
+import Logo from "../lib/images/logo1.webp";
 
 const COLORS = ['#059669', '#10b981', '#34d399', '#6ee7b7'];
 
@@ -555,7 +556,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string
   return (
     <div className="w-64 bg-white border-r border-slate-200 flex-col hidden lg:flex h-full">
        <div className="p-6">
-          <img className="h-12" src="./lib/images/logo1.webp"/>
+          <img className="h-12" src={Logo}/>
        </div>
        <nav className="flex-1 px-4 space-y-1">
           {menuItems.map((item) => (
@@ -899,8 +900,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
              </div>
              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold">CatÃ¡logo de Produtos</h2>
-                  <p className="text-sm text-slate-500">Busque por nome, cÃ³digo, departamento, fabricante, marca ou EAN.</p>
+                  <h2 className="text-2xl font-bold">Catálogo de Produtos</h2>
+                  <p className="text-sm text-slate-500">Busque por nome, código, departamento, fabricante, marca ou EAN.</p>
                 </div>
                 <div className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row lg:items-center">
                   <div className="relative w-full lg:w-[420px]">

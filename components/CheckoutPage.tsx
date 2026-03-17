@@ -15,6 +15,7 @@ import {
   getComboSummaryLabel,
   mapComboItemsWithProducts,
 } from '../lib/comboUtils';
+import Logo from "../lib/images/logo1.webp";
 
 const buildAddressLabel = (currentUser: AuthUser | null) => {
   if (!currentUser) {
@@ -771,7 +772,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="rounded-xl flex items-center bg-[#be342e] p-2 gap-1 cursor-pointer" onClick={onNavigateToHome}>
-              <img className="h-12" src="./lib/images/logo1.webp" />
+              <img className="h-12" src={Logo} />
             </div>
             <div className="h-6 w-px bg-slate-300 mx-2 hidden md:block"></div>
             <h1 className="text-lg font-bold text-slate-600 hidden md:block">Checkout Seguro</h1>

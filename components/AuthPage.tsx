@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Lock, Building2, Mail, Phone, Key, ShieldCheck, User, Zap } from 'lucide-react';
 import { loginStoredUser, registerStoredUser } from '../lib/authStorage';
 import { AuthUser } from '../types';
+import Logo from "../lib/images/logo1.webp";
 
 interface AuthPageProps {
   onLoginSuccess: (user: AuthUser) => void;
@@ -219,7 +220,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
       <header className="bg-[#be342e] text-white shadow-md flex-shrink-0">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-            <img className="h-12" src="./lib/images/logo1.webp" />
+            <img className="h-12" src={Logo} />
           </div>
           <Button variant="primary" onClick={onNavigateToHome}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Loja

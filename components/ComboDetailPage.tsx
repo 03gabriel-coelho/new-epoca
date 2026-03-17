@@ -20,6 +20,7 @@ import {
   getSelectionGroupQuantity,
   isComboSelectionComplete
 } from '../lib/comboUtils';
+import Logo from "../lib/images/logo1.webp";
 
 interface ComboDetailPageProps {
   comboId: string;
@@ -95,7 +96,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
               <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
             </Button>
             <div className="flex cursor-pointer items-center gap-1" onClick={onNavigateToHome}>
-              <img className="h-12" src="./lib/images/logo1.webp" />
+              <img className="h-12" src={Logo} />
             </div>
           </div>
 
