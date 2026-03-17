@@ -39,6 +39,8 @@ const getBestSellerScore = (product: Product) => {
   return stockWeight + codeWeight;
 };
 
+const PRODUCT_BATCH_SIZE = 24;
+
 const ProductsPage: React.FC<ProductsPageProps> = ({
   currentUser,
   onNavigateToHome,
@@ -59,6 +61,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   const [searchScope, setSearchScope] = useState('ALL');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [visibleCountByContext, setVisibleCountByContext] = useState<Record<string, number>>({});
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -127,6 +131,54 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
         return 0;
     }
   });
+
+  const currentDisplayKey = searchTerm
+    ? `search:${searchScope}:${searchTerm.trim().toLowerCase()}`
+    : `department:${selectedCategory}`;
+
+  const visibleProductCount = visibleCountByContext[currentDisplayKey] ?? PRODUCT_BATCH_SIZE;
+  const visibleProducts = sortedProducts.slice(0, visibleProductCount);
+
+  useEffect(() => {
+    setVisibleCountByContext((prev) => {
+      if (prev[currentDisplayKey]) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [currentDisplayKey]: PRODUCT_BATCH_SIZE
+      };
+    });
+  }, [currentDisplayKey]);
+
+  useEffect(() => {
+    const loadTarget = loadMoreRef.current;
+
+    if (!loadTarget || visibleProductCount >= sortedProducts.length) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) {
+          return;
+        }
+
+        setVisibleCountByContext((prev) => ({
+          ...prev,
+          [currentDisplayKey]: Math.min((prev[currentDisplayKey] ?? PRODUCT_BATCH_SIZE) + PRODUCT_BATCH_SIZE, sortedProducts.length)
+        }));
+      },
+      {
+        rootMargin: '320px 0px'
+      }
+    );
+
+    observer.observe(loadTarget);
+
+    return () => observer.disconnect();
+  }, [currentDisplayKey, sortedProducts.length, visibleProductCount]);
 
   const handleSuggestionClick = (productName: string) => {
     setSearchTerm(productName);
@@ -304,7 +356,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                 )}
               </h1>
               <p className="text-slate-500 text-sm flex items-center gap-2">
-                {sortedProducts.length} itens encontrados
+                Mostrando {visibleProducts.length} de {sortedProducts.length} itens
                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                 Sync ERP WinThor
               </p>
@@ -324,76 +376,86 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
           </div>
 
           {sortedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {sortedProducts.map((product) => {
-                const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
-                const isFavorite = favoriteIds.includes(product.id);
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {visibleProducts.map((product) => {
+                  const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
+                  const isFavorite = favoriteIds.includes(product.id);
 
-                return (
-                  <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
-                    <div className="h-44 mb-4 relative flex items-center justify-center cursor-pointer" onClick={() => onProductClick(product.id)}>
-                      <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <ProductImage
-                          src={product.image_path}
-                          alt={product.description}
-                          className="w-full h-full"
-                          imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <button
-                        className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-300 hover:text-red-500'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(product.id);
-                        }}
-                      >
-                        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
-                      </button>
-                    </div>
-
-                    <div className="mt-auto">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
-                        <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
-                      </div>
-                      <div className="mt-1">
-                        <PixBadge label="no PIX" />
-                      </div>
-                    </div>
-
-                    <a className="text-sm text-slate-700 hover:underline line-clamp-2 mt-2 mb-4 cursor-pointer min-h-[40px]" onClick={() => onProductClick(product.id)}>
-                      {product.description}
-                    </a>
-
-                    <p className="text-[10px] text-slate-400 mb-3 font-mono">COD: {product.winthor_codprod}</p>
-
-                    {quantityInCart > 0 ? (
-                      <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                  return (
+                    <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
+                      <div className="h-44 mb-4 relative flex items-center justify-center cursor-pointer" onClick={() => onProductClick(product.id)}>
+                        <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <ProductImage
+                            src={product.image_path}
+                            alt={product.description}
+                            className="w-full h-full"
+                            imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
                         <button
-                          onClick={() => removeFromCart(product.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
-                          aria-label={`Remover uma unidade de ${product.description}`}
+                          className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-300 hover:text-red-500'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(product.id);
+                          }}
                         >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
-                        <button
-                          onClick={() => addToCart(product.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
-                          aria-label={`Adicionar uma unidade de ${product.description}`}
-                        >
-                          <Plus className="w-4 h-4" />
+                          <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                         </button>
                       </div>
-                    ) : (
-                      <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] font-bold h-9 text-xs transition-colors">
-                        Adicionar
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+
+                      <div className="mt-auto">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
+                          <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
+                        </div>
+                        <div className="mt-1">
+                          <PixBadge label="no PIX" />
+                        </div>
+                      </div>
+
+                      <a className="text-sm text-slate-700 hover:underline line-clamp-2 mt-2 mb-4 cursor-pointer min-h-[40px]" onClick={() => onProductClick(product.id)}>
+                        {product.description}
+                      </a>
+
+                      <p className="text-[10px] text-slate-400 mb-3 font-mono">COD: {product.winthor_codprod}</p>
+
+                      {quantityInCart > 0 ? (
+                        <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                          <button
+                            onClick={() => removeFromCart(product.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                            aria-label={`Remover uma unidade de ${product.description}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
+                          <button
+                            onClick={() => addToCart(product.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                            aria-label={`Adicionar uma unidade de ${product.description}`}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] font-bold h-9 text-xs transition-colors">
+                          Adicionar
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {visibleProductCount < sortedProducts.length && (
+                <div ref={loadMoreRef} className="flex items-center justify-center py-6">
+                  <span className="rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-500 shadow-sm">
+                    Carregando mais produtos...
+                  </span>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">

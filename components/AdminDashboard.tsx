@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
@@ -590,13 +590,16 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => {
+  const PRODUCT_BATCH_SIZE = 80;
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImageDraft, setProductImageDraft] = useState('');
+  const [visibleProductCount, setVisibleProductCount] = useState(PRODUCT_BATCH_SIZE);
   const bulkImageInputRef = useRef<HTMLInputElement | null>(null);
+  const productLoadMoreRef = useRef<HTMLDivElement | null>(null);
   const [onDemandUploadSummary, setOnDemandUploadSummary] = useState<null | {
     totalFiles: number;
     matchedFiles: number;
@@ -640,6 +643,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
       return searchableFields.some((value) => value.includes(query));
   });
+
+  const visibleProducts = filteredProducts.slice(0, visibleProductCount);
+
+  useEffect(() => {
+      setVisibleProductCount(PRODUCT_BATCH_SIZE);
+  }, [productSearchTerm, activeTab]);
+
+  useEffect(() => {
+      if (activeTab !== 'products') return;
+      if (visibleProductCount >= filteredProducts.length) return;
+      if (!productLoadMoreRef.current) return;
+
+      const observer = new IntersectionObserver(
+          (entries) => {
+              const firstEntry = entries[0];
+              if (firstEntry?.isIntersecting) {
+                  setVisibleProductCount((prev) => Math.min(prev + PRODUCT_BATCH_SIZE, filteredProducts.length));
+              }
+          },
+          { rootMargin: '320px 0px' }
+      );
+
+      observer.observe(productLoadMoreRef.current);
+      return () => observer.disconnect();
+  }, [activeTab, filteredProducts.length, visibleProductCount]);
 
   const handleCreateClient = (e: React.FormEvent) => {
       e.preventDefault();
@@ -911,7 +939,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
              <Card>
                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 text-sm">
                   <span className="font-medium text-slate-500">
-                    {filteredProducts.length} produto{filteredProducts.length === 1 ? '' : 's'} encontrado{filteredProducts.length === 1 ? '' : 's'}
+                    Mostrando {visibleProducts.length} de {filteredProducts.length} produto{filteredProducts.length === 1 ? '' : 's'}
                   </span>
                   {productSearchTerm && (
                     <span className="text-xs text-slate-400">
@@ -931,7 +959,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredProducts.map(product => (
+                      {visibleProducts.map(product => (
                         <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="px-6 py-3 font-mono text-slate-500">{product.winthor_codprod}</td>
                           <td className="px-6 py-3 font-medium text-slate-900 flex items-center gap-3">
@@ -961,6 +989,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                   </table>
                 </CardContent>
              </Card>
+             {visibleProductCount < filteredProducts.length && (
+               <div ref={productLoadMoreRef} className="flex items-center justify-center py-4">
+                 <span className="rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-500 shadow-sm">
+                   Carregando mais produtos...
+                 </span>
+               </div>
+             )}
           </div>
         );
       case 'content':
