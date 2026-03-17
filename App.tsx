@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
-import ClientDashboard, { ClientProfilePage } from './components/ClientDashboard';
+import ClientDashboard, { ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
 import ProductsPage from './components/ProductsPage';
@@ -14,7 +14,7 @@ import ProductDetailPage from './components/ProductDetailPage';
 import ComboDetailPage from './components/ComboDetailPage';
 import FavoritesPage from './components/FavoritesPage';
 import { Button } from './components/ui/Layout';
-import { AuthUser, CartItem } from './types';
+import { AuthUser, CartItem, StoredOrder } from './types';
 import { clearStoredSession, getStoredSession } from './lib/authStorage';
 import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage';
 import { mockCombos } from './lib/mockCombos';
@@ -287,6 +287,16 @@ const App = () => {
     navigate(`/produto/${productId}`);
   };
 
+  const handleNavigateToOrders = () => {
+    if (isLoggedIn) {
+      navigate('/cliente/pedidos');
+      return;
+    }
+
+    setNextPathAfterLogin('/cliente/pedidos');
+    navigate('/auth');
+  };
+
   const handleComboClick = (comboId: string) => {
     navigate(`/combo/${comboId}`);
   };
@@ -320,6 +330,10 @@ const App = () => {
 
   const handleCurrentUserUpdate = (user: AuthUser) => {
     setCurrentUser(user);
+  };
+
+  const handleOrderPlaced = (_order: StoredOrder) => {
+    setCart([]);
   };
 
   const ProductDetailRoute = () => {
@@ -391,7 +405,14 @@ const App = () => {
           >
             Dados do Cliente
           </NavLink>
-          <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Meus Pedidos</a>
+          <NavLink
+            to="/cliente/pedidos"
+            className={({ isActive }) =>
+              `block rounded-md px-4 py-2 transition-colors ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-800'}`
+            }
+          >
+            Meus Pedidos
+          </NavLink>
           <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Financeiro</a>
           <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Catalogo</a>
         </nav>
@@ -507,10 +528,13 @@ const App = () => {
           element={
             isLoggedIn ? (
               <CheckoutPage
+                currentUser={currentUser}
                 cart={cart}
                 addToCart={addToCart}
                 removeFromCart={removeFromCart}
                 onNavigateToHome={navigateToHome}
+                onNavigateToOrders={handleNavigateToOrders}
+                onOrderPlaced={handleOrderPlaced}
               />
             ) : (
               <Navigate to="/auth" replace />
@@ -534,6 +558,17 @@ const App = () => {
             path="dados"
             element={
               <ClientProfilePage
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/checkout')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+          <Route
+            path="pedidos"
+            element={
+              <ClientOrdersPage
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/checkout')}

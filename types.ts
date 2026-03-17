@@ -101,6 +101,29 @@ export interface Order {
   fraud_analysis?: FraudAnalysis;
 }
 
+export type CheckoutPaymentMethod = 'CREDIT_CARD' | 'TWO_CARDS' | 'PIX' | 'BOLETO';
+
+export interface StoredOrderItem {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  description: string;
+  image_path: string;
+  winthor_codprod: number;
+}
+
+export interface StoredOrder extends Order {
+  customer_id: string;
+  company_name: string;
+  address: string;
+  payment_method: CheckoutPaymentMethod;
+  freight_cost: number;
+  combo_savings_total: number;
+  payment_adjustment_value: number;
+  items: StoredOrderItem[];
+  tracking_message: string;
+}
+
 export interface BankIntegration {
   bank_name: 'ITAÚ' | 'BRADESCO' | 'SANTANDER';
   registration_id: string;

@@ -810,7 +810,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     <Badge variant="brand" className="mb-2 bg-white">Campanha Sazonal</Badge>
                     <h3 className="text-2xl font-bold mb-2">Especial de Páscoa</h3>
                     <p className="mb-6 text-slate-600 max-w-xs">Reforce bomboniere e mercearia com itens de alto giro para a Semana Santa.</p>
-                    <Button onClick={onNavigateToProducts} className="rounded-full text-[#be342e] bg-white text-slate-900 hover:bg-slate-100">Montar Pedido</Button>
+                    <Button onClick={onNavigateToProducts} variant="primary">Montar Pedido</Button>
                  </div>
                  <img src="https://placehold.co/420x420/e6f1fc/be342e?text=Páscoa" className="absolute bottom-0 right-0 w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:scale-110 transition-transform" />
             </div>
@@ -819,7 +819,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     <Badge variant="warning" className="mb-2 border-none">Abastecimento Inteligente</Badge>
                     <h3 className="text-2xl font-bold mb-2">Reposicao de Alto Giro</h3>
                     <p className="mb-6 text-slate-300 max-w-xs">Mercearia, limpeza e perfumaria com condicoes comerciais para recompra rapida.</p>
-                    <Button onClick={onNavigateToProducts} className="rounded-full bg-[#FFC220] text-slate-900 hover:bg-yellow-400 border-none">Ver Departamentos</Button>
+                    <Button onClick={onNavigateToProducts}>Ver Departamentos</Button>
                  </div>
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
             </div>

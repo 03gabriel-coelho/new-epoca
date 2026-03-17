@@ -4,7 +4,8 @@ import ProductImage from './ui/ProductImage';
 import { CreditCard, Barcode, MapPin, ShieldCheck, CheckCircle, AlertCircle, Plus, Trash2, Minus, ShoppingCart, Loader2, Zap, Copy, QrCode, Gift, Tags, Percent } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { mockCombos } from '../lib/mockCombos';
-import { CartItem } from '../types';
+import { AuthUser, CartItem, CheckoutPaymentMethod, OrderStatus, StoredOrder } from '../types';
+import { createStoredOrder } from '../lib/ordersStorage';
 import {
   getAppliedComboQualifyingItemsFromCart,
   getAppliedComboRewardItemsFromCart,
@@ -15,25 +16,57 @@ import {
   mapComboItemsWithProducts,
 } from '../lib/comboUtils';
 
+const buildAddressLabel = (currentUser: AuthUser | null) => {
+  if (!currentUser) {
+    return '';
+  }
+
+  const streetLine = [currentUser.street, currentUser.addressNumber].filter(Boolean).join(', ');
+  const complement = currentUser.addressComplement ? ` - ${currentUser.addressComplement}` : '';
+  const cityLine = [currentUser.city, currentUser.state].filter(Boolean).join(' - ');
+  const zipCode = currentUser.zipCode ? `, ${currentUser.zipCode}` : '';
+  const reference = currentUser.referencePoint ? ` (${currentUser.referencePoint})` : '';
+
+  return `${streetLine}${complement}${streetLine && cityLine ? ', ' : ''}${cityLine}${zipCode}${reference}`.trim();
+};
+
 interface CheckoutPageProps {
   onNavigateToHome: () => void;
+  onNavigateToOrders: () => void;
+  currentUser: AuthUser | null;
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  onOrderPlaced: (order: StoredOrder) => void;
 }
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, addToCart, removeFromCart }) => {
+const CheckoutPage: React.FC<CheckoutPageProps> = ({
+  onNavigateToHome,
+  onNavigateToOrders,
+  currentUser,
+  cart,
+  addToCart,
+  removeFromCart,
+  onOrderPlaced
+}) => {
   const [step, setStep] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'TWO_CARDS' | 'PIX' | 'BOLETO'>('CREDIT_CARD');
-  const [cep, setCep] = useState('');
-  const [freightCost, setFreightCost] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('PIX');
   const [address, setAddress] = useState<string | null>(null);
-  const [loadingFreight, setLoadingFreight] = useState(false);
-  const [freightError, setFreightError] = useState('');
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    zipCode: '',
+    street: '',
+    number: '',
+    complement: '',
+    city: '',
+    state: '',
+    referencePoint: '',
+  });
   const [card1Amount, setCard1Amount] = useState('');
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState<StoredOrder | null>(null);
 
   const productSubtotal = cart.reduce((acc, item) => {
     const product = mockProducts.find(p => p.id === item.product_id);
@@ -103,7 +136,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
   const displayItemCount = cart.reduce((total, item) => total + getDisplayQuantity(item), 0);
 
   const comboSavingsTotal = appliedCombos.reduce((total, combo) => total + combo.savingsValue, 0);
-  const pixTotal = Math.max(productSubtotal - comboSavingsTotal, 0) + freightCost;
+  const pixTotal = Math.max(productSubtotal - comboSavingsTotal, 0);
   const paymentAdjustmentRate =
     paymentMethod === 'CREDIT_CARD' ? 0.035 :
     paymentMethod === 'TWO_CARDS' ? 0.045 :
@@ -129,79 +162,42 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
     setIsProcessingPix(false);
   }, [paymentMethod, paymentAdjustedTotal]);
 
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    const initialForm = {
+      zipCode: currentUser.zipCode || '',
+      street: currentUser.street || '',
+      number: currentUser.addressNumber || '',
+      complement: currentUser.addressComplement || '',
+      city: currentUser.city || '',
+      state: currentUser.state || '',
+      referencePoint: currentUser.referencePoint || '',
+    };
+
+    setAddressForm(initialForm);
+    setAddress(buildAddressLabel(currentUser));
+  }, [currentUser]);
+
   const card2Amount = (paymentAdjustedTotal - (parseFloat(card1Amount) || 0)).toFixed(2);
   const pixCode = `00020126580014BR.GOV.BCB.PIX0136epoca-b2b-${cart.length || 1}-${pixTotal.toFixed(2).replace('.', '')}520400005303986540${pixTotal.toFixed(2).length}${pixTotal.toFixed(2)}5802BR5925EPOCA DISTRIBUICAO LTDA6009SAO PAULO62070503***6304ABCD`;
 
-  const calculateFreight = (uf: string) => {
-    const southeast = ['SP', 'RJ', 'MG', 'ES'];
-    const south = ['PR', 'SC', 'RS'];
-
-    if (southeast.includes(uf)) {
-      setFreightCost(29.9);
-      return;
-    }
-
-    if (south.includes(uf)) {
-      setFreightCost(45.5);
-      return;
-    }
-
-    setFreightCost(89.9);
+  const handleAddressFieldChange = (field: keyof typeof addressForm, value: string) => {
+    setAddressForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleCalculateFreight = async () => {
-    const cleanCep = cep.replace(/\D/g, '');
-    if (cleanCep.length !== 8) {
-      setFreightError('Digite um CEP valido com 8 digitos.');
-      return;
-    }
+  const handleConfirmEditedAddress = () => {
+    const streetLine = [addressForm.street, addressForm.number].filter(Boolean).join(', ');
+    const complement = addressForm.complement ? ` - ${addressForm.complement}` : '';
+    const cityLine = [addressForm.city, addressForm.state].filter(Boolean).join(' - ');
+    const zipCode = addressForm.zipCode ? `, ${addressForm.zipCode}` : '';
+    const reference = addressForm.referencePoint ? ` (${addressForm.referencePoint})` : '';
 
-    setLoadingFreight(true);
-    setFreightError('');
-    setAddress(null);
-
-    try {
-      const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cleanCep}`);
-
-      if (!response.ok) {
-        throw new Error('Falha na BrasilAPI');
-      }
-
-      const data = await response.json();
-      const street = data.street ? `${data.street}, ` : '';
-      const neighborhood = data.neighborhood ? `${data.neighborhood} - ` : '';
-      const city = data.city;
-      const state = data.state;
-
-      setAddress(`${street}${neighborhood}${city}/${state}`);
-      calculateFreight(state);
-    } catch (error) {
-      console.log('BrasilAPI failed, trying ViaCEP...', error);
-
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-        const data = await response.json();
-
-        if (data.erro) {
-          setFreightError('CEP nao encontrado na base dos Correios.');
-          setLoadingFreight(false);
-          return;
-        }
-
-        const street = data.logradouro ? `${data.logradouro}, ` : '';
-        const neighborhood = data.bairro ? `${data.bairro} - ` : '';
-        const city = data.localidade;
-        const state = data.uf;
-
-        setAddress(`${street}${neighborhood}${city}/${state}`);
-        calculateFreight(state);
-      } catch (viaCepError) {
-        console.error('ViaCEP lookup failed', viaCepError);
-        setFreightError('Servico de CEP indisponivel no momento.');
-      }
-    } finally {
-      setLoadingFreight(false);
-    }
+    const nextAddress = `${streetLine}${complement}${streetLine && cityLine ? ', ' : ''}${cityLine}${zipCode}${reference}`.trim();
+    setAddress(nextAddress);
+    setIsEditingAddress(false);
   };
 
   const handlePlaceOrder = () => {
@@ -209,6 +205,49 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
       return;
     }
 
+    if (!currentUser || !address || cart.length === 0) {
+      return;
+    }
+
+    const order = createStoredOrder({
+      customer_id: currentUser.id,
+      company_name: currentUser.companyName,
+      date: new Date().toISOString(),
+      total_value: paymentAdjustedTotal,
+      status: paymentMethod === 'BOLETO' ? OrderStatus.ABERTO : OrderStatus.LIBERADO,
+      items_count: displayItemCount,
+      address,
+      payment_method: paymentMethod,
+      freight_cost: 0,
+      combo_savings_total: comboSavingsTotal,
+      payment_adjustment_value: paymentAdjustmentValue,
+      tracking_message:
+        paymentMethod === 'PIX'
+          ? 'Pagamento confirmado e pedido encaminhado para separacao.'
+          : paymentMethod === 'BOLETO'
+            ? 'Pedido recebido e aguardando compensacao do boleto.'
+            : 'Pedido aprovado e encaminhado para separacao.',
+      items: cart
+        .map((item) => {
+          const product = mockProducts.find((entry) => entry.id === item.product_id);
+          if (!product) {
+            return null;
+          }
+
+          return {
+            product_id: product.id,
+            quantity: getDisplayQuantity(item),
+            unit_price: product.price,
+            description: product.description,
+            image_path: product.image_path,
+            winthor_codprod: product.winthor_codprod,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    });
+
+    setCreatedOrder(order);
+    onOrderPlaced(order);
     setStep(4);
   };
 
@@ -234,7 +273,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
       <Card className="border-none shadow-sm">
         <CardHeader className="bg-slate-50 border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-slate-800">
-            <ShoppingCart className="text-[#be342e]" /> Revisao do Carrinho
+            <ShoppingCart className="text-[#be342e]" /> Revisão do Carrinho
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -395,46 +434,97 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid gap-4 max-w-md">
-            <label className="text-sm font-bold text-slate-700">CEP para entrega</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={cep}
-                onChange={(e) => setCep(e.target.value)}
-                onBlur={handleCalculateFreight}
-                placeholder="00000-000"
-                className={`flex-1 h-11 rounded-full border px-4 focus:ring-2 outline-none transition-all ${freightError ? 'border-red-300 focus:ring-red-100' : 'border-slate-300 focus:border-[#be342e] focus:ring-blue-100'}`}
-              />
-              <Button
-                onClick={handleCalculateFreight}
-                disabled={loadingFreight}
-                className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] min-w-[100px]"
-              >
-                {loadingFreight ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Calcular'}
-              </Button>
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Endereco cadastrado</p>
+              <p className="mt-2 text-sm text-slate-700">
+                {address || 'Nenhum endereco cadastrado. Informe abaixo o endereco para entrega.'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button
+                  className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
+                  onClick={() => {
+                    if (address) {
+                      setStep(3);
+                    } else {
+                      setIsEditingAddress(true);
+                    }
+                  }}
+                >
+                  Enviar neste endereco
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-[#be342e] text-[#be342e] hover:bg-blue-50"
+                  onClick={() => setIsEditingAddress((prev) => !prev)}
+                >
+                  {isEditingAddress ? 'Fechar edicao' : 'Trocar endereco'}
+                </Button>
+              </div>
             </div>
 
-            {freightError && (
-              <p className="text-xs text-red-500 font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> {freightError}
-              </p>
-            )}
-
-            {address && (
-              <div className="mt-2 p-4 bg-blue-50 rounded-xl border border-blue-100 animate-in zoom-in-95">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-[#be342e] mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-bold text-slate-800 text-sm">Endereco Confirmado:</p>
-                    <p className="text-slate-600 text-sm mt-1">{address}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge variant="success" className="bg-green-100 text-green-700 border border-green-200">
-                        Frete: R$ {freightCost.toFixed(2)}
-                      </Badge>
-                      <span className="text-xs text-slate-500">Prazo: 3 dias uteis</span>
-                    </div>
-                  </div>
+            {isEditingAddress && (
+              <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <p className="text-sm font-bold text-slate-800">Alterar endereco de entrega</p>
+                  <p className="mt-1 text-sm text-slate-500">Use este formulario apenas se quiser receber em outro endereco neste pedido.</p>
+                </div>
+                <input
+                  type="text"
+                  value={addressForm.zipCode}
+                  onChange={(e) => handleAddressFieldChange('zipCode', e.target.value)}
+                  placeholder="CEP"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.street}
+                  onChange={(e) => handleAddressFieldChange('street', e.target.value)}
+                  placeholder="Rua / Logradouro"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.number}
+                  onChange={(e) => handleAddressFieldChange('number', e.target.value)}
+                  placeholder="Numero"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.complement}
+                  onChange={(e) => handleAddressFieldChange('complement', e.target.value)}
+                  placeholder="Complemento"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.city}
+                  onChange={(e) => handleAddressFieldChange('city', e.target.value)}
+                  placeholder="Cidade"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.state}
+                  onChange={(e) => handleAddressFieldChange('state', e.target.value)}
+                  placeholder="Estado"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.referencePoint}
+                  onChange={(e) => handleAddressFieldChange('referencePoint', e.target.value)}
+                  placeholder="Ponto de referencia"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e] md:col-span-2"
+                />
+                <div className="md:col-span-2 flex justify-end">
+                  <Button
+                    className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
+                    onClick={handleConfirmEditedAddress}
+                  >
+                    Confirmar novo endereco
+                  </Button>
                 </div>
               </div>
             )}
@@ -656,20 +746,21 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
       <p className="text-slate-500 mb-8 text-lg">
         {paymentMethod === 'PIX'
           ? 'Pagamento PIX confirmado e pedido enviado para separacao.'
-          : 'Seu pedido #50999 foi enviado para separacao.'}
+          : `Seu pedido #${createdOrder?.winthor_numped || '--'} foi enviado para separacao.`}
       </p>
 
       <div className="max-w-md mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 text-left">
         <p className="font-bold text-slate-700 mb-4 border-b pb-2">Resumo da Entrega</p>
-        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereco:</span> {address}</p>
+        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pedido:</span> #{createdOrder?.winthor_numped || '--'}</p>
+        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereco:</span> {createdOrder?.address || address}</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Previsao:</span> 3 dias uteis</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pagamento:</span> {paymentMethod === 'PIX' ? 'PIX' : paymentMethod === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
-        <p className="text-sm text-slate-600"><span className="font-bold">Total Pago:</span> R$ {paymentAdjustedTotal.toFixed(2)}</p>
+        <p className="text-sm text-slate-600"><span className="font-bold">Total Pago:</span> R$ {(createdOrder?.total_value || paymentAdjustedTotal).toFixed(2)}</p>
       </div>
 
       <div className="flex justify-center gap-4">
         <Button onClick={onNavigateToHome} variant="outline" className="rounded-full h-10">Voltar para Loja</Button>
-        <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] h-10">Acompanhar Pedido</Button>
+        <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] h-10" onClick={onNavigateToOrders}>Acompanhar Pedido</Button>
       </div>
     </div>
   );
@@ -743,20 +834,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigateToHome, cart, add
                       </div>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Frete</span>
-                    <span className="font-bold">{freightCost ? `R$ ${freightCost.toFixed(2)}` : '--'}</span>
-                  </div>
                   {paymentMethod !== 'PIX' && (
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-500">{paymentAdjustmentLabel}</span>
                       <span className="font-bold">R$ {paymentAdjustmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
-                  )}
-                  {freightCost === 0 && (
-                    <p className="text-xs text-orange-500 bg-orange-50 p-2 rounded">
-                      Informe o CEP na proxima etapa.
-                    </p>
                   )}
                   <div className="border-t border-slate-100 pt-3 flex justify-between text-lg">
                     <span className="font-bold text-slate-800">Total</span>

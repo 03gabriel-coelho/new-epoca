@@ -439,7 +439,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                           </button>
                         </div>
                       ) : (
-                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] font-bold h-9 text-xs transition-colors">
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#FFF] font-bold h-9 text-xs transition-colors">
                           Adicionar
                         </Button>
                       )}

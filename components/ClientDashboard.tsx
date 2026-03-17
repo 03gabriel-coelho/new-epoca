@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import { mockOrders, mockFinancials } from '../lib/mockData';
-import { AuthUser, OrderStatus } from '../types';
+import ProductImage from './ui/ProductImage';
+import { AuthUser, OrderStatus, StoredOrder } from '../types';
 import { updateStoredUser } from '../lib/authStorage';
+import { getStoredOrdersByCustomer } from '../lib/ordersStorage';
 import {
   FileText,
   RefreshCw,
@@ -20,7 +22,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Save
+  Save,
+  PackageSearch
 } from 'lucide-react';
 
 interface Notification {
@@ -64,6 +67,28 @@ interface ClientProfileFormData {
 }
 
 const DEFAULT_ZIP_CODE = '32150-240';
+
+const getOrderStatusBadge = (status: OrderStatus) => {
+  switch (status) {
+    case OrderStatus.LIBERADO:
+      return <Badge variant="success">Liberado</Badge>;
+    case OrderStatus.BLOQUEADO:
+      return <Badge variant="destructive">Bloqueado</Badge>;
+    case OrderStatus.FATURADO:
+      return <Badge variant="default">Faturado</Badge>;
+    case OrderStatus.ABERTO:
+      return <Badge variant="warning">Em Aberto</Badge>;
+    case OrderStatus.CANCELADO:
+      return <Badge variant="destructive">Cancelado</Badge>;
+    default:
+      return <Badge>{status}</Badge>;
+  }
+};
+
+const getClientOrders = (currentUser: AuthUser | null) => {
+  const storedOrders = currentUser ? getStoredOrdersByCustomer(currentUser.id) : [];
+  return [...storedOrders, ...mockOrders].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+};
 
 const formatZipCode = (value: string) => {
   const digits = value.replace(/\D/g, '').slice(0, 8);
@@ -117,7 +142,7 @@ const NotificationCenter = () => {
           className="relative h-10 w-10 rounded-full border-slate-200 p-0 hover:bg-slate-100 hover:text-[#be342e]"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          <Bell className="h-5 w-5 text-slate-600 fixed"/>
+          <Bell className="h-5 w-5 text-slate-600 absolute"/>
           {unreadCount > 0 && (
             <span className="absolute right-0 top-0 h-3 w-3 translate-x-[-2px] translate-y-[2px] rounded-full border-2 border-white bg-red-500" />
           )}
@@ -223,21 +248,11 @@ const CreditLimitCard = () => {
   );
 };
 
-const OrdersTable: React.FC<{ onNavigateToCheckout: () => void }> = ({ onNavigateToCheckout }) => {
-  const getStatusBadge = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.LIBERADO:
-        return <Badge variant="success">Liberado</Badge>;
-      case OrderStatus.BLOQUEADO:
-        return <Badge variant="destructive">Bloqueado</Badge>;
-      case OrderStatus.FATURADO:
-        return <Badge variant="default">Faturado</Badge>;
-      case OrderStatus.ABERTO:
-        return <Badge variant="warning">Em Aberto</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
+const OrdersTable: React.FC<{ currentUser: AuthUser | null; onNavigateToCheckout: () => void }> = ({
+  currentUser,
+  onNavigateToCheckout
+}) => {
+  const orders = getClientOrders(currentUser).slice(0, 6);
 
   return (
     <Card className="col-span-1 shadow-sm md:col-span-2">
@@ -258,19 +273,19 @@ const OrdersTable: React.FC<{ onNavigateToCheckout: () => void }> = ({ onNavigat
               </tr>
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
-              {mockOrders.map((order) => (
+              {orders.map((order) => (
                 <tr key={order.id} className="border-b transition-colors hover:bg-muted/50">
                   <td className="p-6 align-middle font-medium">{order.winthor_numped}</td>
                   <td className="p-6 align-middle">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
                   <td className="p-6 align-middle">{order.items_count}</td>
                   <td className="p-6 align-middle">R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="p-6 align-middle">{getStatusBadge(order.status)}</td>
+                  <td className="p-6 align-middle">{getOrderStatusBadge(order.status)}</td>
                   <td className="p-6 align-middle text-right">
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
                         className="h-8 rounded-full text-xs text-slate-500 hover:text-slate-900"
-                        onClick={() => alert(`Rastreamento do pedido ${order.id} aberto.`)}
+                        onClick={() => alert(`Pedido #${order.winthor_numped}: ${'tracking_message' in order ? order.tracking_message : 'Pedido em acompanhamento logistico.'}`)}
                       >
                         <Truck className="mr-1 h-3 w-3" /> Rastrear
                       </Button>
@@ -679,8 +694,153 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNaviga
       />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <CreditLimitCard />
-        <OrdersTable onNavigateToCheckout={onNavigateToCheckout} />
+        <OrdersTable currentUser={currentUser} onNavigateToCheckout={onNavigateToCheckout} />
         <FinancialTitles />
+      </div>
+    </div>
+  );
+};
+
+export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
+  currentUser,
+  onNavigateToHome,
+  onNavigateToCheckout
+}) => {
+  const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
+  const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
+
+  useEffect(() => {
+    setSelectedOrder(orders[0] || null);
+  }, [currentUser?.id, orders]);
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_380px]">
+        <Card className="overflow-hidden border-slate-200 shadow-sm">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#fff4f3] via-white to-slate-50">
+            <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#be342e] text-white">
+                <PackageSearch className="h-5 w-5" />
+              </span>
+              Meus Pedidos
+            </CardTitle>
+            <p className="text-sm text-slate-500">Acompanhe pedidos confirmados no checkout e seu historico recente.</p>
+          </CardHeader>
+          <CardContent className="p-0">
+            {orders.length > 0 ? (
+              <div className="divide-y divide-slate-100">
+                {orders.map((order) => (
+                  <button
+                    key={order.id}
+                    type="button"
+                    onClick={() => setSelectedOrder('customer_id' in order ? order : null)}
+                    className="flex w-full flex-col gap-4 px-6 py-5 text-left transition-colors hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-base font-bold text-slate-900">Pedido #{order.winthor_numped}</span>
+                        {getOrderStatusBadge(order.status)}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {new Date(order.date).toLocaleDateString('pt-BR')} • {order.items_count} itens
+                      </p>
+                    </div>
+                    <div className="text-left md:text-right">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Valor total</p>
+                      <p className="text-lg font-bold text-[#be342e]">
+                        R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
+                <h3 className="text-lg font-bold text-slate-900">Nenhum pedido encontrado</h3>
+                <p className="mt-1 max-w-sm text-sm text-slate-500">Assim que um pedido for finalizado no checkout, ele aparecera aqui para acompanhamento.</p>
+                <Button className="mt-5 rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+                  Fazer novo pedido
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-slate-200 shadow-sm">
+          <CardHeader className="border-b border-slate-100 bg-slate-50">
+            <CardTitle className="text-lg text-slate-900">Detalhes do Pedido</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 p-6">
+            {selectedOrder ? (
+              <>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-slate-900">#{selectedOrder.winthor_numped}</span>
+                    {getOrderStatusBadge(selectedOrder.status)}
+                  </div>
+                  <p className="mt-1 text-sm text-slate-500">{selectedOrder.tracking_message}</p>
+                </div>
+
+                <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+                  <p><span className="font-bold text-slate-800">Data:</span> {new Date(selectedOrder.date).toLocaleString('pt-BR')}</p>
+                  <p><span className="font-bold text-slate-800">Pagamento:</span> {selectedOrder.payment_method === 'PIX' ? 'PIX' : selectedOrder.payment_method === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
+                  <p><span className="font-bold text-slate-800">Entrega:</span> {selectedOrder.address}</p>
+                </div>
+
+                <div>
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
+                  <div className="space-y-3">
+                    {selectedOrder.items.map((item) => (
+                      <div key={`${selectedOrder.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
+                        <ProductImage
+                          src={item.image_path}
+                          alt={item.description}
+                          className="h-14 w-14 rounded-xl border border-slate-100"
+                          imgClassName="h-full w-full object-contain"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
+                          <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
+                          <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-green-700">Beneficio de combos</span>
+                    <span className="font-bold text-green-700">
+                      R$ {selectedOrder.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
+                    <span className="text-sm font-bold text-slate-800">Total do pedido</span>
+                    <span className="text-lg font-bold text-[#be342e]">
+                      R$ {selectedOrder.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+                <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
+                <p className="max-w-xs text-sm text-slate-500">Selecione um pedido finalizado no checkout para ver os detalhes completos e acompanhar a entrega.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

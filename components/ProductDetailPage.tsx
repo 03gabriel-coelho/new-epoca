@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import PixBadge from './ui/PixBadge';
-import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, MapPin, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
 import Logo from "../lib/images/logo1.webp";
@@ -37,7 +37,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 }) => {
   const product = mockProducts.find(p => p.id === productId);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs'>('desc');
-  const [cep, setCep] = useState('');
 
   if (!product) {
     return (
@@ -212,18 +211,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      
                      <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                         <p className="text-xs font-bold text-slate-700 uppercase mb-2 flex items-center gap-2">
-                           <Truck className="w-4 h-4" /> Calcular Frete e Prazo
+                           <MapPin className="w-4 h-4" /> Entrega regionalizada
                         </p>
-                        <div className="flex gap-2">
-                           <input 
-                              type="text" 
-                              placeholder="00000-000" 
-                              value={cep}
-                              onChange={(e) => setCep(e.target.value)}
-                              className="flex-1 h-9 rounded-md border border-slate-300 px-3 text-sm focus:border-[#be342e] outline-none" 
-                           />
-                           <Button className="h-9 px-4 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded-md text-xs font-bold">OK</Button>
-                        </div>
+                        <p className="text-sm text-slate-600">
+                           O valor deste item ja considera a politica comercial da sua regiao. No checkout voce apenas confirma o endereco de entrega.
+                        </p>
                         <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" className="text-[10px] text-[#be342e] underline mt-2 block">Não sei meu CEP</a>
                      </div>
                   </div>
