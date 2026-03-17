@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
@@ -445,6 +445,104 @@ const ProductImageEditModal = ({
   );
 };
 
+const OnDemandImageImportModal = ({
+  summary,
+  onClose,
+  onConfirm
+}: {
+  summary: {
+    totalFiles: number;
+    matchedFiles: number;
+    unmatchedFiles: string[];
+    sampleMatches: string[];
+  };
+  onClose: () => void;
+  onConfirm: () => void;
+}) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-in zoom-in-95">
+      <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Carga sob demanda</p>
+          <h3 className="text-2xl font-bold text-slate-900">Revisar pasta de imagens</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Confira os arquivos identificados antes de enviar a carga para processamento.
+          </p>
+        </div>
+        <button onClick={onClose} className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Arquivos lidos</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{summary.totalFiles}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Correspondencias</p>
+            <p className="mt-2 text-2xl font-bold text-emerald-700">{summary.matchedFiles}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Pendencias</p>
+            <p className="mt-2 text-2xl font-bold text-amber-700">{summary.totalFiles - summary.matchedFiles}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-emerald-100 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Arquivos identificados por codigo</p>
+              <Badge variant="success" className="border border-emerald-200 bg-emerald-50 text-emerald-700">
+                Prontos para envio
+              </Badge>
+            </div>
+            <div className="mt-4 space-y-2">
+              {summary.sampleMatches.length > 0 ? (
+                summary.sampleMatches.map((fileName) => (
+                  <div key={fileName} className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    {fileName}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">Nenhum arquivo identificado.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-amber-100 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-900">Arquivos para revisao</p>
+              <Badge variant="warning" className="border border-amber-200 bg-amber-50 text-amber-700">
+                Validacao manual
+              </Badge>
+            </div>
+            <div className="mt-4 space-y-2">
+              {summary.unmatchedFiles.length > 0 ? (
+                summary.unmatchedFiles.map((fileName) => (
+                  <div key={fileName} className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    {fileName}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">Nenhuma pendencia nesta carga.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={onConfirm}>
+          Enviar imagens
+        </Button>
+      </div>
+    </div>
+  </div>
+);
+
 const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }) => {
   const menuItems = [
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
@@ -498,6 +596,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImageDraft, setProductImageDraft] = useState('');
+  const bulkImageInputRef = useRef<HTMLInputElement | null>(null);
+  const [onDemandUploadSummary, setOnDemandUploadSummary] = useState<null | {
+    totalFiles: number;
+    matchedFiles: number;
+    unmatchedFiles: string[];
+    sampleMatches: string[];
+  }>(null);
   
   // States for Customer Management Tab
   const [userTab, setUserTab] = useState<'clients' | 'admins'>('clients');
@@ -595,6 +700,48 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
           )
       );
       handleCloseProductEditor();
+  };
+
+  const handleOpenOnDemandImageImport = () => {
+      bulkImageInputRef.current?.click();
+  };
+
+  const handleOnDemandImageFolderChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      if (files.length === 0) return;
+
+      const productCodeSet = new Set(products.map((product) => String(product.winthor_codprod)));
+      const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+      const matchedFiles: string[] = [];
+      const unmatchedFiles: string[] = [];
+
+      imageFiles.forEach((file) => {
+          const fileNameWithoutExtension = file.name.replace(/\.[^.]+$/, '');
+          const normalizedCode = fileNameWithoutExtension.replace(/-(2|3|4|5)$/, '');
+
+          if (productCodeSet.has(normalizedCode)) {
+              matchedFiles.push(file.name);
+          } else {
+              unmatchedFiles.push(file.name);
+          }
+      });
+
+      setOnDemandUploadSummary({
+          totalFiles: imageFiles.length,
+          matchedFiles: matchedFiles.length,
+          unmatchedFiles: unmatchedFiles.slice(0, 5),
+          sampleMatches: matchedFiles.slice(0, 5),
+      });
+
+      event.target.value = '';
+  };
+
+  const handleCloseOnDemandImageImport = () => {
+      setOnDemandUploadSummary(null);
+  };
+
+  const handleConfirmOnDemandImageImport = () => {
+      setOnDemandUploadSummary(null);
   };
 
   const renderContent = () => {
@@ -746,6 +893,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                       </button>
                     )}
                   </div>
+                  <input
+                    ref={bulkImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleOnDemandImageFolderChange}
+                    {...({ webkitdirectory: '', directory: '' } as Record<string, string>)}
+                  />
+                  <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={handleOpenOnDemandImageImport}>
+                    <UploadCloud className="mr-2 h-4 w-4" /> Imagens sob demanda
+                  </Button>
                   <Button>Sincronizar WinThor</Button>
                 </div>
              </div>
@@ -1109,6 +1268,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
             onClose={handleCloseProductEditor}
             onSave={handleSaveProductImage}
             onFileChange={handleProductImageFileChange}
+          />
+       )}
+       {onDemandUploadSummary && (
+          <OnDemandImageImportModal
+            summary={onDemandUploadSummary}
+            onClose={handleCloseOnDemandImageImport}
+            onConfirm={handleConfirmOnDemandImageImport}
           />
        )}
        <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onNavigateToHome} />
