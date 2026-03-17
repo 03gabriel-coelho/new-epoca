@@ -221,13 +221,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
           <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
             <img className="h-12" src="./lib/images/logo1.webp" />
           </div>
-          <Button variant="ghost" onClick={onNavigateToHome} className="text-white hover:bg-[#b70e0c] rounded-full">
+          <Button variant="primary" onClick={onNavigateToHome}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para Loja
           </Button>
         </div>
       </header>
 
-      <div className="flex-1 flex">
+      <div className="flex flex-1 overflow-hidden">
         <div className="hidden lg:flex w-1/2 bg-[#be342e] relative overflow-hidden flex-col justify-between p-12 text-white">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')] bg-cover bg-center opacity-10 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-[#b70e0c] to-[#be342e] opacity-90"></div>
@@ -266,9 +266,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
           </div>
         </div>
 
-        <div className="w-full lg:w-1/2 flex flex-col justify-center p-6 md:p-12 lg:p-24 bg-white overflow-y-auto">
-          <div className="max-w-md w-full mx-auto">
-            <div className="mb-8 text-center lg:text-left">
+        <div className="flex w-full flex-col justify-center bg-white px-6 py-6 md:px-10 lg:w-1/2 lg:px-12 lg:py-8 xl:px-16">
+          <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center">
+            <div className="mb-5 text-center lg:text-left">
               <h2 className="text-3xl font-bold text-slate-900 mb-2">
                 {activeTab === 'register' ? 'Criar Conta Empresarial' : 'Acesse sua Conta'}
               </h2>
@@ -277,7 +277,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
               </p>
             </div>
 
-            <div className="flex p-1 bg-slate-100 rounded-full mb-8">
+            <div className="mb-5 flex rounded-full bg-slate-100 p-1">
               <button
                 onClick={() => setActiveTab('register')}
                 className={`flex-1 py-2 text-sm font-bold rounded-full transition-all duration-300 ${activeTab === 'register' ? 'bg-white text-[#be342e] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -300,7 +300,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleRegisterSubmit}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   <div className="grid gap-2">
                     <label className="text-sm font-bold text-slate-700">CNPJ</label>
@@ -338,7 +338,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <div className="grid gap-2">
                       <label className="text-sm font-bold text-slate-700">Email Corporativo</label>
                       <div className="relative">
@@ -369,33 +369,35 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                     </div>
                   </div>
 
-                  <div className="grid gap-2">
-                    <label className="text-sm font-bold text-slate-700">Definir Senha de Acesso</label>
-                    <div className="relative">
-                      <Key className="absolute left-4 top-3 h-5 w-5 text-slate-400" />
-                      <input
-                        type="password"
-                        required
-                        placeholder="Minimo 8 caracteres"
-                        className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        value={registerData.password}
-                        onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
-                      />
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <label className="text-sm font-bold text-slate-700">Definir Senha de Acesso</label>
+                      <div className="relative">
+                        <Key className="absolute left-4 top-3 h-5 w-5 text-slate-400" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="Minimo 8 caracteres"
+                          className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          value={registerData.password}
+                          onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid gap-2">
-                    <label className="text-sm font-bold text-slate-700">Confirmar Senha</label>
-                    <div className="relative">
-                      <Key className="absolute left-4 top-3 h-5 w-5 text-slate-400" />
-                      <input
-                        type="password"
-                        required
-                        placeholder="Repita sua senha"
-                        className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        value={registerData.confirmPassword}
-                        onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                      />
+                    <div className="grid gap-2">
+                      <label className="text-sm font-bold text-slate-700">Confirmar Senha</label>
+                      <div className="relative">
+                        <Key className="absolute left-4 top-3 h-5 w-5 text-slate-400" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="Repita sua senha"
+                          className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          value={registerData.confirmPassword}
+                          onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -407,7 +409,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
 
                   <Button
                     type="submit"
-                    className="w-full h-12 text-base rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white mt-4 font-bold"
+                    className="mt-3 h-12 w-full rounded-full bg-[#be342e] text-base font-bold text-white hover:bg-[#b70e0c]"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -418,7 +420,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                     ) : 'Cadastrar Empresa'}
                   </Button>
 
-                  <p className="text-xs text-center text-slate-400 mt-4">
+                  <p className="mt-3 text-center text-xs text-slate-400">
                     Ao se cadastrar, voce concorda com nossos Termos de Uso e Politica de Privacidade.
                   </p>
                 </motion.form>

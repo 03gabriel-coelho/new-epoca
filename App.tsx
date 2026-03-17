@@ -417,7 +417,7 @@ const App = () => {
           <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Catalogo</a>
         </nav>
         <div className="mt-4 border-t border-slate-800 pt-4">
-          <Button variant="ghost" className="w-full justify-start text-slate-400" onClick={handleClientLogout}>
+          <Button variant="ghost" className="text-[#FFF] hover:text-[blue] w-full justify-start text-slate-400" onClick={handleClientLogout}>
             Sair
           </Button>
         </div>

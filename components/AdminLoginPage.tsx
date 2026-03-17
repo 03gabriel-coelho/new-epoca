@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/Layout';
 import { Lock, Server, User, ArrowLeft, Key, ShieldCheck, Database, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Logo from "../lib/images/logo1.webp";
 
 interface AdminLoginPageProps {
   onLoginSuccess: () => void;
@@ -51,7 +52,7 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
           className="mb-8 text-center"
         >
           <div className="flex items-center justify-center gap-2 mb-4">
-             <img className="h-12" src="./lib/images/logo1.webp"/>
+             <img className="h-12" src={Logo}/>
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
              <Server className="w-3 h-3" /> Conexão Segura WinThor
