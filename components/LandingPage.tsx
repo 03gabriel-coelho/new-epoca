@@ -213,7 +213,7 @@ const MainCarousel = ({
         <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
           <Button
             onClick={onNavigateToProducts}
-            className="bg-[#FFC220] hover:bg-yellow-400 text-slate-900 rounded-full px-6 h-11 text-sm shadow-lg"
+            className="bg-[red-600] hover:bg-red-800 text-slate-900 rounded-full px-6 h-11 text-sm shadow-lg"
           >
             Ver produtos <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -294,7 +294,7 @@ const LocationModal = ({
       const data = await response.json();
 
       if (data.erro) {
-        setError('CEP nÃ£o encontrado.');
+        setError('CEP não encontrado.');
       } else {
         onLocationSelect(cleanCep.replace(/^(\d{5})(\d{3})$/, '$1-$2'));
         onClose();
@@ -465,7 +465,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   }).slice(0, 5);
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900">
       {isDepartmentsOpen && (
         <div className="fixed inset-0 z-[70] hidden lg:block">
           <button
@@ -496,7 +496,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     setIsDepartmentsOpen(false);
                     onNavigateToProducts();
                   }}
-                  className="h-11 w-full rounded-full bg-[#FFC220] text-slate-900 hover:bg-yellow-400"
+                  className="h-11 w-full rounded-full bg-[#FFC220] text-slate-900 hover:red-700"
                 >
                   Ver todos os produtos
                 </Button>
@@ -791,7 +791,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                 </button>
                             </div>
                         ) : (
-                            <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#be342e] font-bold h-9 text-xs">
+                            <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] font-bold h-9 text-xs">
                                 Adicionar
                             </Button>
                         )}

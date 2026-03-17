@@ -195,7 +195,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
       <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
-            <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
+            <Button variant="destructive" onClick={onNavigateToHome} className="pl-0 text-white rounded-full px-4">
               <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
             </Button>
 
@@ -221,7 +221,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
               <div className="flex-1 relative h-full">
                 <input
                   type="text"
-                  placeholder="Buscar por nome, codigo RCA ou marca..."
+                  placeholder="Buscar por nome, código RCA ou marca..."
                   className="w-full h-full pl-4 pr-12 bg-transparent focus:outline-none text-slate-900 placeholder:text-slate-400 rounded-r-full"
                   value={searchTerm}
                   onChange={(e) => {
@@ -367,7 +367,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'RELEVANCE' | 'LOWEST_PRICE' | 'HIGHEST_PRICE' | 'BEST_SELLERS')}
               >
-                <option value="RELEVANCE">Relevancia</option>
+                <option value="RELEVANCE">Relevância</option>
                 <option value="LOWEST_PRICE">Menor Preco</option>
                 <option value="HIGHEST_PRICE">Maior Preco</option>
                 <option value="BEST_SELLERS">Mais Vendidos</option>

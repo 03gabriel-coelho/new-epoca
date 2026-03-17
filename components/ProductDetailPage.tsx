@@ -6,6 +6,7 @@ import PixBadge from './ui/PixBadge';
 import { ArrowLeft, ShoppingCart, Truck, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
+import Logo from "../lib/images/logo1.webp";
 
 interface ProductDetailPageProps {
   productId: string;
@@ -72,12 +73,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
-             <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
+             <Button variant="primary" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
                <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
              </Button>
              
              <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
-                <img className="h-12" src="./lib/images/logo1.webp"/>
+                <img className="h-12" src={Logo}/>
              </div>
           </div>
           

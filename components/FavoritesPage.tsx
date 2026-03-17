@@ -41,7 +41,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
       <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
-            <Button variant="ghost" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
+            <Button variant="primary" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
               <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
             </Button>
             <div className="flex items-center gap-1 cursor-pointer" onClick={onNavigateToHome}>
