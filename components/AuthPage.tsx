@@ -96,6 +96,14 @@ const formatPhone = (phone?: OpenCnpjPhone) => {
   return digits;
 };
 
+const isStrongPassword = (value: string) => {
+  const hasMinLength = value.length >= 8;
+  const hasNumber = /\d/.test(value);
+  const hasSpecialChar = /[^A-Za-z0-9]/.test(value);
+
+  return hasMinLength && hasNumber && hasSpecialChar;
+};
+
 const emptyCnpjProfileData = (): CnpjProfileData => ({
   tradeName: '',
   legalName: '',
@@ -264,8 +272,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
       return;
     }
 
-    if (registerData.password.length < 8) {
-      setAuthFeedback({ type: 'error', message: 'A senha deve ter pelo menos 8 caracteres.' });
+    if (!isStrongPassword(registerData.password)) {
+      setAuthFeedback({
+        type: 'error',
+        message: 'A senha deve ter pelo menos 8 caracteres, incluindo numero e caractere especial.',
+      });
       return;
     }
 
@@ -490,7 +501,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
                         <input
                           type="password"
                           required
-                          placeholder="Minimo 8 caracteres"
+                          placeholder="Min. 8 caracteres, numero e especial"
                           className="w-full pl-11 h-11 rounded-full border border-slate-300 focus:border-[#be342e] focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                           value={registerData.password}
                           onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
