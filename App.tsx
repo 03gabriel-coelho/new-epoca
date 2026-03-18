@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
-import ClientDashboard, { ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
+import ClientDashboard, { ClientFinancialPage, ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
 import ProductsPage from './components/ProductsPage';
@@ -413,7 +413,14 @@ const App = () => {
           >
             Meus Pedidos
           </NavLink>
-          <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Financeiro</a>
+          <NavLink
+            to="/cliente/financeiro"
+            className={({ isActive }) =>
+              `block rounded-md px-4 py-2 transition-colors ${isActive ? 'bg-slate-800 text-white' : 'hover:bg-slate-800'}`
+            }
+          >
+            Financeiro
+          </NavLink>
           <a href="#" className="block rounded-md px-4 py-2 hover:bg-slate-800">Catalogo</a>
         </nav>
         <div className="mt-4 border-t border-slate-800 pt-4">
@@ -569,6 +576,17 @@ const App = () => {
             path="pedidos"
             element={
               <ClientOrdersPage
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/checkout')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+          <Route
+            path="financeiro"
+            element={
+              <ClientFinancialPage
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/checkout')}

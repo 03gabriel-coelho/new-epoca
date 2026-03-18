@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import { mockOrders, mockFinancials } from '../lib/mockData';
 import ProductImage from './ui/ProductImage';
@@ -26,6 +26,8 @@ import {
   Save,
   PackageSearch
 } from 'lucide-react';
+
+const WHATSAPP_SUPPORT_URL = 'https://api.whatsapp.com/send/?phone=5531997935059&text&type=phone_number&app_absent=0';
 
 interface Notification {
   id: string;
@@ -264,7 +266,7 @@ const OrdersTable: React.FC<{ currentUser: AuthUser | null; onNavigateToCheckout
           <table className="w-full caption-bottom text-left text-sm">
             <thead className="[&_tr]:border-b bg-slate-50/50">
               <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Nº Pedido (RCA)</th>
+                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">NÂº Pedido (RCA)</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Data</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Itens</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor Total</th>
@@ -314,6 +316,43 @@ const OrdersTable: React.FC<{ currentUser: AuthUser | null; onNavigateToCheckout
 
 const FinancialTitles = () => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const installmentRows = useMemo(
+    () =>
+      [
+        { id: 'ped-50231-bol-1', orderNumber: '50231', installmentLabel: 'Parcela 1', dueDate: '2026-03-20', value: 1200, status: 'OVERDUE' as const, paymentMethod: 'Boleto' as const },
+        { id: 'ped-50231-bol-2', orderNumber: '50231', installmentLabel: 'Parcela 2', dueDate: '2026-04-20', value: 1200, status: 'PENDING' as const, paymentMethod: 'Boleto' as const },
+        { id: 'ped-50231-bol-3', orderNumber: '50231', installmentLabel: 'Parcela 3', dueDate: '2026-05-20', value: 1200, status: 'PENDING' as const, paymentMethod: 'Boleto' as const },
+        { id: 'ped-50248-cc-1', orderNumber: '50248', installmentLabel: 'Parcela 1', dueDate: '2026-02-15', value: 980, status: 'PAID' as const, paymentMethod: 'Cartao de Credito' as const },
+        { id: 'ped-50248-cc-2', orderNumber: '50248', installmentLabel: 'Parcela 2', dueDate: '2026-03-15', value: 980, status: 'PAID' as const, paymentMethod: 'Cartao de Credito' as const },
+        { id: 'ped-50248-cc-3', orderNumber: '50248', installmentLabel: 'Parcela 3', dueDate: '2026-04-15', value: 980, status: 'PENDING' as const, paymentMethod: 'Cartao de Credito' as const },
+        { id: 'ped-50263-bol-1', orderNumber: '50263', installmentLabel: 'Parcela 1', dueDate: '2026-04-05', value: 650, status: 'PENDING' as const, paymentMethod: 'Boleto' as const },
+      ].sort((left, right) => {
+        const getPriority = (item: { status: 'PENDING' | 'PAID' | 'OVERDUE'; paymentMethod: 'Boleto' | 'Cartao de Credito' }) => {
+          if (item.status === 'OVERDUE') {
+            return 0;
+          }
+
+          if (item.status === 'PENDING' && item.paymentMethod === 'Boleto') {
+            return 1;
+          }
+
+          if (item.status === 'PENDING') {
+            return 2;
+          }
+
+          return 3;
+        };
+
+        const priorityDifference = getPriority(left) - getPriority(right);
+        if (priorityDifference !== 0) {
+          return priorityDifference;
+        }
+
+        return new Date(left.dueDate).getTime() - new Date(right.dueDate).getTime();
+      }),
+    []
+  );
+  const nextDueInstallmentId = installmentRows.find((item) => item.status === 'PENDING')?.id;
 
   return (
     <Card className="col-span-1 shadow-sm md:col-span-3">
@@ -330,28 +369,41 @@ const FinancialTitles = () => {
           <table className="w-full caption-bottom text-left text-sm">
             <thead className="[&_tr]:border-b bg-slate-50/50">
               <tr className="border-b">
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Documento</th>
+                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Pedido</th>
+                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Parcela</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Vencimento</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Banco</th>
+                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Metodo de pagamento</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
                 <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">2a Via</th>
               </tr>
             </thead>
             <tbody>
-              {mockFinancials.map((title) => (
-                <tr key={title.id} className="border-b hover:bg-muted/50">
-                  <td className="p-6 align-middle">{title.doc_number}</td>
-                  <td className="p-6 align-middle">{new Date(title.due_date).toLocaleDateString('pt-BR')}</td>
+              {installmentRows.map((title) => (
+                <tr key={title.id} className={`border-b hover:bg-muted/50 ${title.id === nextDueInstallmentId ? 'bg-amber-50/60' : ''}`}>
+                  <td className="p-6 align-middle">
+                    <div className="font-semibold text-slate-800">Pedido #{title.orderNumber}</div>
+                    <div className="text-xs text-slate-500">
+                      {title.id === nextDueInstallmentId ? 'Proxima parcela a vencer' : title.status === 'PENDING' ? 'Parcela futura' : 'Historico do pedido'}
+                    </div>
+                  </td>
+                  <td className="p-6 align-middle font-medium text-slate-800">
+                    {title.installmentLabel} - R$ {title.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="p-6 align-middle">{new Date(title.dueDate).toLocaleDateString('pt-BR')}</td>
                   <td className="p-6 align-middle">R$ {title.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="p-6 align-middle">
-                    {title.bank_data?.bank_name === 'ITAÚ' ? (
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${title.paymentMethod === 'Boleto' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                      {title.paymentMethod}
+                    </div>
+                    {false && (title.bank_data?.bank_name === 'ITAÃš' ? (
                       <div className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-orange-500" /> Itau
                       </div>
                     ) : (
                       'Outros'
-                    )}
+                    ))}
                   </td>
                   <td className="p-6 align-middle">
                     {title.status === 'PAID' && <div className="flex items-center text-green-600"><CheckCircle className="mr-1 h-4 w-4" /> Pago</div>}
@@ -359,7 +411,33 @@ const FinancialTitles = () => {
                     {title.status === 'PENDING' && <div className="flex items-center text-yellow-600"><Clock className="mr-1 h-4 w-4" /> A Vencer</div>}
                   </td>
                   <td className="p-6 align-middle text-right">
-                    {title.status !== 'PAID' && (
+                    {title.paymentMethod === 'Boleto' ? (
+                      <Button
+                        variant="outline"
+                        className="h-9 rounded-full border-[#be342e] px-4 text-xs font-semibold text-[#be342e] hover:bg-blue-50"
+                        onClick={() => {
+                          setLoadingId(title.id);
+                          setTimeout(() => {
+                            setLoadingId(null);
+                            alert('[BOLETO]\nSegunda via gerada com sucesso.\nDownload iniciado.');
+                          }, 1200);
+                        }}
+                        disabled={loadingId === title.id}
+                      >
+                        {loadingId === title.id ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Gerando...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="mr-2 h-4 w-4" /> Baixar 2a via
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Nao se aplica</span>
+                    )}
+                    {false && title.status !== 'PAID' && (
                       <Tooltip content="Gerar 2a via Itau (API)">
                         <Button
                           variant="ghost"
@@ -672,7 +750,17 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
 
         <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-slate-500">
-            Os dados fiscais ficam bloqueados nesta tela. Para alteracoes cadastrais, fale com seu consultor Epoca.
+            Os dados fiscais ficam bloqueados nesta tela. Para alteracoes cadastrais,
+            {' '}
+            <a
+              href={WHATSAPP_SUPPORT_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-[#be342e] underline underline-offset-2"
+            >
+              fale com seu consultor Epoca
+            </a>
+            .
           </p>
           <div className="flex items-center gap-3">
             {isFetchingZipCode && (
@@ -726,7 +814,13 @@ const ClientHeader: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateT
         <Store className="mr-2 h-4 w-4" /> Ir para Loja
       </Button>
       <NotificationCenter />
-      <Button variant="outline" className="rounded-full">Falar com Vendedor</Button>
+      <Button
+        variant="outline"
+        className="rounded-full"
+        onClick={() => window.open(WHATSAPP_SUPPORT_URL, '_blank', 'noopener,noreferrer')}
+      >
+        Falar com Vendedor
+      </Button>
       <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
         <ShoppingCart className="mr-2 h-4 w-4" /> Novo Pedido
       </Button>
@@ -745,7 +839,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNaviga
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <CreditLimitCard />
         <OrdersTable currentUser={currentUser} onNavigateToCheckout={onNavigateToCheckout} />
-        <FinancialTitles />
       </div>
     </div>
   );
@@ -798,7 +891,7 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                         {getOrderStatusBadge(order.status)}
                       </div>
                       <p className="mt-1 text-sm text-slate-500">
-                        {new Date(order.date).toLocaleDateString('pt-BR')} • {order.items_count} itens
+                        {new Date(order.date).toLocaleDateString('pt-BR')} â€¢ {order.items_count} itens
                       </p>
                     </div>
                     <div className="text-left md:text-right">
@@ -914,4 +1007,22 @@ export const ClientProfilePage: React.FC<ClientDashboardProps> = ({
   );
 };
 
+export const ClientFinancialPage: React.FC<ClientDashboardProps> = ({
+  currentUser,
+  onNavigateToHome,
+  onNavigateToCheckout
+}) => {
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+      <FinancialTitles />
+    </div>
+  );
+};
+
 export default ClientDashboard;
+
