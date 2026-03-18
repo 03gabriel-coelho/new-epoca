@@ -1295,7 +1295,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
   };
 
   return (
-    <div className="h-screen flex bg-slate-50 overflow-hidden font-sans text-slate-900">
+    <div className="h-screen w-full flex bg-slate-50 overflow-hidden font-sans text-slate-900">
        {editingProduct && (
           <ProductImageEditModal
             product={editingProduct}

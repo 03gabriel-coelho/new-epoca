@@ -211,14 +211,6 @@ const MainCarousel = ({
             loading="eager"
           />
         </button>
-        <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
-          <Button
-            onClick={onNavigateToProducts}
-            className="bg-[red-600] hover:bg-red-800 text-slate-900 rounded-full px-6 h-11 text-sm shadow-lg"
-          >
-            Ver produtos <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
       </div>
 
       <button
