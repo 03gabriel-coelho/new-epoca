@@ -55,17 +55,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('PIX');
   const [address, setAddress] = useState<string | null>(null);
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [addressForm, setAddressForm] = useState({
-    zipCode: '',
-    street: '',
-    district: '',
-    number: '',
-    complement: '',
-    city: '',
-    state: '',
-    referencePoint: '',
-  });
   const [card1Amount, setCard1Amount] = useState('');
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
@@ -170,40 +159,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     if (!currentUser) {
       return;
     }
-
-    const initialForm = {
-      zipCode: currentUser.zipCode || '',
-      street: currentUser.street || '',
-      district: currentUser.district || '',
-      number: currentUser.addressNumber || '',
-      complement: currentUser.addressComplement || '',
-      city: currentUser.city || '',
-      state: currentUser.state || '',
-      referencePoint: currentUser.referencePoint || '',
-    };
-
-    setAddressForm(initialForm);
     setAddress(buildAddressLabel(currentUser));
   }, [currentUser]);
 
   const card2Amount = (paymentAdjustedTotal - (parseFloat(card1Amount) || 0)).toFixed(2);
   const pixCode = `00020126580014BR.GOV.BCB.PIX0136epoca-b2b-${cart.length || 1}-${pixTotal.toFixed(2).replace('.', '')}520400005303986540${pixTotal.toFixed(2).length}${pixTotal.toFixed(2)}5802BR5925EPOCA DISTRIBUICAO LTDA6009SAO PAULO62070503***6304ABCD`;
-
-  const handleAddressFieldChange = (field: keyof typeof addressForm, value: string) => {
-    setAddressForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleConfirmEditedAddress = () => {
-    const streetLine = [addressForm.street, addressForm.number].filter(Boolean).join(', ');
-    const complement = addressForm.complement ? ` - ${addressForm.complement}` : '';
-    const cityLine = [addressForm.district, addressForm.city, addressForm.state].filter(Boolean).join(' - ');
-    const zipCode = addressForm.zipCode ? `, ${addressForm.zipCode}` : '';
-    const reference = addressForm.referencePoint ? ` (${addressForm.referencePoint})` : '';
-
-    const nextAddress = `${streetLine}${complement}${streetLine && cityLine ? ', ' : ''}${cityLine}${zipCode}${reference}`.trim();
-    setAddress(nextAddress);
-    setIsEditingAddress(false);
-  };
 
   const handlePlaceOrder = () => {
     if (paymentMethod === 'PIX' && !pixPaid) {
@@ -452,103 +412,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Endereco cadastrado</p>
               <p className="mt-2 text-sm text-slate-700">
-                {address || 'Nenhum endereco cadastrado. Informe abaixo o endereco para entrega.'}
+                {address || 'Nenhum endereco cadastrado para este usuario.'}
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button
-                  className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
-                  onClick={() => {
-                    if (address) {
-                      setStep(3);
-                    } else {
-                      setIsEditingAddress(true);
-                    }
-                  }}
-                >
-                  Enviar neste endereco
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full border-[#be342e] text-[#be342e] hover:bg-blue-50"
-                  onClick={() => setIsEditingAddress((prev) => !prev)}
-                >
-                  {isEditingAddress ? 'Fechar edicao' : 'Trocar endereco'}
-                </Button>
-              </div>
             </div>
-
-            {isEditingAddress && (
-              <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <p className="text-sm font-bold text-slate-800">Alterar endereco de entrega</p>
-                  <p className="mt-1 text-sm text-slate-500">Use este formulario apenas se quiser receber em outro endereco neste pedido.</p>
-                </div>
-                <input
-                  type="text"
-                  value={addressForm.zipCode}
-                  onChange={(e) => handleAddressFieldChange('zipCode', e.target.value)}
-                  placeholder="CEP"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.street}
-                  onChange={(e) => handleAddressFieldChange('street', e.target.value)}
-                  placeholder="Rua / Logradouro"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.district}
-                  onChange={(e) => handleAddressFieldChange('district', e.target.value)}
-                  placeholder="Bairro"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.number}
-                  onChange={(e) => handleAddressFieldChange('number', e.target.value)}
-                  placeholder="Numero"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.complement}
-                  onChange={(e) => handleAddressFieldChange('complement', e.target.value)}
-                  placeholder="Complemento"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.city}
-                  onChange={(e) => handleAddressFieldChange('city', e.target.value)}
-                  placeholder="Cidade"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.state}
-                  onChange={(e) => handleAddressFieldChange('state', e.target.value)}
-                  placeholder="Estado"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
-                />
-                <input
-                  type="text"
-                  value={addressForm.referencePoint}
-                  onChange={(e) => handleAddressFieldChange('referencePoint', e.target.value)}
-                  placeholder="Ponto de referencia"
-                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e] md:col-span-2"
-                />
-                <div className="md:col-span-2 flex justify-end">
-                  <Button
-                    className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
-                    onClick={handleConfirmEditedAddress}
-                  >
-                    Confirmar novo endereco
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -558,7 +424,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <Button
           disabled={!address}
           onClick={() => setStep(3)}
-          className="h-12 px-8 rounded-full bg-[#FFC220] hover:bg-yellow-400 text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-12 px-8 rounded-full text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Ir para Pagamento
         </Button>

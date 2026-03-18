@@ -864,7 +864,7 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
         onNavigateToCheckout={onNavigateToCheckout}
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_380px]">
+      <div className="grid gap-6">
         <Card className="overflow-hidden border-slate-200 shadow-sm">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#fff4f3] via-white to-slate-50">
             <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
@@ -915,76 +915,77 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
             )}
           </CardContent>
         </Card>
-
-        <Card className="overflow-hidden border-slate-200 shadow-sm">
-          <CardHeader className="border-b border-slate-100 bg-slate-50">
-            <CardTitle className="text-lg text-slate-900">Detalhes do Pedido</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 p-6">
-            {selectedOrder ? (
-              <>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-slate-900">#{selectedOrder.winthor_numped}</span>
-                    {getOrderStatusBadge(selectedOrder.status)}
-                  </div>
-                  <p className="mt-1 text-sm text-slate-500">{selectedOrder.tracking_message}</p>
-                </div>
-
-                <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                  <p><span className="font-bold text-slate-800">Data:</span> {new Date(selectedOrder.date).toLocaleString('pt-BR')}</p>
-                  <p><span className="font-bold text-slate-800">Pagamento:</span> {selectedOrder.payment_method === 'PIX' ? 'PIX' : selectedOrder.payment_method === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
-                  <p><span className="font-bold text-slate-800">Entrega:</span> {selectedOrder.address}</p>
-                </div>
-
-                <div>
-                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
-                  <div className="space-y-3">
-                    {selectedOrder.items.map((item) => (
-                      <div key={`${selectedOrder.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
-                        <ProductImage
-                          src={item.image_path}
-                          alt={item.description}
-                          className="h-14 w-14 rounded-xl border border-slate-100"
-                          imgClassName="h-full w-full object-contain"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
-                          <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
-                          <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-green-700">Beneficio de combos</span>
-                    <span className="font-bold text-green-700">
-                      R$ {selectedOrder.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
-                    <span className="text-sm font-bold text-slate-800">Total do pedido</span>
-                    <span className="text-lg font-bold text-[#be342e]">
-                      R$ {selectedOrder.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
-                <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
-                <p className="max-w-xs text-sm text-slate-500">Selecione um pedido finalizado no checkout para ver os detalhes completos e acompanhar a entrega.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Detalhes do Pedido</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="text-lg font-bold text-slate-900">#{selectedOrder.winthor_numped}</span>
+                  {getOrderStatusBadge(selectedOrder.status)}
+                </div>
+              </div>
+              <Button variant="ghost" className="rounded-full" onClick={() => setSelectedOrder(null)}>
+                Fechar
+              </Button>
+            </div>
+
+            <div className="max-h-[calc(90vh-88px)] space-y-5 overflow-y-auto p-6">
+              <div>
+                <p className="text-sm text-slate-500">{selectedOrder.tracking_message}</p>
+              </div>
+
+              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-3">
+                <p><span className="font-bold text-slate-800">Data:</span> {new Date(selectedOrder.date).toLocaleString('pt-BR')}</p>
+                <p><span className="font-bold text-slate-800">Pagamento:</span> {selectedOrder.payment_method === 'PIX' ? 'PIX' : selectedOrder.payment_method === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
+                <p><span className="font-bold text-slate-800">Entrega:</span> {selectedOrder.address}</p>
+              </div>
+
+              <div>
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
+                <div className="space-y-3">
+                  {selectedOrder.items.map((item) => (
+                    <div key={`${selectedOrder.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
+                      <ProductImage
+                        src={item.image_path}
+                        alt={item.description}
+                        className="h-14 w-14 rounded-xl border border-slate-100"
+                        imgClassName="h-full w-full object-contain"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
+                        <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
+                        <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-green-700">Beneficio de combos</span>
+                  <span className="font-bold text-green-700">
+                    R$ {selectedOrder.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
+                  <span className="text-sm font-bold text-slate-800">Total do pedido</span>
+                  <span className="text-lg font-bold text-[#be342e]">
+                    R$ {selectedOrder.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
