@@ -4,6 +4,7 @@ import { mockOrders, mockFinancials } from '../lib/mockData';
 import ProductImage from './ui/ProductImage';
 import { AuthUser, OrderStatus, StoredOrder } from '../types';
 import { updateStoredUser } from '../lib/authStorage';
+import { DEFAULT_ZIP_CODE, formatPartialZipCode, resolveZipCodeFromIp } from '../lib/location';
 import { getStoredOrdersByCustomer } from '../lib/ordersStorage';
 import {
   FileText,
@@ -59,14 +60,13 @@ interface ClientProfileFormData {
   email2: string;
   cep: string;
   logradouro: string;
+  bairro: string;
   numero: string;
   complemento: string;
   cidade: string;
   estado: string;
   pontoReferencia: string;
 }
-
-const DEFAULT_ZIP_CODE = '32150-240';
 
 const getOrderStatusBadge = (status: OrderStatus) => {
   switch (status) {
@@ -90,31 +90,31 @@ const getClientOrders = (currentUser: AuthUser | null) => {
   return [...storedOrders, ...mockOrders].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
 };
 
-const formatZipCode = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 8);
-  if (digits.length <= 5) {
-    return digits;
-  }
-
-  return digits.replace(/^(\d{5})(\d)/, '$1-$2');
-};
-
 const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFormData => ({
-  cnpj: currentUser?.cnpj || '12.345.678/0001-90',
-  nomeFantasia: currentUser?.tradeName || currentUser?.companyName || 'Cliente B2B',
-  razaoSocial: currentUser?.legalName || currentUser?.companyName || 'Cliente B2B LTDA',
-  telefone1: currentUser?.phone || '(31) 3333-4444',
-  telefone2: currentUser?.phone2 || '(31) 98888-7777',
-  email1: currentUser?.email || 'compras@cliente.com.br',
-  email2: currentUser?.email2 || 'financeiro@cliente.com.br',
-  cep: currentUser?.zipCode || DEFAULT_ZIP_CODE,
-  logradouro: currentUser?.street || 'Av. dos Parceiros',
-  numero: currentUser?.addressNumber || '1500',
+  cnpj: currentUser?.cnpj || '',
+  nomeFantasia: currentUser?.tradeName || currentUser?.companyName || '',
+  razaoSocial: currentUser?.legalName || currentUser?.companyName || '',
+  telefone1: currentUser?.phone || '',
+  telefone2: currentUser?.phone2 || '',
+  email1: currentUser?.email || '',
+  email2: currentUser?.email2 || '',
+  cep: currentUser?.zipCode || '',
+  logradouro: currentUser?.street || '',
+  bairro: currentUser?.district || '',
+  numero: currentUser?.addressNumber || '',
   complemento: currentUser?.addressComplement || '',
-  cidade: currentUser?.city || 'Belo Horizonte',
-  estado: currentUser?.state || 'MG',
-  pontoReferencia: currentUser?.referencePoint || 'Ao lado da praca principal'
+  cidade: currentUser?.city || '',
+  estado: currentUser?.state || '',
+  pontoReferencia: currentUser?.referencePoint || ''
 });
+
+const buildFullAddress = (formData: ClientProfileFormData) => {
+  const streetLine = [formData.logradouro, formData.numero].filter(Boolean).join(', ');
+  const complement = formData.complemento ? ` - ${formData.complemento}` : '';
+  const locationLine = [formData.bairro, formData.cidade, formData.estado].filter(Boolean).join(' - ');
+
+  return [streetLine ? `${streetLine}${complement}` : '', locationLine, formData.cep].filter(Boolean).join(', ');
+};
 
 const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -396,7 +396,8 @@ const ProfileField = ({
   disabled = false,
   type = 'text',
   placeholder,
-  multiline = false
+  multiline = false,
+  required = false
 }: {
   label: string;
   value: string;
@@ -406,6 +407,7 @@ const ProfileField = ({
   type?: string;
   placeholder?: string;
   multiline?: boolean;
+  required?: boolean;
 }) => {
   const sharedClassName = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all ${
     disabled
@@ -415,7 +417,9 @@ const ProfileField = ({
 
   return (
     <label className="space-y-2">
-      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</span>
+      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+        {label}{required ? ' *' : ''}
+      </span>
       <div className="relative">
         <Icon className={`absolute left-3 top-3.5 h-4 w-4 ${disabled ? 'text-slate-400' : 'text-[#be342e]'}`} />
         {multiline ? (
@@ -425,6 +429,7 @@ const ProfileField = ({
             disabled={disabled}
             placeholder={placeholder}
             rows={4}
+            required={required}
             className={`${sharedClassName} min-h-[112px] resize-none pl-10`}
           />
         ) : (
@@ -434,6 +439,7 @@ const ProfileField = ({
             onChange={(event) => onChange?.(event.target.value)}
             disabled={disabled}
             placeholder={placeholder}
+            required={required}
             className={`${sharedClassName} h-12 pl-10`}
           />
         )}
@@ -457,6 +463,33 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
     setFeedbackMessage('');
   }, [currentUser]);
 
+  useEffect(() => {
+    if (currentUser?.zipCode || formData.cep) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadDefaultZipCode = async () => {
+      try {
+        const zipCode = await resolveZipCodeFromIp();
+        if (!isCancelled) {
+          setFormData((prev) => (prev.cep ? prev : { ...prev, cep: zipCode }));
+        }
+      } catch {
+        if (!isCancelled) {
+          setFormData((prev) => (prev.cep ? prev : { ...prev, cep: DEFAULT_ZIP_CODE }));
+        }
+      }
+    };
+
+    loadDefaultZipCode();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUser?.zipCode, formData.cep]);
+
   const updateField = (field: keyof ClientProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setSaveStatus('idle');
@@ -464,7 +497,7 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
   };
 
   const handleZipCodeChange = async (value: string) => {
-    const formattedZipCode = formatZipCode(value);
+    const formattedZipCode = formatPartialZipCode(value);
     updateField('cep', formattedZipCode);
 
     if (formattedZipCode.replace(/\D/g, '').length !== 8) {
@@ -485,6 +518,7 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
         ...prev,
         cep: formattedZipCode,
         logradouro: data.logradouro || prev.logradouro,
+        bairro: data.bairro || prev.bairro,
         cidade: data.localidade || prev.cidade,
         estado: data.uf || prev.estado,
       }));
@@ -504,6 +538,18 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
       return;
     }
 
+    if (!formData.telefone1.trim()) {
+      setSaveStatus('error');
+      setFeedbackMessage('Telefone 1 e obrigatorio.');
+      return;
+    }
+
+    if (!formData.email1.trim()) {
+      setSaveStatus('error');
+      setFeedbackMessage('Email 1 e obrigatorio.');
+      return;
+    }
+
     setSaveStatus('saving');
     setFeedbackMessage('Salvando dados...');
 
@@ -517,10 +563,11 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
           phone2: formData.telefone2,
           email: formData.email1,
           email2: formData.email2,
-          fullAddress: `${formData.logradouro}, ${formData.numero}${formData.complemento ? ` - ${formData.complemento}` : ''}, ${formData.cidade} - ${formData.estado}, ${formData.cep}`,
+          fullAddress: buildFullAddress(formData),
           referencePoint: formData.pontoReferencia,
           zipCode: formData.cep,
           street: formData.logradouro,
+          district: formData.bairro,
           addressNumber: formData.numero,
           addressComplement: formData.complemento,
           city: formData.cidade,
@@ -558,9 +605,9 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <ProfileField label="Telefone 1" value={formData.telefone1} onChange={(value) => updateField('telefone1', value)} icon={Phone} placeholder="(00) 0000-0000" />
+          <ProfileField label="Telefone 1" value={formData.telefone1} onChange={(value) => updateField('telefone1', value)} icon={Phone} placeholder="(00) 0000-0000" required />
           <ProfileField label="Telefone 2" value={formData.telefone2} onChange={(value) => updateField('telefone2', value)} icon={Phone} placeholder="(00) 00000-0000" />
-          <ProfileField label="Email 1" value={formData.email1} onChange={(value) => updateField('email1', value)} icon={Mail} type="email" placeholder="compras@empresa.com.br" />
+          <ProfileField label="Email 1" value={formData.email1} onChange={(value) => updateField('email1', value)} icon={Mail} type="email" placeholder="compras@empresa.com.br" required />
           <ProfileField label="Email 2" value={formData.email2} onChange={(value) => updateField('email2', value)} icon={Mail} type="email" placeholder="financeiro@empresa.com.br" />
         </div>
 
@@ -578,6 +625,13 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
             onChange={(value) => updateField('logradouro', value)}
             icon={MapPin}
             placeholder="Rua, avenida, etc."
+          />
+          <ProfileField
+            label="Bairro"
+            value={formData.bairro}
+            onChange={(value) => updateField('bairro', value)}
+            icon={MapPin}
+            placeholder="Bairro"
           />
           <ProfileField
             label="Numero"
@@ -607,15 +661,11 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
             icon={MapPin}
             placeholder="UF"
           />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4">
           <ProfileField
             label="Ponto de Referencia"
             value={formData.pontoReferencia}
             onChange={(value) => updateField('pontoReferencia', value)}
             icon={MapPin}
-            multiline
             placeholder="Ex.: Portao lateral, esquina com..."
           />
         </div>

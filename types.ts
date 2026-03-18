@@ -204,6 +204,7 @@ export interface AuthUser {
   referencePoint?: string;
   zipCode?: string;
   street?: string;
+  district?: string;
   addressNumber?: string;
   addressComplement?: string;
   city?: string;

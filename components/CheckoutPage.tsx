@@ -24,7 +24,7 @@ const buildAddressLabel = (currentUser: AuthUser | null) => {
 
   const streetLine = [currentUser.street, currentUser.addressNumber].filter(Boolean).join(', ');
   const complement = currentUser.addressComplement ? ` - ${currentUser.addressComplement}` : '';
-  const cityLine = [currentUser.city, currentUser.state].filter(Boolean).join(' - ');
+  const cityLine = [currentUser.district, currentUser.city, currentUser.state].filter(Boolean).join(' - ');
   const zipCode = currentUser.zipCode ? `, ${currentUser.zipCode}` : '';
   const reference = currentUser.referencePoint ? ` (${currentUser.referencePoint})` : '';
 
@@ -57,6 +57,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [addressForm, setAddressForm] = useState({
     zipCode: '',
     street: '',
+    district: '',
     number: '',
     complement: '',
     city: '',
@@ -171,6 +172,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const initialForm = {
       zipCode: currentUser.zipCode || '',
       street: currentUser.street || '',
+      district: currentUser.district || '',
       number: currentUser.addressNumber || '',
       complement: currentUser.addressComplement || '',
       city: currentUser.city || '',
@@ -192,7 +194,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const handleConfirmEditedAddress = () => {
     const streetLine = [addressForm.street, addressForm.number].filter(Boolean).join(', ');
     const complement = addressForm.complement ? ` - ${addressForm.complement}` : '';
-    const cityLine = [addressForm.city, addressForm.state].filter(Boolean).join(' - ');
+    const cityLine = [addressForm.district, addressForm.city, addressForm.state].filter(Boolean).join(' - ');
     const zipCode = addressForm.zipCode ? `, ${addressForm.zipCode}` : '';
     const reference = addressForm.referencePoint ? ` (${addressForm.referencePoint})` : '';
 
@@ -482,6 +484,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   value={addressForm.street}
                   onChange={(e) => handleAddressFieldChange('street', e.target.value)}
                   placeholder="Rua / Logradouro"
+                  className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
+                />
+                <input
+                  type="text"
+                  value={addressForm.district}
+                  onChange={(e) => handleAddressFieldChange('district', e.target.value)}
+                  placeholder="Bairro"
                   className="h-11 rounded-xl border border-slate-300 px-4 outline-none focus:border-[#be342e]"
                 />
                 <input

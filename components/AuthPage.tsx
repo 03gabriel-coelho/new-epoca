@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Lock, Building2, Mail, Phone, Key, ShieldCheck, User, Zap } from 'lucide-react';
 import { loginStoredUser, registerStoredUser } from '../lib/authStorage';
 import { AuthUser } from '../types';
+import { formatZipCode } from '../lib/location';
 import Logo from "../lib/images/logo1.webp";
 
 interface AuthPageProps {
@@ -23,6 +24,50 @@ interface OpenCnpjResponse {
   nome_fantasia?: string;
   email?: string;
   telefones?: OpenCnpjPhone[];
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  municipio?: string;
+  cidade?: string;
+  uf?: string;
+  endereco?: {
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    cidade?: string;
+    uf?: string;
+  };
+  estabelecimento?: {
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    cidade?: string;
+    uf?: string;
+  };
+}
+
+interface CnpjProfileData {
+  tradeName: string;
+  legalName: string;
+  email: string;
+  phone: string;
+  fullAddress: string;
+  referencePoint: string;
+  zipCode: string;
+  street: string;
+  district: string;
+  addressNumber: string;
+  addressComplement: string;
+  city: string;
+  state: string;
 }
 
 const getDigits = (value: string) => value.replace(/\D/g, '');
@@ -51,6 +96,53 @@ const formatPhone = (phone?: OpenCnpjPhone) => {
   return digits;
 };
 
+const emptyCnpjProfileData = (): CnpjProfileData => ({
+  tradeName: '',
+  legalName: '',
+  email: '',
+  phone: '',
+  fullAddress: '',
+  referencePoint: '',
+  zipCode: '',
+  street: '',
+  district: '',
+  addressNumber: '',
+  addressComplement: '',
+  city: '',
+  state: '',
+});
+
+const extractAddressFromCnpj = (data: OpenCnpjResponse) => {
+  const address = data.estabelecimento || data.endereco || data;
+  const zipCode = formatZipCode(address.cep || '');
+  const street = address.logradouro || '';
+  const addressNumber = address.numero || '';
+  const addressComplement = address.complemento || '';
+  const district = address.bairro || '';
+  const city = address.municipio || address.cidade || '';
+  const state = address.uf || '';
+
+  const fullAddress = [
+    [street, addressNumber].filter(Boolean).join(', '),
+    [district, city, state].filter(Boolean).join(' - '),
+    zipCode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    fullAddress,
+    referencePoint: '',
+    zipCode,
+    street,
+    district,
+    addressNumber,
+    addressComplement,
+    city,
+    state,
+  };
+};
+
 const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('register');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,6 +150,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
   const [cnpjFeedback, setCnpjFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [authFeedback, setAuthFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const lastFetchedCnpjRef = useRef<string>('');
+  const [cnpjProfileData, setCnpjProfileData] = useState<CnpjProfileData>(() => emptyCnpjProfileData());
 
   const [registerData, setRegisterData] = useState({
     cnpj: '',
@@ -82,6 +175,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
     if (cnpjDigits.length !== 14) {
       setIsFetchingCnpj(false);
       setCnpjFeedback(null);
+      setCnpjProfileData(emptyCnpjProfileData());
       if (cnpjDigits.length === 0) {
         lastFetchedCnpjRef.current = '';
       }
@@ -117,6 +211,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
         const data = (await response.json()) as OpenCnpjResponse;
         const companyName = data.razao_social || data.nome_fantasia || '';
         const phone = formatPhone(data.telefones?.find(item => !item.is_fax) || data.telefones?.[0]);
+        const addressData = extractAddressFromCnpj(data);
 
         setRegisterData(prev => ({
           ...prev,
@@ -124,6 +219,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
           email: data.email || prev.email,
           phone: phone || prev.phone,
         }));
+        setCnpjProfileData({
+          tradeName: data.nome_fantasia || companyName,
+          legalName: data.razao_social || companyName,
+          email: data.email || '',
+          phone: phone || '',
+          ...addressData,
+        });
         lastFetchedCnpjRef.current = cnpjDigits;
         setCnpjFeedback({
           type: 'success',
@@ -135,6 +237,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
         }
 
         lastFetchedCnpjRef.current = '';
+        setCnpjProfileData(emptyCnpjProfileData());
         setCnpjFeedback({
           type: 'error',
           message: error instanceof Error ? error.message : 'Falha ao consultar o CNPJ.',
@@ -173,12 +276,21 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onNavigateToHome })
           id: '123',
           cnpj: registerData.cnpj,
           companyName: registerData.companyName,
-          tradeName: registerData.companyName,
-          legalName: registerData.companyName,
+          tradeName: cnpjProfileData.tradeName || registerData.companyName,
+          legalName: cnpjProfileData.legalName || registerData.companyName,
           email: registerData.email,
           phone: registerData.phone,
           password: registerData.password,
           createdAt: new Date().toISOString(),
+          fullAddress: cnpjProfileData.fullAddress,
+          referencePoint: cnpjProfileData.referencePoint,
+          zipCode: cnpjProfileData.zipCode,
+          street: cnpjProfileData.street,
+          district: cnpjProfileData.district,
+          addressNumber: cnpjProfileData.addressNumber,
+          addressComplement: cnpjProfileData.addressComplement,
+          city: cnpjProfileData.city,
+          state: cnpjProfileData.state,
         });
 
         setAuthFeedback({ type: 'success', message: 'Cadastro salvo localmente e sessao iniciada.' });
