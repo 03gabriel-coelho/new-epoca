@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { ArrowLeft, Heart, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
+import { getPricedProducts } from '../lib/pricing';
 import Logo from "../lib/images/logo1.webp";
 
 interface FavoritesPageProps {
   currentUser: AuthUser | null;
+  currentZipCode: string;
   favoriteIds: string[];
   cart: CartItem[];
   onNavigateToHome: () => void;
@@ -20,6 +22,7 @@ interface FavoritesPageProps {
 
 const FavoritesPage: React.FC<FavoritesPageProps> = ({
   currentUser,
+  currentZipCode,
   favoriteIds,
   cart,
   onNavigateToHome,
@@ -29,10 +32,11 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
   removeFromCart,
   toggleFavorite
 }) => {
-  const favoriteProducts = mockProducts.filter(product => favoriteIds.includes(product.id));
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
+  const favoriteProducts = pricedProducts.filter(product => favoriteIds.includes(product.id));
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find(p => p.id === item.product_id);
+    const product = pricedProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
   const title = currentUser ? `Favoritos de ${currentUser.companyName}` : 'Meus Favoritos';

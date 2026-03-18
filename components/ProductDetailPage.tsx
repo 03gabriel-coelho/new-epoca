@@ -1,16 +1,18 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import PixBadge from './ui/PixBadge';
 import { ArrowLeft, ShoppingCart, MapPin, Ruler, Scale, Box, Info, Heart, Share2, Zap, Check, Star, Minus, Plus, User } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem } from '../types';
+import { getPricedProducts } from '../lib/pricing';
 import Logo from "../lib/images/logo1.webp";
 
 interface ProductDetailPageProps {
   productId: string;
   currentUser: AuthUser | null;
+  currentZipCode: string;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
   onNavigateToFavorites: () => void;
@@ -25,6 +27,7 @@ interface ProductDetailPageProps {
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   productId,
   currentUser,
+  currentZipCode,
   onNavigateToHome,
   onNavigateToClient,
   onNavigateToFavorites,
@@ -35,7 +38,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   favoriteIds,
   toggleFavorite
 }) => {
-  const product = mockProducts.find(p => p.id === productId);
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
+  const product = pricedProducts.find(p => p.id === productId);
   const [activeTab, setActiveTab] = useState<'desc' | 'specs'>('desc');
 
   if (!product) {
@@ -51,7 +55,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
-    const p = mockProducts.find(prod => prod.id === item.product_id);
+    const p = pricedProducts.find(prod => prod.id === item.product_id);
     return acc + (item.quantity * (p?.price || 0));
   }, 0);
 

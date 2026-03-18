@@ -6,6 +6,7 @@ import { mockProducts } from '../lib/mockData';
 import { mockCombos } from '../lib/mockCombos';
 import { AuthUser, CartItem, CheckoutPaymentMethod, OrderStatus, StoredOrder } from '../types';
 import { createStoredOrder } from '../lib/ordersStorage';
+import { getPricedProducts } from '../lib/pricing';
 import {
   getAppliedComboQualifyingItemsFromCart,
   getAppliedComboRewardItemsFromCart,
@@ -35,6 +36,7 @@ interface CheckoutPageProps {
   onNavigateToHome: () => void;
   onNavigateToOrders: () => void;
   currentUser: AuthUser | null;
+  currentZipCode: string;
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
@@ -46,6 +48,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onNavigateToHome,
   onNavigateToOrders,
   currentUser,
+  currentZipCode,
   cart,
   addToCart,
   removeFromCart,
@@ -60,9 +63,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [pixPaid, setPixPaid] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<StoredOrder | null>(null);
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
 
   const productSubtotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find(p => p.id === item.product_id);
+    const product = pricedProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
 
@@ -74,10 +78,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           return null;
         }
 
-        const qualifyingItems = mapComboItemsWithProducts(getAppliedComboQualifyingItemsFromCart(combo, cart), mockProducts);
-        const rewardItems = mapComboItemsWithProducts(getAppliedComboRewardItemsFromCart(combo, cart), mockProducts);
-        const discountValue = getCartComboDiscountValue(combo, mockProducts, cart);
-        const rewardValue = getCartComboRewardValue(combo, mockProducts, cart);
+        const qualifyingItems = mapComboItemsWithProducts(getAppliedComboQualifyingItemsFromCart(combo, cart), pricedProducts);
+        const rewardItems = mapComboItemsWithProducts(getAppliedComboRewardItemsFromCart(combo, cart), pricedProducts);
+        const discountValue = getCartComboDiscountValue(combo, pricedProducts, cart);
+        const rewardValue = getCartComboRewardValue(combo, pricedProducts, cart);
 
         return {
           combo,
@@ -90,7 +94,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         };
       })
       .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
-  }, [cart]);
+  }, [cart, pricedProducts]);
 
   const rewardQuantitiesByProductId = useMemo(() => {
     const quantities = new Map<string, number>();
@@ -194,7 +198,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             : 'Pedido aprovado e encaminhado para separacao.',
       items: cart
         .map((item) => {
-          const product = mockProducts.find((entry) => entry.id === item.product_id);
+          const product = pricedProducts.find((entry) => entry.id === item.product_id);
           if (!product) {
             return null;
           }
@@ -245,7 +249,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           {cart.length > 0 ? (
             <div className="divide-y divide-slate-100">
               {cart.map((item) => {
-                const product = mockProducts.find(p => p.id === item.product_id);
+                const product = pricedProducts.find(p => p.id === item.product_id);
                 if (!product) {
                   return null;
                 }

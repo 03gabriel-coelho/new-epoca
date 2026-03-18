@@ -1,5 +1,5 @@
 ﻿
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -7,6 +7,7 @@ import PixBadge from './ui/PixBadge';
 import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus } from 'lucide-react';
 import { AuthUser, CartItem } from '../types';
 import { DEFAULT_ZIP_CODE, formatZipCode, resolveZipCodeFromIp } from '../lib/location';
+import { getPricedProducts } from '../lib/pricing';
 import bannerTopo1 from '../lib/images/banner_topo_1.webp';
 import bannerTopo2 from '../lib/images/banner_topo_2.webp';
 import bannerTopo3 from '../lib/images/banner_topo_3.webp';
@@ -14,6 +15,8 @@ import Logo from "../lib/images/logo1.webp";
 
 interface LandingPageProps {
   currentUser: AuthUser | null;
+  currentZipCode: string;
+  onZipCodeChange: (zipCode: string) => void;
   onNavigateToClient: () => void;
   onNavigateToAdmin: () => void;
   onNavigateToFavorites: () => void;
@@ -277,6 +280,8 @@ const LocationModal = ({
 
 const LandingPage: React.FC<LandingPageProps> = ({ 
   currentUser,
+  currentZipCode,
+  onZipCodeChange,
   onNavigateToClient, 
   onNavigateToAdmin,
   onNavigateToFavorites,
@@ -296,20 +301,27 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [userLocation, setUserLocation] = useState<string>('');
+  const [userLocation, setUserLocation] = useState<string>(currentZipCode);
 
   // Search State
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const pricedProducts = useMemo(
+    () => getPricedProducts(mockProducts, userLocation || currentUser?.zipCode || currentZipCode),
+    [currentUser?.zipCode, currentZipCode, userLocation]
+  );
+  const loggedUserDeliveryLabel = [currentUser?.street, currentUser?.addressNumber]
+    .filter(Boolean)
+    .join(', ') || currentUser?.fullAddress || 'Endereco cadastrado';
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
   const cartTotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find(p => p.id === item.product_id);
+    const product = pricedProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
-  const departments = Array.from(new Set(mockProducts.map((product) => product.department)))
+  const departments = Array.from(new Set(pricedProducts.map((product) => product.department)))
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
@@ -325,10 +337,16 @@ const LandingPage: React.FC<LandingPageProps> = ({
   }, []);
 
   useEffect(() => {
+    if (currentZipCode) {
+      setUserLocation(currentZipCode);
+      return;
+    }
+
     const storedUserZipCode = currentUser?.zipCode;
 
     if (storedUserZipCode) {
       setUserLocation(storedUserZipCode);
+      onZipCodeChange(storedUserZipCode);
       return;
     }
 
@@ -344,10 +362,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
         const zipCode = await resolveZipCodeFromIp();
         if (!isCancelled) {
           setUserLocation(zipCode);
+          onZipCodeChange(zipCode);
         }
       } catch {
         if (!isCancelled) {
           setUserLocation(DEFAULT_ZIP_CODE);
+          onZipCodeChange(DEFAULT_ZIP_CODE);
         }
       }
     };
@@ -357,7 +377,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [currentUser]);
+  }, [currentUser, currentZipCode, onZipCodeChange]);
+
+  useEffect(() => {
+    if (currentZipCode && currentZipCode !== userLocation) {
+      setUserLocation(currentZipCode);
+    }
+  }, [currentZipCode, userLocation]);
 
   useEffect(() => {
     if (!isDepartmentsOpen) {
@@ -374,7 +400,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isDepartmentsOpen]);
 
-  const suggestions = mockProducts.filter(p => {
+  const suggestions = pricedProducts.filter(p => {
     if (!searchTerm) return false;
     return p.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
            p.winthor_codprod.toString().includes(searchTerm);
@@ -442,7 +468,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
       <LocationModal 
         isOpen={isLocationModalOpen} 
         onClose={() => setIsLocationModalOpen(false)} 
-        onLocationSelect={setUserLocation}
+        onLocationSelect={(zipCode) => {
+          setUserLocation(zipCode);
+          onZipCodeChange(zipCode);
+        }}
         initialCep={userLocation}
       />
 
@@ -569,18 +598,31 @@ const LandingPage: React.FC<LandingPageProps> = ({
         {/* Subheader / Quick Links */}
         <div className="bg-[#e6f1fc] text-slate-800 py-2 border-b border-white/50">
             <div className="container mx-auto px-4 flex items-center gap-6 overflow-x-auto text-xs font-bold scrollbar-hide">
-                 <div 
-                   className="flex items-center gap-3 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full hover:bg-white cursor-pointer transition-colors shrink-0"
-                   onClick={() => setIsLocationModalOpen(true)}
-                 >
-                    <MapPin className="w-4 h-4 text-[#be342e]" />
-                    <span>Receber em:</span>
-                    <span className="text-[#be342e]">{userLocation || 'Buscando CEP...'}</span>
-                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-[#be342e]">
-                      Alterar
-                    </span>
-                 </div>
-                 <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
+                 {currentUser ? (
+                   <>
+                     <div className="flex items-center gap-3 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full shrink-0">
+                        <MapPin className="w-4 h-4 text-[#be342e]" />
+                        <span>Enviar para:</span>
+                        <span className="text-[#be342e]">{loggedUserDeliveryLabel}</span>
+                     </div>
+                     <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
+                   </>
+                 ) : (
+                   <>
+                     <div 
+                       className="flex items-center gap-3 mr-4 text-slate-900 bg-white/50 px-3 py-1 rounded-full hover:bg-white cursor-pointer transition-colors shrink-0"
+                       onClick={() => setIsLocationModalOpen(true)}
+                     >
+                        <MapPin className="w-4 h-4 text-[#be342e]" />
+                        <span>Receber em:</span>
+                        <span className="text-[#be342e]">{userLocation || 'Buscando CEP...'}</span>
+                        <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-[#be342e]">
+                          Alterar
+                        </span>
+                     </div>
+                     <span className="w-px h-4 bg-slate-300 hidden md:block"></span>
+                   </>
+                 )}
                  <button onClick={onNavigateToProducts} className="whitespace-nowrap hover:underline">Ofertas da Semana</button>
                  <button onClick={onNavigateToCombos} className="whitespace-nowrap hover:underline">Combos</button>
                  <button onClick={onNavigateToSuppliers} className="whitespace-nowrap hover:underline">Marcas Parceiras</button>
@@ -639,7 +681,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                {mockProducts.slice(0, 5).map((product) => {
+                {pricedProducts.slice(0, 5).map((product) => {
                     const quantityInCart = cart.find(item => item.product_id === product.id)?.quantity || 0;
                     const isFavorite = favoriteIds.includes(product.id);
 

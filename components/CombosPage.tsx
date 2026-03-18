@@ -6,6 +6,7 @@ import PixBadge from './ui/PixBadge';
 import { AuthUser, CartItem } from '../types';
 import { mockProducts } from '../lib/mockData';
 import { mockCombos } from '../lib/mockCombos';
+import { getPricedProducts } from '../lib/pricing';
 import {
   getAllComboVisualProducts,
   getComboPrice,
@@ -18,6 +19,7 @@ import Logo from "../lib/images/logo1.webp";
 
 interface CombosPageProps {
   currentUser: AuthUser | null;
+  currentZipCode: string;
   cart: CartItem[];
   favoriteIds: string[];
   onNavigateToHome: () => void;
@@ -38,6 +40,7 @@ const ruleIconMap = {
 
 const CombosPage: React.FC<CombosPageProps> = ({
   currentUser,
+  currentZipCode,
   cart,
   favoriteIds,
   onNavigateToHome,
@@ -50,10 +53,11 @@ const CombosPage: React.FC<CombosPageProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find((entry) => entry.id === item.product_id);
+    const product = pricedProducts.find((entry) => entry.id === item.product_id);
     return acc + item.quantity * (product?.price || 0);
   }, 0);
 
@@ -133,10 +137,10 @@ const CombosPage: React.FC<CombosPageProps> = ({
         {visibleCombos.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {visibleCombos.map((combo) => {
-              const qualifyingProducts = getComboProducts(combo, mockProducts);
-              const rewardProducts = getComboRewardProducts(combo, mockProducts);
-              const visualProducts = getAllComboVisualProducts(combo, mockProducts);
-              const comboPrice = getComboPrice(combo, mockProducts);
+              const qualifyingProducts = getComboProducts(combo, pricedProducts);
+              const rewardProducts = getComboRewardProducts(combo, pricedProducts);
+              const visualProducts = getAllComboVisualProducts(combo, pricedProducts);
+              const comboPrice = getComboPrice(combo, pricedProducts);
               const quantityInCart = getComboQuantityInCart(combo, cart);
               const RuleIcon = ruleIconMap[combo.rule_type];
 

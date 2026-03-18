@@ -20,6 +20,8 @@ import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage'
 import { mockCombos } from './lib/mockCombos';
 import { ComboSelections, createDefaultComboSelections, resolveComboQualifyingItems } from './lib/comboUtils';
 
+const ACTIVE_ZIP_STORAGE_KEY = 'epoca_b2b_active_zip_code';
+
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +32,7 @@ const App = () => {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [nextPathAfterLogin, setNextPathAfterLogin] = useState<string | null>(null);
+  const [activeZipCode, setActiveZipCode] = useState('');
 
   const upsertCartItem = (
     items: CartItem[],
@@ -93,8 +96,33 @@ const App = () => {
     if (storedSession) {
       setCurrentUser(storedSession);
       setIsLoggedIn(true);
+      setActiveZipCode(storedSession.zipCode || '');
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      setActiveZipCode(window.localStorage.getItem(ACTIVE_ZIP_STORAGE_KEY) || '');
     }
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.zipCode) {
+      setActiveZipCode(currentUser.zipCode);
+    }
+  }, [currentUser?.zipCode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (activeZipCode) {
+      window.localStorage.setItem(ACTIVE_ZIP_STORAGE_KEY, activeZipCode);
+      return;
+    }
+
+    window.localStorage.removeItem(ACTIVE_ZIP_STORAGE_KEY);
+  }, [activeZipCode]);
 
   useEffect(() => {
     const ownerKey = currentUser?.id || 'guest';
@@ -350,6 +378,7 @@ const App = () => {
       <ProductDetailPage
         productId={productId}
         currentUser={currentUser}
+        currentZipCode={activeZipCode}
         cart={cart}
         addToCart={addToCart}
         removeFromCart={removeFromCart}
@@ -373,6 +402,7 @@ const App = () => {
       <ComboDetailPage
         comboId={comboId}
         currentUser={currentUser}
+        currentZipCode={activeZipCode}
         cart={cart}
         favoriteIds={favoriteIds}
         onNavigateToHome={navigateToHome}
@@ -450,6 +480,8 @@ const App = () => {
               addToCart={addToCart}
               removeFromCart={removeFromCart}
               currentUser={currentUser}
+              currentZipCode={activeZipCode}
+              onZipCodeChange={setActiveZipCode}
               onNavigateToClient={handleClientAreaClick}
               onNavigateToAdmin={handleAdminClick}
               onNavigateToFavorites={navigateToFavorites}
@@ -481,6 +513,7 @@ const App = () => {
               addToCart={addToCart}
               removeFromCart={removeFromCart}
               currentUser={currentUser}
+              currentZipCode={activeZipCode}
               onNavigateToHome={navigateToHome}
               onNavigateToClient={handleClientAreaClick}
               onNavigateToFavorites={navigateToFavorites}
@@ -496,6 +529,7 @@ const App = () => {
           element={
             <CombosPage
               currentUser={currentUser}
+              currentZipCode={activeZipCode}
               cart={cart}
               favoriteIds={favoriteIds}
               onNavigateToHome={navigateToHome}
@@ -515,6 +549,7 @@ const App = () => {
           element={
             <FavoritesPage
               currentUser={currentUser}
+              currentZipCode={activeZipCode}
               favoriteIds={favoriteIds}
               cart={cart}
               onNavigateToHome={navigateToHome}
@@ -540,6 +575,7 @@ const App = () => {
             isLoggedIn ? (
               <CheckoutPage
                 currentUser={currentUser}
+                currentZipCode={activeZipCode}
                 cart={cart}
                 addToCart={addToCart}
                 removeFromCart={removeFromCart}

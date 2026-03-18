@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -6,10 +6,12 @@ import PixBadge from './ui/PixBadge';
 import { ArrowLeft, Search, Filter, ChevronRight, ShoppingCart, Package, X, ChevronDown, Heart, User, Minus, Plus } from 'lucide-react';
 import { mockProducts } from '../lib/mockData';
 import { AuthUser, CartItem, Product } from '../types';
+import { getPricedProducts } from '../lib/pricing';
 import Logo from "../lib/images/logo1.webp";
 
 interface ProductsPageProps {
   currentUser: AuthUser | null;
+  currentZipCode: string;
   onNavigateToHome: () => void;
   onNavigateToClient: () => void;
   onNavigateToFavorites: () => void;
@@ -44,6 +46,7 @@ const PRODUCT_BATCH_SIZE = 24;
 
 const ProductsPage: React.FC<ProductsPageProps> = ({
   currentUser,
+  currentZipCode,
   onNavigateToHome,
   onNavigateToClient,
   onNavigateToFavorites,
@@ -65,10 +68,11 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [visibleCountByContext, setVisibleCountByContext] = useState<Record<string, number>>({});
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find(p => p.id === item.product_id);
+    const product = pricedProducts.find(p => p.id === item.product_id);
     return acc + (item.quantity * (product?.price || 0));
   }, 0);
 
@@ -97,7 +101,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
     setSelectedCategory('PROMOÇÕES');
   }, [location.search]);
 
-  const suggestions = mockProducts.filter(product => {
+  const suggestions = pricedProducts.filter(product => {
     if (!searchTerm) {
       return false;
     }
@@ -109,7 +113,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
     return matchesTerm && matchesScope;
   }).slice(0, 5);
 
-  const filteredProducts = mockProducts.filter(product => {
+  const filteredProducts = pricedProducts.filter(product => {
     if (searchTerm) {
       const matchesTerm = product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.winthor_codprod.toString().includes(searchTerm);

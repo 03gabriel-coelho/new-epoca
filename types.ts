@@ -34,6 +34,8 @@ export interface Product {
   description: string;
   department: string;
   price: number;
+  basePrice?: number;
+  regionalAdjustment?: number;
   image_path: string;
   gallery_images?: string[];
   details?: TechnicalDetails; // Extended details

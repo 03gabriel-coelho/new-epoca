@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Check, Gift, Heart, Info, Minus, Package2, Percent, Plus, ShoppingCart, Star, Tags, User } from 'lucide-react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -6,6 +6,7 @@ import PixBadge from './ui/PixBadge';
 import { AuthUser, CartItem } from '../types';
 import { mockCombos } from '../lib/mockCombos';
 import { mockProducts } from '../lib/mockData';
+import { getPricedProducts } from '../lib/pricing';
 import {
   ComboSelections,
   createDefaultComboSelections,
@@ -25,6 +26,7 @@ import Logo from "../lib/images/logo1.webp";
 interface ComboDetailPageProps {
   comboId: string;
   currentUser: AuthUser | null;
+  currentZipCode: string;
   cart: CartItem[];
   favoriteIds: string[];
   onNavigateToHome: () => void;
@@ -39,6 +41,7 @@ interface ComboDetailPageProps {
 const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
   comboId,
   currentUser,
+  currentZipCode,
   cart,
   favoriteIds,
   onNavigateToHome,
@@ -63,17 +66,19 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
     );
   }
 
-  const qualifyingProducts = getComboProducts(combo, mockProducts, comboSelections);
-  const rewardProducts = getComboRewardProducts(combo, mockProducts);
-  const comboPrice = getComboPrice(combo, mockProducts, comboSelections);
-  const discountValue = getComboDiscountValue(combo, mockProducts, comboSelections);
-  const rewardValue = getComboRewardValue(combo, mockProducts);
+  const pricedProducts = useMemo(() => getPricedProducts(mockProducts, currentZipCode || currentUser?.zipCode), [currentUser?.zipCode, currentZipCode]);
+
+  const qualifyingProducts = getComboProducts(combo, pricedProducts, comboSelections);
+  const rewardProducts = getComboRewardProducts(combo, pricedProducts);
+  const comboPrice = getComboPrice(combo, pricedProducts, comboSelections);
+  const discountValue = getComboDiscountValue(combo, pricedProducts, comboSelections);
+  const rewardValue = getComboRewardValue(combo, pricedProducts);
   const displayName = currentUser?.companyName?.split(' ')[0] || 'Entrar';
   const quantityInCart = getComboQuantityInCart(combo, cart);
   const isSelectionComplete = isComboSelectionComplete(combo, comboSelections);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cart.reduce((acc, item) => {
-    const product = mockProducts.find((entry) => entry.id === item.product_id);
+    const product = pricedProducts.find((entry) => entry.id === item.product_id);
     return acc + item.quantity * (product?.price || 0);
   }, 0);
 
@@ -153,7 +158,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       {group.eligible_product_ids.map((productId) => {
-                        const product = mockProducts.find((entry) => entry.id === productId);
+                        const product = pricedProducts.find((entry) => entry.id === productId);
                         if (!product) {
                           return null;
                         }
