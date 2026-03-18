@@ -209,6 +209,10 @@ const App = () => {
     });
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   const addComboToCart = (comboId: string, selections?: ComboSelections) => {
     const combo = mockCombos.find((entry) => entry.id === comboId);
     if (!combo) {
@@ -539,6 +543,7 @@ const App = () => {
                 cart={cart}
                 addToCart={addToCart}
                 removeFromCart={removeFromCart}
+                clearCart={clearCart}
                 onNavigateToHome={navigateToHome}
                 onNavigateToOrders={handleNavigateToOrders}
                 onOrderPlaced={handleOrderPlaced}

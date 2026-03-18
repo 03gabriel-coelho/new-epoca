@@ -38,6 +38,7 @@ interface CheckoutPageProps {
   cart: CartItem[];
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  clearCart: () => void;
   onOrderPlaced: (order: StoredOrder) => void;
 }
 
@@ -48,6 +49,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   cart,
   addToCart,
   removeFromCart,
+  clearCart,
   onOrderPlaced
 }) => {
   const [step, setStep] = useState(1);
@@ -416,7 +418,16 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         </Card>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        {cart.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={clearCart}
+            className="h-12 rounded-full border-red-200 px-8 font-bold text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Esvaziar carrinho
+          </Button>
+        )}
         <Button
           disabled={cart.length === 0}
           onClick={() => setStep(2)}
