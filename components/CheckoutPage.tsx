@@ -418,9 +418,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <Button
           disabled={cart.length === 0}
           onClick={() => setStep(2)}
-          className="h-12 px-8 rounded-full bg-[#FFC220] hover:bg-yellow-400 text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-12 px-8 rounded-full text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continuar para Endereco
+          Continuar para endereço
         </Button>
       </div>
     </div>
@@ -856,7 +856,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   </p>
                 </div>
 
-                <Button variant="ghost" onClick={onNavigateToHome} className="w-full text-xs text-slate-500">
+                <Button variant="outline" onClick={onNavigateToHome} className="w-full text-x text-slate-500">
                   Continuar Comprando
                 </Button>
               </div>
