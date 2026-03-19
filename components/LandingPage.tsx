@@ -4,7 +4,7 @@ import { mockProducts, vendorLogos } from '../lib/mockData';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import PixBadge from './ui/PixBadge';
-import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus } from 'lucide-react';
+import { ArrowRight, Box, ShieldCheck, Truck, Menu, X, Lock, Search, ChevronLeft, ChevronRight, User, ShoppingCart, Heart, Grid, Zap, MapPin, Loader2, Minus, Plus, MessageCircle } from 'lucide-react';
 import { AuthUser, CartItem } from '../types';
 import { DEFAULT_ZIP_CODE, formatZipCode, resolveZipCodeFromIp } from '../lib/location';
 import { getPricedProducts } from '../lib/pricing';
@@ -33,6 +33,77 @@ interface LandingPageProps {
   favoriteIds: string[];
   toggleFavorite: (productId: string) => void;
 }
+
+const WHATSAPP_SUPPORT_URL = 'https://api.whatsapp.com/send/?phone=5531997935059&text&type=phone_number&app_absent=0';
+
+type ChatNodeId =
+  | 'welcome'
+  | 'help'
+  | 'question'
+  | 'discover'
+  | 'orderHelp'
+  | 'commercialQuestion'
+  | 'catalogDiscover';
+
+type ChatOption = {
+  label: string;
+  nextNode: ChatNodeId;
+};
+
+type ChatMessage = {
+  id: string;
+  sender: 'bot' | 'user';
+  text: string;
+};
+
+const chatbotFlow: Record<ChatNodeId, { message: string; options?: ChatOption[] }> = {
+  welcome: {
+    message: 'Oi! Eu sou a assistente virtual da Epoca. Para saber mais, e so falar comigo aqui!',
+    options: [
+      { label: 'Preciso de ajuda', nextNode: 'help' },
+      { label: 'Tenho uma duvida', nextNode: 'question' },
+      { label: 'Quero conhecer', nextNode: 'discover' },
+    ],
+  },
+  help: {
+    message: 'Posso te ajudar com cadastro, entrega e andamento de compra. Qual caminho faz mais sentido para voce agora?',
+    options: [
+      { label: 'Ajuda com pedido', nextNode: 'orderHelp' },
+      { label: 'Falar com atendimento', nextNode: 'commercialQuestion' },
+    ],
+  },
+  question: {
+    message: 'Sem problema. Se a sua duvida for comercial, pagamento ou condicoes de entrega, eu te encaminho rapidinho.',
+    options: [
+      { label: 'Duvida comercial', nextNode: 'commercialQuestion' },
+      { label: 'Quero suporte agora', nextNode: 'orderHelp' },
+    ],
+  },
+  discover: {
+    message: 'Posso te apresentar o mix, as condicoes de compra e como funciona o atendimento para o seu negocio.',
+    options: [
+      { label: 'Conhecer catalogo', nextNode: 'catalogDiscover' },
+      { label: 'Falar com consultor', nextNode: 'commercialQuestion' },
+    ],
+  },
+  orderHelp: {
+    message: 'Para um atendimento mais rapido sobre pedido, entrega ou suporte, vou te direcionar para o nosso WhatsApp.',
+  },
+  commercialQuestion: {
+    message: 'Perfeito. Nosso atendimento comercial pode te orientar sobre condicoes, formas de pagamento e cadastro.',
+  },
+  catalogDiscover: {
+    message: 'Nosso time pode te mostrar as categorias, campanhas e oportunidades ideais para o seu perfil de compra.',
+  },
+};
+
+const initialChatMessages: ChatMessage[] = [
+  {
+    id: 'welcome-bot',
+    sender: 'bot',
+    text: chatbotFlow.welcome.message,
+  },
+];
 
 const VendorTicker = () => {
   const activeVendors = vendorLogos
@@ -301,6 +372,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatNode, setChatNode] = useState<ChatNodeId>('welcome');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [userLocation, setUserLocation] = useState<string>(currentZipCode);
 
   // Search State
@@ -405,6 +479,33 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return p.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
            p.winthor_codprod.toString().includes(searchTerm);
   }).slice(0, 5);
+  const activeChatNode = chatbotFlow[chatNode];
+  const showWhatsappCta = !activeChatNode.options;
+  const hasChatInteraction = chatMessages.some((message) => message.sender === 'user');
+
+  const handleChatOptionSelect = (option: ChatOption) => {
+    const nextNode = chatbotFlow[option.nextNode];
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-user-${option.nextNode}`,
+        sender: 'user',
+        text: option.label,
+      },
+      {
+        id: `${Date.now()}-bot-${option.nextNode}`,
+        sender: 'bot',
+        text: nextNode.message,
+      },
+    ]);
+    setChatNode(option.nextNode);
+  };
+
+  const resetChatbot = () => {
+    setChatMessages(initialChatMessages);
+    setChatNode('welcome');
+  };
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900">
@@ -840,6 +941,114 @@ const LandingPage: React.FC<LandingPageProps> = ({
              </button>
          </div>
       </footer>
+
+      <div className="fixed bottom-4 right-4 z-[80] w-[calc(100vw-2rem)] max-w-sm">
+        {isChatOpen ? (
+          <div className="overflow-hidden rounded-3xl border border-[#be342e]/15 bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-[#be342e] px-4 py-3 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
+                  <MessageCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Atendimento Epoca</p>
+                  <p className="text-[11px] text-white/80">Assistente virtual</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsChatOpen(false)}
+                className="rounded-full p-2 transition-colors hover:bg-white/10"
+                aria-label="Fechar chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 bg-[#fff7f6] px-4 py-4 max-h-[360px] overflow-y-auto">
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                      message.sender === 'user'
+                        ? 'bg-[#be342e] text-white rounded-br-md'
+                        : 'bg-white text-slate-700 rounded-bl-md'
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3 px-4 py-4">
+              {activeChatNode.options ? (
+                <div className="flex flex-wrap gap-2">
+                  {activeChatNode.options.map((option) => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      onClick={() => handleChatOptionSelect(option)}
+                      className="rounded-full border border-[#be342e]/25 bg-[#fff4f3] px-4 py-2 text-sm font-semibold text-[#be342e] transition-colors hover:bg-[#be342e] hover:text-white"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <a
+                    href={WHATSAPP_SUPPORT_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-11 w-full items-center justify-center rounded-full bg-[#25D366] px-5 text-sm font-bold text-white transition-colors hover:bg-[#1fb85a]"
+                  >
+                    Ir para o WhatsApp de atendimento
+                  </a>
+                  {hasChatInteraction && (
+                    <button
+                      type="button"
+                      onClick={resetChatbot}
+                      className="w-full rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                    >
+                      Reiniciar conversa
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {!showWhatsappCta && hasChatInteraction && (
+                <button
+                  type="button"
+                  onClick={resetChatbot}
+                  className="text-xs font-semibold text-slate-400 transition-colors hover:text-[#be342e]"
+                >
+                  Reiniciar conversa
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsChatOpen(true)}
+            className="ml-auto flex items-center gap-3 rounded-full border border-[#be342e]/20 bg-white px-5 py-3 text-sm font-bold text-[#be342e] shadow-xl transition-transform hover:scale-[1.02] hover:border-[#be342e] hover:bg-[#fff4f3]"
+            aria-label="Abrir chat de ajuda"
+          >
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#be342e] text-white">
+              <MessageCircle className="h-5 w-5" />
+              <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-[#25D366]"></span>
+            </span>
+            <span className="flex flex-col items-start leading-tight">
+              <span>Chat de ajuda</span>
+              <span className="text-[11px] font-medium text-slate-500">Tire dúvidas e fale com o atendimento</span>
+            </span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };
