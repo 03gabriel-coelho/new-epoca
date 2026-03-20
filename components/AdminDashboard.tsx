@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
+import AdminStatisticsPage from './AdminStatisticsPage';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
 import { SalesData, Customer, AdminUser, Product } from '../types';
@@ -11,7 +12,7 @@ import {
 import { 
   UploadCloud, Image as ImageIcon, Check, Search, X, 
   LayoutDashboard, ShoppingBag, Users, FileText, Settings, LogOut,
-  TrendingUp, AlertTriangle, ShieldCheck, Activity, Server, CreditCard, Video, Plus, UserPlus, Eye, Globe
+  TrendingUp, AlertTriangle, ShieldCheck, Activity, Server, CreditCard, Video, Plus, UserPlus, Eye, Globe, BarChart3
 } from 'lucide-react';
 import Logo from "../lib/images/logo1.webp";
 
@@ -546,6 +547,7 @@ const OnDemandImageImportModal = ({
 
 const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }) => {
   const menuItems = [
+    { id: 'statistics', label: 'Estatisticas', icon: BarChart3 },
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
     { id: 'products', label: 'Catálogo ERP', icon: ShoppingBag },
     { id: 'content', label: 'Marketing / CMS', icon: ImageIcon },
@@ -999,6 +1001,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
              )}
           </div>
         );
+      case 'statistics':
+        return <AdminStatisticsPage />;
       case 'content':
         return (
            <div className="space-y-6 animate-in fade-in">

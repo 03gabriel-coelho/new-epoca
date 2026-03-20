@@ -190,6 +190,22 @@ export interface ActivityLog {
   timestamp: string;
 }
 
+export type SalesChannel = 'ORGANIC' | 'SALES_ASSISTED';
+
+export interface SalesStatisticEntry {
+  id: string;
+  customer_id: string;
+  customer_name: string;
+  state: string;
+  city: string;
+  region: string;
+  channel: SalesChannel;
+  revenue: number;
+  orders: number;
+  avg_ticket: number;
+  period_label: string;
+}
+
 export interface AuthUser {
   id: string;
   cnpj: string;
