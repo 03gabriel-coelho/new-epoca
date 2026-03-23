@@ -277,7 +277,7 @@ export const mockCustomers: Customer[] = [
 export const mockAdminUsers: AdminUser[] = [
   { id: 'u1', name: 'Admin Master', email: 'admin@epoca.com.br', role: 'ADMIN', status: 'ACTIVE', last_login: 'Hoje, 09:00' },
   { id: 'u2', name: 'Carlos Vendas', email: 'carlos@epoca.com.br', role: 'SALES', status: 'ACTIVE', last_login: 'Ontem, 14:30' },
-  { id: 'u3', name: 'Ana Marketing', email: 'ana@epoca.com.br', role: 'MARKETING', status: 'ACTIVE', last_login: '2 dias atrÃ¡s' },
+  { id: 'u3', name: 'Ana Marketing', email: 'ana@epoca.com.br', role: 'MARKETING', status: 'ACTIVE', last_login: '2 dias atrás' },
 ];
 
 export const mockActivities: ActivityLog[] = [

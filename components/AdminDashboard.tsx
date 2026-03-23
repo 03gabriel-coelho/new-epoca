@@ -562,7 +562,9 @@ const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string
           <img className="h-12" src={Logo}/>
        </div>
        <nav className="flex-1 px-4 space-y-1">
-          {menuItems.map((item) => (
+          {[
+            ...menuItems.filter((item) => ['overview', 'products', 'content', 'customers', 'statistics', 'settings'].includes(item.id))
+          ].sort((a, b) => ['overview', 'products', 'content', 'customers', 'statistics', 'settings'].indexOf(a.id) - ['overview', 'products', 'content', 'customers', 'statistics', 'settings'].indexOf(b.id)).map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
@@ -1401,7 +1403,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                       type="text"
                       value={productSearchTerm}
                       onChange={(e) => setProductSearchTerm(e.target.value)}
-                      placeholder="Pesquisar no catÃ¡logo ERP..."
+                      placeholder="Pesquisar no catálogo ERP..."
                       className="h-11 w-full rounded-full border border-slate-200 bg-white pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                     />
                     {productSearchTerm && (
@@ -1650,10 +1652,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                        <Tooltip content="Espiar Carrinho">
                                                           <Button
                                                             variant="ghost"
-                                                            className={`h-8 w-8 p-0 ${c.is_online ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400'}`}
+                                                            className={`h-8 w-8 border p-0 ${
+                                                              c.is_online
+                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                                                : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                                            }`}
                                                             onClick={() => setViewingCart(c)}
                                                           >
-                                                              <ShoppingBag className="h-4 w-4" />
+                                                              <ShoppingBag className="h-4 w-4 shrink-0" />
                                                           </Button>
                                                        </Tooltip>
                                                        <Button variant="ghost" className="h-8 text-xs" onClick={() => handleOpenClientEditor(c)}>Editar</Button>
