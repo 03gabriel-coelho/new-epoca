@@ -32,6 +32,13 @@ const buildAddressLabel = (currentUser: AuthUser | null) => {
   return `${streetLine}${complement}${streetLine && cityLine ? ', ' : ''}${cityLine}${zipCode}${reference}`.trim();
 };
 
+interface SplitCardFormData {
+  number: string;
+  expiry: string;
+  cvv: string;
+  holderName: string;
+}
+
 interface CheckoutPageProps {
   onNavigateToHome: () => void;
   onNavigateToOrders: () => void;
@@ -59,6 +66,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('PIX');
   const [address, setAddress] = useState<string | null>(null);
   const [card1Amount, setCard1Amount] = useState('');
+  const [splitCard1, setSplitCard1] = useState<SplitCardFormData>({ number: '', expiry: '', cvv: '', holderName: '' });
+  const [splitCard2, setSplitCard2] = useState<SplitCardFormData>({ number: '', expiry: '', cvv: '', holderName: '' });
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
   const [isProcessingPix, setIsProcessingPix] = useState(false);
@@ -148,16 +157,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const paymentAdjustmentValue = Number((paymentAdjustedTotal - pixTotal).toFixed(2));
 
   useEffect(() => {
-    if (!card1Amount) {
-      setCard1Amount((paymentAdjustedTotal / 2).toFixed(2));
-    }
-  }, [paymentAdjustedTotal, card1Amount]);
-
-  useEffect(() => {
     setPixCopied(false);
     setPixPaid(false);
     setIsProcessingPix(false);
   }, [paymentMethod, paymentAdjustedTotal]);
+
+  useEffect(() => {
+    if (paymentMethod !== 'TWO_CARDS') {
+      return;
+    }
+
+    setCard1Amount('');
+    setSplitCard1({ number: '', expiry: '', cvv: '', holderName: '' });
+    setSplitCard2({ number: '', expiry: '', cvv: '', holderName: '' });
+  }, [paymentMethod]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -166,7 +179,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setAddress(buildAddressLabel(currentUser));
   }, [currentUser]);
 
-  const card2Amount = (paymentAdjustedTotal - (parseFloat(card1Amount) || 0)).toFixed(2);
+  const parsedCard1Amount = parseFloat(card1Amount.replace(',', '.'));
+  const normalizedCard1Amount = Number.isFinite(parsedCard1Amount)
+    ? Math.min(Math.max(parsedCard1Amount, 0), paymentAdjustedTotal)
+    : 0;
+  const card2Amount = (paymentAdjustedTotal - normalizedCard1Amount).toFixed(2);
   const pixCode = `00020126580014BR.GOV.BCB.PIX0136epoca-b2b-${cart.length || 1}-${pixTotal.toFixed(2).replace('.', '')}520400005303986540${pixTotal.toFixed(2).length}${pixTotal.toFixed(2)}5802BR5925EPOCA DISTRIBUICAO LTDA6009SAO PAULO62070503***6304ABCD`;
 
   const handlePlaceOrder = () => {
@@ -499,16 +516,42 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         type="number"
                         value={card1Amount}
                         onChange={(e) => setCard1Amount(e.target.value)}
+                        placeholder="0,00"
                         className="w-full h-10 pl-10 rounded-lg border border-slate-300 font-bold text-slate-900"
                       />
                     </div>
                   </div>
-                  <div className="space-y-3 opacity-50 pointer-events-none">
-                    <input type="text" value="•••• •••• •••• 4242" className="w-full h-10 rounded-lg border px-3 bg-white" readOnly />
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={splitCard1.number}
+                      onChange={(e) => setSplitCard1((current) => ({ ...current, number: e.target.value }))}
+                      placeholder="Numero do Cartao"
+                      className="w-full h-10 rounded-lg border px-3"
+                    />
                     <div className="flex gap-2">
-                      <input type="text" value="12/28" className="w-1/2 h-10 rounded-lg border px-3 bg-white" readOnly />
-                      <input type="text" value="•••" className="w-1/2 h-10 rounded-lg border px-3 bg-white" readOnly />
+                      <input
+                        type="text"
+                        value={splitCard1.expiry}
+                        onChange={(e) => setSplitCard1((current) => ({ ...current, expiry: e.target.value }))}
+                        placeholder="MM/AA"
+                        className="w-1/2 h-10 rounded-lg border px-3"
+                      />
+                      <input
+                        type="text"
+                        value={splitCard1.cvv}
+                        onChange={(e) => setSplitCard1((current) => ({ ...current, cvv: e.target.value }))}
+                        placeholder="CVV"
+                        className="w-1/2 h-10 rounded-lg border px-3"
+                      />
                     </div>
+                    <input
+                      type="text"
+                      value={splitCard1.holderName}
+                      onChange={(e) => setSplitCard1((current) => ({ ...current, holderName: e.target.value }))}
+                      placeholder="Nome no Cartao"
+                      className="w-full h-10 rounded-lg border px-3"
+                    />
                   </div>
                 </div>
 
@@ -527,11 +570,36 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <input type="text" placeholder="Numero do Cartao" className="w-full h-10 rounded-lg border px-3" />
+                    <input
+                      type="text"
+                      value={splitCard2.number}
+                      onChange={(e) => setSplitCard2((current) => ({ ...current, number: e.target.value }))}
+                      placeholder="Numero do Cartao"
+                      className="w-full h-10 rounded-lg border px-3"
+                    />
                     <div className="flex gap-2">
-                      <input type="text" placeholder="MM/AA" className="w-1/2 h-10 rounded-lg border px-3" />
-                      <input type="text" placeholder="CVV" className="w-1/2 h-10 rounded-lg border px-3" />
+                      <input
+                        type="text"
+                        value={splitCard2.expiry}
+                        onChange={(e) => setSplitCard2((current) => ({ ...current, expiry: e.target.value }))}
+                        placeholder="MM/AA"
+                        className="w-1/2 h-10 rounded-lg border px-3"
+                      />
+                      <input
+                        type="text"
+                        value={splitCard2.cvv}
+                        onChange={(e) => setSplitCard2((current) => ({ ...current, cvv: e.target.value }))}
+                        placeholder="CVV"
+                        className="w-1/2 h-10 rounded-lg border px-3"
+                      />
                     </div>
+                    <input
+                      type="text"
+                      value={splitCard2.holderName}
+                      onChange={(e) => setSplitCard2((current) => ({ ...current, holderName: e.target.value }))}
+                      placeholder="Nome no Cartao"
+                      className="w-full h-10 rounded-lg border px-3"
+                    />
                   </div>
                 </div>
               </div>
@@ -759,7 +827,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   </p>
                 </div>
 
-                <Button variant="outline" onClick={onNavigateToHome} className="w-full text-x text-slate-500">
+                <Button
+                  variant="outline"
+                  onClick={onNavigateToHome}
+                  className="w-full border-[#FFC220] bg-[#FFC220] text-slate-900 shadow-sm hover:border-yellow-400 hover:bg-yellow-400"
+                >
                   Continuar Comprando
                 </Button>
               </div>
