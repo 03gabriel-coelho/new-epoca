@@ -548,7 +548,7 @@ const OnDemandImageImportModal = ({
 
 const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }) => {
   const menuItems = [
-    { id: 'statistics', label: 'Estatisticas', icon: BarChart3 },
+    { id: 'statistics', label: 'Estatísticas', icon: BarChart3 },
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
     { id: 'products', label: 'Catálogo ERP', icon: ShoppingBag },
     { id: 'content', label: 'Marketing / CMS', icon: ImageIcon },

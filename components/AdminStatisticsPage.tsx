@@ -430,10 +430,10 @@ const AdminStatisticsPage: React.FC = () => {
         <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
           <div>
             <h2 className={`${pageStyles.title} text-4xl`} style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
-              Estatisticas de Performance
+              Estatísticas de Performance
             </h2>
             <p className={`${pageStyles.softText} mt-2 max-w-xl text-base`}>
-              Visao consolidada da operacao logistica e comercial.
+              Visão consolidada da operação logística e comercial.
             </p>
           </div>
 
@@ -581,14 +581,14 @@ const AdminStatisticsPage: React.FC = () => {
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/65">Distribuicao de vendas</p>
                 <div className="mt-6 flex items-center gap-8">
                   <div>
-                    <div className="text-5xl font-black" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                    <div className="text-4xl font-black" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
                       {Math.round(organicShare * 100)}%
                     </div>
                     <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Organico (App/Portal)</p>
                   </div>
                   <div className="h-12 w-px bg-white/20" />
                   <div>
-                    <div className="text-5xl font-black" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                    <div className="text-4xl font-black" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
                       {Math.round(assistedShare * 100)}%
                     </div>
                     <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/70">Assistido (Vendedor)</p>
