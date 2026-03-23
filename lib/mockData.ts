@@ -230,10 +230,10 @@ export const vendorLogos = [
 
 export const mockInstitutionalVideo: InstitutionalVideo = {
   id: 'vid-001',
-  title: 'ConheÃ§a nossa OperaÃ§Ã£o LogÃ­stica',
+  title: 'Conheça nossa Operação Logística',
   url: 'https://www.w3schools.com/html/mov_bbb.mp4', // Public placeholder video
   thumbnail: 'https://placehold.co/1920x1080/022c22/ffffff?text=Video+Institucional+Thumb',
-  description: 'Um tour completo pelo nosso Centro de DistribuiÃ§Ã£o e processos de qualidade.'
+  description: 'Um tour completo pelo nosso Centro de Distribuição e processos de qualidade.'
 };
 
 export const mockCustomers: Customer[] = [
@@ -281,9 +281,9 @@ export const mockAdminUsers: AdminUser[] = [
 ];
 
 export const mockActivities: ActivityLog[] = [
-  { id: 'a1', user: 'Carlos Silva (Vendas)', action: 'Aprovou pedido #50242', timestamp: '10 min atrÃ¡s' },
-  { id: 'a2', user: 'Ana Souza (Marketing)', action: 'Atualizou Banner "Ofertas Natal"', timestamp: '1 hora atrÃ¡s' },
-  { id: 'a3', user: 'Sistema (n8n)', action: 'Sync de Boletos ItaÃº processado', timestamp: '2 horas atrÃ¡s' },
+  { id: 'a1', user: 'Carlos Silva (Vendas)', action: 'Aprovou pedido #50242', timestamp: '10 min atrás' },
+  { id: 'a2', user: 'Ana Souza (Marketing)', action: 'Atualizou Banner "Ofertas Natal"', timestamp: '1 hora atrás' },
+  { id: 'a3', user: 'Sistema (n8n)', action: 'Sync de Boletos Itaú processado', timestamp: '2 horas atrás' },
 ];
 
 export const mockSalesStatistics: SalesStatisticEntry[] = [

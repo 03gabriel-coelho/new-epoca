@@ -303,6 +303,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </p>
                     <p className="mt-4 leading-relaxed">
                       Ideal para abastecimento de gôndolas de varejo, mercearias e supermercados. Produto de alto giro com validade estendida e garantia de procedência direto da indústria. Acondicionado em embalagem resistente para transporte logístico.
+                    </p>
                  </div>
               ) : (
                  <div className="overflow-x-auto">
