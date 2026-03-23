@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Gift, Heart, Minus, Package2, Percent, Plus, Search, ShoppingCart, Tags, User } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Gift, Heart, Minus, Package2, Percent, Plus, Search, ShoppingCart, Tags, User } from 'lucide-react';
 import { Button, Badge } from './ui/Layout';
 import ComboImage from './ui/ComboImage';
 import PixBadge from './ui/PixBadge';
@@ -37,6 +37,19 @@ const ruleIconMap = {
   combo_bundle: Package2,
   value_threshold_bonus: Tags,
 } as const;
+
+const formatComboValidity = (value?: string) => {
+  if (!value) {
+    return 'Sem data definida';
+  }
+
+  const parsedDate = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value;
+  }
+
+  return parsedDate.toLocaleDateString('pt-BR');
+};
 
 const CombosPage: React.FC<CombosPageProps> = ({
   currentUser,
@@ -152,6 +165,10 @@ const CombosPage: React.FC<CombosPageProps> = ({
                         {combo.benefit_label}
                       </Badge>
                       <h2 className="mt-3 text-xl font-bold text-slate-900">{combo.name}</h2>
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#fff4f3] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#be342e]">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Validade: {formatComboValidity(combo.valid_until)}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
                       <RuleIcon className="h-3.5 w-3.5" />
