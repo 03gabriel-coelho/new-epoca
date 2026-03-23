@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ArrowUpRight,
+  BarChart3,
   Bell,
   ChevronDown,
   Download,
@@ -8,7 +10,9 @@ import {
   MapPinned,
   Plus,
   Search,
-  Settings
+  Settings,
+  TrendingUp,
+  X
 } from 'lucide-react';
 import { mockSalesStatistics } from '../lib/mockData';
 
@@ -268,6 +272,9 @@ const AdminStatisticsPage: React.FC = () => {
   const [selectedState, setSelectedState] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState('all');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
+  const [isFullReportOpen, setIsFullReportOpen] = useState(false);
 
   const states = Array.from(new Set(mockSalesStatistics.map((item) => item.state))).sort((a, b) => a.localeCompare(b));
 
@@ -300,17 +307,36 @@ const AdminStatisticsPage: React.FC = () => {
   useEffect(() => {
     if (selectedCustomer !== 'all' && !customers.includes(selectedCustomer)) {
       setSelectedCustomer('all');
+      setCustomerSearchTerm('');
     }
   }, [customers, selectedCustomer]);
 
+  const filteredCustomerOptions = useMemo(() => {
+    const normalizedSearch = customerSearchTerm.trim().toLowerCase();
+    if (!normalizedSearch) {
+      return customers.slice(0, 8);
+    }
+
+    return customers
+      .filter((customer) => customer.toLowerCase().includes(normalizedSearch))
+      .slice(0, 8);
+  }, [customers, customerSearchTerm]);
+
   const filteredData = useMemo(() => {
+    const normalizedCustomerSearch = customerSearchTerm.trim().toLowerCase();
+
     return mockSalesStatistics.filter((item) => {
       const stateMatch = selectedState === 'all' || item.state === selectedState;
       const cityMatch = selectedCity === 'all' || item.city === selectedCity;
-      const customerMatch = selectedCustomer === 'all' || item.customer_name === selectedCustomer;
+      const customerMatch =
+        selectedCustomer !== 'all'
+          ? item.customer_name === selectedCustomer
+          : normalizedCustomerSearch
+            ? item.customer_name.toLowerCase().includes(normalizedCustomerSearch)
+            : true;
       return stateMatch && cityMatch && customerMatch;
     });
-  }, [selectedState, selectedCity, selectedCustomer]);
+  }, [selectedState, selectedCity, selectedCustomer, customerSearchTerm]);
 
   const periodConfig = periodConfigs[selectedPeriod];
 
@@ -446,9 +472,255 @@ const AdminStatisticsPage: React.FC = () => {
   const monthlyTrend = periodConfig.trend;
 
   const customerBadgePalette = ['bg-[#1a237e]/10 text-[#1a237e]', 'bg-[#90efef]/50 text-[#006e6e]', 'bg-[#dfe6ff] text-[#343d96]', 'bg-[#ffdad6] text-[#ba1a1a]'];
+  const reportSummaryCards = [
+    {
+      label: 'Receita organica',
+      value: formatCompactCurrency(organicRevenue),
+      detail: `${Math.round(organicShare * 100)}% do total`,
+      accent: 'text-[#006a6a]',
+      bg: 'bg-[#e6fffb]',
+    },
+    {
+      label: 'Receita assistida',
+      value: formatCompactCurrency(assistedRevenue),
+      detail: `${Math.round(assistedShare * 100)}% do total`,
+      accent: 'text-[#000666]',
+      bg: 'bg-[#e8ebff]',
+    },
+    {
+      label: 'Pedidos no periodo',
+      value: totalOrders.toLocaleString('pt-BR'),
+      detail: `${aggregatedCustomers.length} clientes monitorados`,
+      accent: 'text-[#0d1c2e]',
+      bg: 'bg-[#f2f5fe]',
+    },
+  ];
+  const reportCheckpoints = monthlyTrend.map((item, index) => {
+    const total = item.organic + item.assisted;
+    const organicRevenueEstimate = organicRevenue * (total / 100);
+    const assistedRevenueEstimate = assistedRevenue * (total / 100);
+
+    return {
+      ...item,
+      total,
+      organicRevenueEstimate,
+      assistedRevenueEstimate,
+      totalRevenueEstimate: organicRevenueEstimate + assistedRevenueEstimate,
+      momentum: index === 0 ? 0 : total - (monthlyTrend[index - 1].organic + monthlyTrend[index - 1].assisted),
+    };
+  });
+  const reportInsights = [
+    `${Math.round(assistedShare * 100)}% da receita do periodo veio do canal assistido, reforcando a influencia do time comercial na conversao.`,
+    topCustomers[0]
+      ? `${topCustomers[0].customer} lidera o periodo com ${formatCompactCurrency(topCustomers[0].revenue)} em faturamento.`
+      : 'Nenhum cliente com receita suficiente para destacar no periodo atual.',
+    topState
+      ? `${stateLabelMap[topState.state] || topState.state} aparece como principal concentrador de receita entre os estados monitorados.`
+      : 'Sem estado lider definido para os filtros atuais.',
+  ];
 
   return (
     <div className={`${pageStyles.shell} relative -m-8 min-h-screen p-8`} style={{ fontFamily: 'Inter, sans-serif' }}>
+      {isFullReportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#091228]/55 p-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/60 bg-[#f8f9ff] shadow-[0_28px_80px_-32px_rgba(9,18,40,0.65)]">
+            <div className="flex items-start justify-between border-b border-[#e5eaf7] bg-white/75 px-6 py-5 backdrop-blur">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Relatorio completo</p>
+                <h3 className="mt-2 text-3xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                  Tendencia de Canais
+                </h3>
+                <p className="mt-2 text-sm text-[#60697c]">
+                  Panorama expandido de {selectedPeriod.toLowerCase()} com foco em orgânico vs assistido
+                  {selectedState !== 'all' ? `, filtrado para ${stateLabelMap[selectedState] || selectedState}` : ''}.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFullReportOpen(false)}
+                className="rounded-full border border-[#d9e1f4] bg-white p-3 text-[#0d1c2e] transition-colors hover:bg-[#eef4ff]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              <div className="grid gap-6 xl:grid-cols-[1.3fr,0.9fr]">
+                <div className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {reportSummaryCards.map((card) => (
+                      <div key={card.label} className={`rounded-3xl border border-[#e5eaf7] ${card.bg} p-5`}>
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">{card.label}</p>
+                        <p className={`mt-4 text-3xl font-black ${card.accent}`} style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                          {card.value}
+                        </p>
+                        <p className="mt-2 text-xs text-[#60697c]">{card.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-[28px] border border-[#dce4f8] bg-white p-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                      <div>
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Leitura executiva</p>
+                        <h4 className="mt-2 text-2xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                          Evolucao do mix de canais
+                        </h4>
+                      </div>
+                      <div className="inline-flex items-center gap-2 rounded-full bg-[#eef4ff] px-4 py-2 text-xs font-bold text-[#000666]">
+                        <TrendingUp className="h-4 w-4" />
+                        Atualizado para {selectedPeriod}
+                      </div>
+                    </div>
+
+                    <div className="mt-8 h-64 rounded-[24px] bg-[linear-gradient(180deg,_#f7f9ff_0%,_#edf2ff_100%)] p-5">
+                      <div className="flex h-full items-end gap-3">
+                        {reportCheckpoints.map((item) => (
+                          <div key={item.label} className="flex h-full flex-1 flex-col justify-end gap-3">
+                            <div className="flex flex-1 items-end gap-2">
+                              <div className="flex-1 rounded-t-[18px] bg-[#006a6a]" style={{ height: `${Math.max(item.organic, 14)}%` }} />
+                              <div className="flex-1 rounded-t-[18px] bg-[#000666]" style={{ height: `${Math.max(item.assisted, 14)}%` }} />
+                            </div>
+                            <div>
+                              <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#60697c]">{item.label}</p>
+                              <p className="mt-1 text-center text-[11px] font-bold text-[#0d1c2e]">{formatCompactCurrency(item.totalRevenueEstimate)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-[#dce4f8] bg-white p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Checkpoints do periodo</p>
+                        <h4 className="mt-2 text-2xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                          Timeline operacional
+                        </h4>
+                      </div>
+                      <button className="inline-flex items-center gap-2 rounded-full border border-[#d7ddee] bg-white px-4 py-2 text-xs font-bold text-[#0d1c2e] transition-colors hover:bg-[#f8faff]">
+                        <Download className="h-4 w-4" />
+                        Exportar PDF
+                      </button>
+                    </div>
+
+                    <div className="mt-6 overflow-x-auto">
+                      <table className="w-full min-w-[720px] border-collapse text-left">
+                        <thead className="bg-[#eef3fd]">
+                          <tr>
+                            <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Marco</th>
+                            <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Organico</th>
+                            <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Assistido</th>
+                            <th className="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Receita estimada</th>
+                            <th className="px-5 py-4 text-right text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Momentum</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportCheckpoints.map((item) => (
+                            <tr key={item.label} className="border-b border-[#eef2fb] last:border-b-0">
+                              <td className="px-5 py-4 text-sm font-bold text-[#0d1c2e]">{item.label}</td>
+                              <td className="px-5 py-4 text-sm text-[#006a6a]">{item.organic}%</td>
+                              <td className="px-5 py-4 text-sm text-[#000666]">{item.assisted}%</td>
+                              <td className="px-5 py-4 text-sm text-[#60697c]">{formatCurrency(item.totalRevenueEstimate, 2)}</td>
+                              <td className="px-5 py-4 text-right text-sm font-bold text-[#0d1c2e]">
+                                {item.momentum > 0 ? '+' : ''}
+                                {item.momentum}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="overflow-hidden rounded-[28px] bg-[#000666] p-6 text-white shadow-[0_18px_40px_-20px_rgba(0,6,102,0.7)]">
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/65">Sintese de canais</p>
+                    <div className="mt-6 grid gap-4">
+                      <div className="rounded-2xl bg-white/8 p-4">
+                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.12em] text-white/70">
+                          <span>Organico</span>
+                          <span>{Math.round(organicShare * 100)}%</span>
+                        </div>
+                        <div className="mt-3 h-3 rounded-full bg-white/10">
+                          <div className="h-full rounded-full bg-[#90efef]" style={{ width: `${Math.max(organicShare * 100, 8)}%` }} />
+                        </div>
+                      </div>
+                      <div className="rounded-2xl bg-white/8 p-4">
+                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.12em] text-white/70">
+                          <span>Assistido</span>
+                          <span>{Math.round(assistedShare * 100)}%</span>
+                        </div>
+                        <div className="mt-3 h-3 rounded-full bg-white/10">
+                          <div className="h-full rounded-full bg-[#bdc2ff]" style={{ width: `${Math.max(assistedShare * 100, 8)}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/70">Melhor cliente</p>
+                      <p className="mt-2 text-lg font-black">{topCustomers[0]?.customer || 'Sem destaque'}</p>
+                      <p className="mt-1 text-sm text-white/70">
+                        {topCustomers[0] ? formatCurrency(topCustomers[0].revenue, 2) : 'Sem faturamento para o periodo'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-[#dce4f8] bg-white p-6">
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Insights automaticos</p>
+                    <div className="mt-5 space-y-3">
+                      {reportInsights.map((insight) => (
+                        <div key={insight} className="rounded-2xl bg-[#f5f8ff] p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-0.5 rounded-full bg-[#000666] p-2 text-white">
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </div>
+                            <p className="text-sm leading-6 text-[#0d1c2e]">{insight}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-[#dce4f8] bg-white p-6">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-[#000666]" />
+                      <h4 className="text-lg font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                        Top clientes do recorte
+                      </h4>
+                    </div>
+                    <div className="mt-5 space-y-4">
+                      {topCustomers.slice(0, 3).map((customer, index) => (
+                        <div key={customer.customer} className="rounded-2xl border border-[#eef2fb] p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-bold text-[#0d1c2e]">{customer.customer}</p>
+                              <p className="mt-1 text-xs text-[#60697c]">{stateLabelMap[customer.state] || customer.state}</p>
+                            </div>
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] ${customerBadgePalette[index % customerBadgePalette.length]}`}>
+                              #{index + 1}
+                            </span>
+                          </div>
+                          <div className="mt-4 flex items-center justify-between text-sm">
+                            <span className="text-[#60697c]">Pedidos</span>
+                            <span className="font-bold text-[#0d1c2e]">{customer.orders.toLocaleString('pt-BR')}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between text-sm">
+                            <span className="text-[#60697c]">Ticket medio</span>
+                            <span className="font-bold text-[#0d1c2e]">{formatCurrency(customer.avgTicket, 2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="sticky top-0 z-20 mb-8 flex items-center justify-between bg-[#f8f9ff]/95 px-1 py-3 backdrop-blur">
         <div className="flex w-full max-w-md items-center gap-3 rounded-full bg-[#eff4ff] px-4 py-3 text-sm text-[#767683]">
           <Search className="h-4 w-4" />
@@ -507,6 +779,7 @@ const AdminStatisticsPage: React.FC = () => {
                   setSelectedState(event.target.value);
                   setSelectedCity('all');
                   setSelectedCustomer('all');
+                  setCustomerSearchTerm('');
                 }}
                 className={selectClassName}
               >
@@ -527,6 +800,7 @@ const AdminStatisticsPage: React.FC = () => {
                 onChange={(event) => {
                   setSelectedCity(event.target.value);
                   setSelectedCustomer('all');
+                  setCustomerSearchTerm('');
                 }}
                 className={selectClassName}
               >
@@ -540,23 +814,70 @@ const AdminStatisticsPage: React.FC = () => {
               <ChevronDown className="pointer-events-none absolute right-4 h-4 w-4 text-[#767683]" />
             </div>
 
-            <div className="relative flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-[#e5eaf7]">
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-[#000666]/10 text-[10px] font-bold text-[#000666]">
-                P
+            <div className="relative min-w-[280px] rounded-xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-[#e5eaf7]">
+              <div className="flex items-center gap-3">
+                <Search className="h-4 w-4 text-[#000666]" />
+                <input
+                  value={customerSearchTerm}
+                  onFocus={() => setIsCustomerSearchOpen(true)}
+                  onBlur={() => window.setTimeout(() => setIsCustomerSearchOpen(false), 120)}
+                  onChange={(event) => {
+                    setCustomerSearchTerm(event.target.value);
+                    setSelectedCustomer('all');
+                    setIsCustomerSearchOpen(true);
+                  }}
+                  placeholder="Pesquisar cliente..."
+                  className="w-full border-none bg-transparent p-0 text-sm font-medium text-[#0d1c2e] outline-none placeholder:text-[#767683]"
+                />
+                {customerSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomerSearchTerm('');
+                      setSelectedCustomer('all');
+                      setIsCustomerSearchOpen(false);
+                    }}
+                    className="text-[#767683] transition-colors hover:text-[#0d1c2e]"
+                  >
+                    <Plus className="h-4 w-4 rotate-45" />
+                  </button>
+                )}
               </div>
-              <select
-                value={selectedCustomer}
-                onChange={(event) => setSelectedCustomer(event.target.value)}
-                className={selectClassName}
-              >
-                <option value="all">Clientes: Todos</option>
-                {customers.map((customer) => (
-                  <option key={customer} value={customer}>
-                    {customer}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 h-4 w-4 text-[#767683]" />
+
+              {isCustomerSearchOpen && filteredCustomerOptions.length > 0 && (
+                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-2xl border border-[#e5eaf7] bg-white shadow-[0_18px_40px_-24px_rgba(13,28,46,0.28)]">
+                  <button
+                    type="button"
+                    onMouseDown={() => {
+                      setSelectedCustomer('all');
+                      setCustomerSearchTerm('');
+                      setIsCustomerSearchOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm text-[#60697c] transition-colors hover:bg-[#f5f8ff] hover:text-[#0d1c2e]"
+                  >
+                    <span>Todos os clientes</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em]">Limpar</span>
+                  </button>
+
+                  {filteredCustomerOptions.map((customer) => (
+                    <button
+                      key={customer}
+                      type="button"
+                      onMouseDown={() => {
+                        setSelectedCustomer(customer);
+                        setCustomerSearchTerm(customer);
+                        setIsCustomerSearchOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between border-t border-[#eef2fb] px-4 py-3 text-left text-sm text-[#0d1c2e] transition-colors hover:bg-[#f5f8ff]"
+                    >
+                      <span className="truncate">{customer}</span>
+                      {selectedCustomer === customer && (
+                        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#000666]">Selecionado</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -773,7 +1094,10 @@ const AdminStatisticsPage: React.FC = () => {
             </div>
 
             <div className="mt-auto flex gap-3 pt-8">
-              <button className="flex-1 rounded-xl bg-[#dce9ff] py-3 text-xs font-bold text-[#000666] transition-colors hover:bg-[#d5e3fc]">
+              <button
+                onClick={() => setIsFullReportOpen(true)}
+                className="flex-1 rounded-xl bg-[#dce9ff] py-3 text-xs font-bold text-[#000666] transition-colors hover:bg-[#d5e3fc]"
+              >
                 Ver Relatorio Completo
               </button>
               <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#000666] text-white transition-transform hover:scale-[1.03]">
