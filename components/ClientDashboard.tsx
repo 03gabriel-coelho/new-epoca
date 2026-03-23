@@ -1,6 +1,5 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
-import { mockOrders, mockFinancials } from '../lib/mockData';
 import ProductImage from './ui/ProductImage';
 import { AuthUser, OrderStatus, StoredOrder } from '../types';
 import { updateStoredUser } from '../lib/authStorage';
@@ -103,9 +102,84 @@ const getPaymentStatusLabel = (order: StoredOrder) => {
   return 'Aguardando confirmacao do pagamento';
 };
 
-const getClientOrders = (currentUser: AuthUser | null) => {
-  const storedOrders = currentUser ? getStoredOrdersByCustomer(currentUser.id) : [];
-  return [...storedOrders, ...mockOrders].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+const ClientOrderDetailsModal: React.FC<{
+  order: StoredOrder | null;
+  onClose: () => void;
+}> = ({ order, onClose }) => {
+  if (!order) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Detalhes do Pedido</p>
+            <div className="mt-2 flex items-center gap-3">
+              <span className="text-lg font-bold text-slate-900">#{order.winthor_numped}</span>
+              {getOrderStatusBadge(order.status)}
+            </div>
+          </div>
+          <Button variant="ghost" className="rounded-full" onClick={onClose}>
+            Fechar
+          </Button>
+        </div>
+
+        <div className="max-h-[calc(90vh-88px)] space-y-5 overflow-y-auto p-6">
+          <div>
+            <p className="text-sm text-slate-500">{order.tracking_message}</p>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
+            <p><span className="font-bold text-slate-800">Data:</span> {new Date(order.date).toLocaleString('pt-BR')}</p>
+            <p><span className="font-bold text-slate-800">Pagamento:</span> {getPaymentMethodLabel(order.payment_method)}</p>
+            <p><span className="font-bold text-slate-800">Status do pagamento:</span> {getPaymentStatusLabel(order)}</p>
+            <p><span className="font-bold text-slate-800">Entrega:</span> {order.address}</p>
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div key={`${order.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
+                  <ProductImage
+                    src={item.image_path}
+                    alt={item.description}
+                    className="h-14 w-14 rounded-xl border border-slate-100"
+                    imgClassName="h-full w-full object-contain"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
+                    <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
+                    <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-green-700">Beneficio de combos</span>
+              <span className="font-bold text-green-700">
+                R$ {order.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
+              <span className="text-sm font-bold text-slate-800">Total do pedido</span>
+              <span className="text-lg font-bold text-[#be342e]">
+                R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFormData => ({
@@ -266,11 +340,26 @@ const CreditLimitCard = () => {
   );
 };
 
-const OrdersTable: React.FC<{ currentUser: AuthUser | null; onNavigateToCheckout: () => void }> = ({
+const OrdersTable: React.FC<{
+  currentUser: AuthUser | null;
+  onNavigateToCheckout: () => void;
+}> = ({
   currentUser,
   onNavigateToCheckout
 }) => {
-  const orders = getClientOrders(currentUser).slice(0, 6);
+  const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
+  const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
+
+  useEffect(() => {
+    setSelectedOrder((currentSelectedOrder) => {
+      if (!currentUser || orders.length === 0 || !currentSelectedOrder) {
+        return null;
+      }
+
+      const hasSelectedOrder = orders.some((order) => order.id === currentSelectedOrder.id);
+      return hasSelectedOrder ? currentSelectedOrder : null;
+    });
+  }, [currentUser?.id, orders]);
 
   return (
     <Card className="col-span-1 shadow-sm md:col-span-2">
@@ -278,54 +367,76 @@ const OrdersTable: React.FC<{ currentUser: AuthUser | null; onNavigateToCheckout
         <CardTitle>Meus Pedidos Recentes</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="relative w-full overflow-auto">
-          <table className="w-full caption-bottom text-left text-sm">
-            <thead className="[&_tr]:border-b bg-slate-50/50">
-              <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">NÂº Pedido (RCA)</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Data</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Itens</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor Total</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
-                <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">Acoes</th>
-              </tr>
-            </thead>
-            <tbody className="[&_tr:last-child]:border-0">
-              {orders.map((order) => (
-                <tr key={order.id} className="border-b transition-colors hover:bg-muted/50">
-                  <td className="p-6 align-middle font-medium">{order.winthor_numped}</td>
-                  <td className="p-6 align-middle">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
-                  <td className="p-6 align-middle">{order.items_count}</td>
-                  <td className="p-6 align-middle">R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                  <td className="p-6 align-middle">{getOrderStatusBadge(order.status)}</td>
-                  <td className="p-6 align-middle text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        className="h-8 rounded-full text-xs text-slate-500 hover:text-slate-900"
-                        onClick={() => alert(`Pedido #${order.winthor_numped}: ${'tracking_message' in order ? order.tracking_message : 'Pedido em acompanhamento logistico.'}`)}
-                      >
-                        <Truck className="mr-1 h-3 w-3" /> Rastrear
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 rounded-full border-[#be342e] text-xs text-[#be342e] hover:bg-blue-50"
-                        onClick={onNavigateToCheckout}
-                      >
-                        Repetir
-                      </Button>
-                    </div>
-                  </td>
+        {orders.length > 0 ? (
+          <div className="relative w-full overflow-auto">
+            <table className="w-full caption-bottom text-left text-sm">
+              <thead className="[&_tr]:border-b bg-slate-50/50">
+                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">NÂº Pedido (RCA)</th>
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Data</th>
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Itens</th>
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor Total</th>
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
+                  <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">Acoes</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="flex items-center justify-end gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50/30 p-4 text-xs text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-[#be342e]" />
-            <span>Transacoes protegidas por ClearSale Antifraude</span>
+              </thead>
+              <tbody className="[&_tr:last-child]:border-0">
+                {orders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="cursor-pointer border-b transition-colors hover:bg-muted/50"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <td className="p-6 align-middle font-medium">{order.winthor_numped}</td>
+                    <td className="p-6 align-middle">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
+                    <td className="p-6 align-middle">{order.items_count}</td>
+                    <td className="p-6 align-middle">R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="p-6 align-middle">{getOrderStatusBadge(order.status)}</td>
+                    <td className="p-6 align-middle text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          className="h-8 rounded-full text-xs text-slate-500 hover:text-slate-900"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedOrder(order);
+                          }}
+                        >
+                          <Truck className="mr-1 h-3 w-3" /> Rastrear
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-8 rounded-full border-[#be342e] text-xs text-[#be342e] hover:bg-blue-50"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onNavigateToCheckout();
+                          }}
+                        >
+                          Repetir
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex items-center justify-end gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50/30 p-4 text-xs text-slate-400">
+              <ShieldCheck className="h-4 w-4 text-[#be342e]" />
+              <span>Transacoes protegidas por ClearSale Antifraude</span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+            <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
+            <h3 className="text-lg font-bold text-slate-900">Nenhum pedido recente</h3>
+            <p className="mt-1 max-w-sm text-sm text-slate-500">Assim que um pedido for finalizado no checkout, ele aparecera aqui.</p>
+            <Button className="mt-5 rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+              Fazer novo pedido
+            </Button>
+          </div>
+        )}
       </CardContent>
+      <ClientOrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
     </Card>
   );
 };
@@ -944,76 +1055,7 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
         </Card>
       </div>
 
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Detalhes do Pedido</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <span className="text-lg font-bold text-slate-900">#{selectedOrder.winthor_numped}</span>
-                  {getOrderStatusBadge(selectedOrder.status)}
-                </div>
-              </div>
-              <Button variant="ghost" className="rounded-full" onClick={() => setSelectedOrder(null)}>
-                Fechar
-              </Button>
-            </div>
-
-            <div className="max-h-[calc(90vh-88px)] space-y-5 overflow-y-auto p-6">
-              <div>
-                <p className="text-sm text-slate-500">{selectedOrder.tracking_message}</p>
-              </div>
-
-              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
-                <p><span className="font-bold text-slate-800">Data:</span> {new Date(selectedOrder.date).toLocaleString('pt-BR')}</p>
-                <p><span className="font-bold text-slate-800">Pagamento:</span> {getPaymentMethodLabel(selectedOrder.payment_method)}</p>
-                <p><span className="font-bold text-slate-800">Status do pagamento:</span> {getPaymentStatusLabel(selectedOrder)}</p>
-                <p><span className="font-bold text-slate-800">Entrega:</span> {selectedOrder.address}</p>
-              </div>
-
-              <div>
-                <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item) => (
-                    <div key={`${selectedOrder.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
-                      <ProductImage
-                        src={item.image_path}
-                        alt={item.description}
-                        className="h-14 w-14 rounded-xl border border-slate-100"
-                        imgClassName="h-full w-full object-contain"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
-                        <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
-                        <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-green-700">Beneficio de combos</span>
-                  <span className="font-bold text-green-700">
-                    R$ {selectedOrder.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
-                  <span className="text-sm font-bold text-slate-800">Total do pedido</span>
-                  <span className="text-lg font-bold text-[#be342e]">
-                    R$ {selectedOrder.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ClientOrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
     </div>
   );
 };

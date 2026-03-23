@@ -1,11 +1,18 @@
 
 import React from 'react';
 import { Button, Badge } from './ui/Layout';
-import { ArrowLeft, Leaf, ShieldCheck, Target, Heart, History, Play, Zap, Check } from 'lucide-react';
+import { ArrowLeft, Leaf, ShieldCheck, Target, Heart, History, Play, Zap, Check, MessageCircle, Instagram, Facebook, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { mockInstitutionalVideo } from '../lib/mockData';
 import { AuthUser } from '../types';
 import Logo from "../lib/images/logo1.webp";
+
+const footerSocialLinks = [
+  { label: 'WhatsApp', href: 'https://wa.me/5531997935059', icon: MessageCircle },
+  { label: 'Instagram', href: 'https://www.instagram.com/epoca_online/', icon: Instagram },
+  { label: 'Facebook', href: 'https://www.facebook.com/epocaonlineoficial', icon: Facebook },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/%C3%A9poca-distribui%C3%A7%C3%A3o/', icon: Linkedin },
+] as const;
 
 interface InstitutionalPageProps {
   currentUser: AuthUser | null;
@@ -212,6 +219,27 @@ const InstitutionalPage: React.FC<InstitutionalPageProps> = ({ currentUser, onNa
                         <input type="email" placeholder="Seu e-mail" className="flex-1 bg-transparent px-3 text-slate-900 text-sm focus:outline-none" />
                         <button className="bg-[#be342e] text-white rounded-full px-4 py-1 text-sm font-bold">OK</button>
                     </div>
+                </div>
+            </div>
+            <div className="mb-8 flex flex-col items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 px-5 py-5 text-left backdrop-blur-sm md:flex-row">
+                <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Redes Sociais</p>
+                    <p className="mt-1 text-sm text-blue-100">Acompanhe novidades, atendimento e conteudos da Epoca.</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
+                    {footerSocialLinks.map((socialLink) => (
+                        <a
+                            key={socialLink.label}
+                            href={socialLink.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label={socialLink.label}
+                            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-white hover:text-[#b70e0c]"
+                        >
+                            <socialLink.icon className="h-4 w-4" />
+                            {socialLink.label}
+                        </a>
+                    ))}
                 </div>
             </div>
             <div className="border-t border-blue-400/30 pt-6 text-xs text-blue-200 flex flex-col md:flex-row justify-between items-center">
