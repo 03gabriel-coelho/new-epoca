@@ -853,7 +853,18 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
   const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
 
   useEffect(() => {
-    setSelectedOrder(orders[0] || null);
+    setSelectedOrder((currentSelectedOrder) => {
+      if (!currentUser || orders.length === 0) {
+        return null;
+      }
+
+      if (!currentSelectedOrder) {
+        return null;
+      }
+
+      const hasSelectedOrder = orders.some((order) => order.id === currentSelectedOrder.id);
+      return hasSelectedOrder ? currentSelectedOrder : null;
+    });
   }, [currentUser?.id, orders]);
 
   return (
