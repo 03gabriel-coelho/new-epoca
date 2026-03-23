@@ -714,6 +714,36 @@ const emptyAdminForm = () => ({
   default_password: ADMIN_DEFAULT_PASSWORD,
 });
 
+const ADMIN_ROLES: AdminUser['role'][] = ['ADMIN', 'SALES', 'MARKETING', 'SUPPORT'];
+
+const isCustomerRecord = (value: unknown): value is Customer => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<Customer> & { role?: unknown };
+  return typeof candidate.company_name === 'string'
+    && candidate.company_name.trim().length > 0
+    && typeof candidate.cnpj === 'string'
+    && candidate.cnpj.trim().length > 0
+    && !ADMIN_ROLES.includes(candidate.role as AdminUser['role']);
+};
+
+const isAdminRecord = (value: unknown): value is AdminUser => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<AdminUser> & { cnpj?: unknown; company_name?: unknown };
+  return typeof candidate.name === 'string'
+    && candidate.name.trim().length > 0
+    && typeof candidate.email === 'string'
+    && candidate.email.trim().length > 0
+    && ADMIN_ROLES.includes(candidate.role as AdminUser['role'])
+    && typeof candidate.cnpj !== 'string'
+    && typeof candidate.company_name !== 'string';
+};
+
 const toAuthUserFromCustomerForm = (form: ReturnType<typeof emptyClientForm>, customerId: string): AuthUser => {
   const fullAddress = [
     [form.street, form.address_number].filter(Boolean).join(', '),
@@ -865,10 +895,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
   });
 
   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
+  const visibleCustomers = customers.filter(isCustomerRecord);
+  const visibleAdmins = admins.filter(isAdminRecord);
 
   useEffect(() => {
       setVisibleProductCount(PRODUCT_BATCH_SIZE);
   }, [productSearchTerm, activeTab]);
+
+  useEffect(() => {
+      if (userTab !== 'clients') {
+          setViewingCart(null);
+      }
+  }, [userTab]);
 
   useEffect(() => {
       if (activeTab !== 'products') return;
@@ -1593,7 +1631,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                 </thead>
                                 <tbody>
                                     {userTab === 'clients' ? (
-                                        customers.map(c => (
+                                        visibleCustomers.map(c => (
                                             <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
                                                 <td className="px-6 py-3 font-medium text-slate-900">{c.company_name}</td>
                                                 <td className="px-6 py-3 text-slate-500 font-mono">{c.cnpj}</td>
@@ -1610,8 +1648,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                 <td className="px-6 py-3 text-right">
                                                    <div className="flex justify-end gap-2">
                                                        <Tooltip content="Espiar Carrinho">
-                                                          <Button 
-                                                            variant="ghost" 
+                                                          <Button
+                                                            variant="ghost"
                                                             className={`h-8 w-8 p-0 ${c.is_online ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400'}`}
                                                             onClick={() => setViewingCart(c)}
                                                           >
@@ -1624,7 +1662,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                             </tr>
                                         ))
                                     ) : (
-                                        admins.map(a => (
+                                        visibleAdmins.map(a => (
                                             <tr key={a.id} className="border-b border-slate-100 hover:bg-slate-50">
                                                 <td className="px-6 py-3 font-medium text-slate-900 flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600 font-bold">

@@ -315,7 +315,7 @@ const LocationModal = ({
         </div>
         
         <p className="text-slate-500 text-sm mb-6">
-          Insira seu CEP para ver a disponibilidade de produtos e prazos de entrega para sua regiÃ£o.
+          Insira seu CEP para ver a disponibilidade de produtos para sua região.
         </p>
 
         <div className="space-y-4">
@@ -882,7 +882,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="bg-slate-900 rounded-2xl p-8 flex flex-col justify-center items-start min-h-[250px] relative overflow-hidden group text-white">
                  <div className="relative z-10">
                     <Badge variant="warning" className="mb-2 border-none">Abastecimento Inteligente</Badge>
-                    <h3 className="text-2xl font-bold mb-2">Reposicao de Alto Giro</h3>
+                    <h3 className="text-2xl font-bold mb-2">Reposição de Alto Giro</h3>
                     <p className="mb-6 text-slate-300 max-w-xs">Mercearia, limpeza e perfumaria com condicoes comerciais para recompra rapida.</p>
                     <Button onClick={onNavigateToProducts}>Ver Departamentos</Button>
                  </div>

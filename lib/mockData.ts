@@ -253,7 +253,7 @@ export const mockCustomers: Customer[] = [
   { 
     id: 'c2', 
     cnpj: '98.765.432/0001-10', 
-    company_name: 'Mercearia do JoÃ£o', 
+    company_name: 'Mercearia do João', 
     status: 'BLOCKED', 
     credit_limit: 5000, 
     last_order_date: '2023-09-10',
@@ -263,7 +263,7 @@ export const mockCustomers: Customer[] = [
   { 
     id: 'c3', 
     cnpj: '11.222.333/0001-55', 
-    company_name: 'FarmÃ¡cia SaÃºde', 
+    company_name: 'Farmácia Saúde', 
     status: 'ACTIVE', 
     credit_limit: 15000, 
     last_order_date: '2023-10-28',
