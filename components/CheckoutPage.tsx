@@ -507,7 +507,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
-                  <Badge className="absolute -top-2 -left-2 bg-[#be342e] text-white">Cartao 1</Badge>
+                  <Badge className="absolute -top-2 -left-2 bg-[#be342e]">Cartao 1</Badge>
                   <div className="mb-4">
                     <label className="text-xs font-bold text-slate-500 uppercase">Valor a Cobrar</label>
                     <div className="relative">

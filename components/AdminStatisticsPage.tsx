@@ -20,11 +20,9 @@ const pageStyles = {
 };
 
 const heatmapBase = [
-  { region: 'Capital', label: 'Sao Paulo Metropolitan', top: '20%', left: '60%', tone: 'high' as const },
-  { region: 'Grande SP', label: 'Grande Sao Paulo', top: '50%', left: '75%', tone: 'high' as const },
-  { region: 'Interior', label: 'Interior', top: '40%', left: '40%', tone: 'medium' as const },
-  { region: 'Litoral', label: 'Litoral', top: '70%', left: '30%', tone: 'low' as const },
-  { region: 'Sudeste', label: 'Sudeste', top: '10%', left: '20%', tone: 'low' as const },
+  { region: 'Interior', label: 'Interior de Minas', top: '38%', left: '36%', tone: 'medium' as const },
+  { region: 'Sudeste', label: 'Belo Horizonte e Vitoria', top: '26%', left: '58%', tone: 'high' as const },
+  { region: 'Litoral', label: 'Litoral Capixaba', top: '64%', left: '62%', tone: 'low' as const },
 ];
 
 const mapPalette = {
@@ -159,22 +157,6 @@ const renderBrazilMap = () => (
 </svg>
 );
 
-const renderSaoPauloMap = () => (
-  <svg viewBox="0 0 800 520" className="absolute inset-0 h-full w-full">
-    <path
-      d="M124 276l82-117 161-46 160 33 111 106-3 88-85 76-156 34-122-20-128-66-42-88 22-60z"
-      fill={mapPalette.baseFill}
-      stroke={mapPalette.baseStroke}
-      strokeWidth="10"
-      strokeLinejoin="round"
-    />
-    <path d="M244 177l126-34 58 59-43 62-130 13-47-49 36-51z" fill={mapPalette.regionFill} stroke={mapPalette.baseStroke} strokeWidth="6" strokeLinejoin="round" />
-    <path d="M422 198l99 5 58 56-24 71-111 16-58-55 36-93z" fill={mapPalette.regionStrong} stroke={mapPalette.baseStroke} strokeWidth="6" strokeLinejoin="round" />
-    <path d="M222 277l162-6 31 86-88 58-122-54-20-50 37-34z" fill={mapPalette.regionStrong} stroke={mapPalette.baseStroke} strokeWidth="6" strokeLinejoin="round" />
-    <path d="M422 351l131-21-28 84-132 25-44-58 73-30z" fill={mapPalette.regionFill} stroke={mapPalette.baseStroke} strokeWidth="6" strokeLinejoin="round" />
-  </svg>
-);
-
 const renderMinasMap = () => (
   <svg viewBox="0 0 800 520" className="absolute inset-0 h-full w-full">
     <path
@@ -205,10 +187,63 @@ const renderEspiritoSantoMap = () => (
 );
 
 const stateLabelMap: Record<string, string> = {
-  'Sao Paulo': 'Sao Paulo',
   'Minas Gerais': 'MG',
   'Espirito Santo': 'Espirito Santo',
 };
+
+const periodConfigs = {
+  'Hoje': {
+    revenueMultiplier: 1,
+    ordersMultiplier: 1,
+    channelShareShift: 0,
+    stateMomentum: 1,
+    regionMomentum: 1,
+    growthBadge: '+12.5%',
+    ordersBadge: '-2.1%',
+    monthlyGoal: 1500000,
+    trend: [
+      { label: '08h', organic: 12, assisted: 9 },
+      { label: '10h', organic: 18, assisted: 13 },
+      { label: '12h', organic: 31, assisted: 22 },
+      { label: '14h', organic: 43, assisted: 29 },
+      { label: '16h', organic: 58, assisted: 36 },
+    ],
+  },
+  '7 Dias': {
+    revenueMultiplier: 1.18,
+    ordersMultiplier: 1.12,
+    channelShareShift: 0.025,
+    stateMomentum: 1.06,
+    regionMomentum: 1.08,
+    growthBadge: '+18.9%',
+    ordersBadge: '+6.4%',
+    monthlyGoal: 4200000,
+    trend: [
+      { label: 'SEG', organic: 18, assisted: 16 },
+      { label: 'TER', organic: 26, assisted: 22 },
+      { label: 'QUA', organic: 34, assisted: 30 },
+      { label: 'QUI', organic: 46, assisted: 39 },
+      { label: 'SEX', organic: 63, assisted: 52 },
+    ],
+  },
+  '30 Dias': {
+    revenueMultiplier: 1.42,
+    ordersMultiplier: 1.28,
+    channelShareShift: 0.045,
+    stateMomentum: 1.12,
+    regionMomentum: 1.16,
+    growthBadge: '+27.3%',
+    ordersBadge: '+14.8%',
+    monthlyGoal: 7800000,
+    trend: [
+      { label: 'SEM 1', organic: 22, assisted: 17 },
+      { label: 'SEM 2', organic: 36, assisted: 29 },
+      { label: 'SEM 3', organic: 51, assisted: 42 },
+      { label: 'SEM 4', organic: 67, assisted: 58 },
+      { label: 'HOJE', organic: 74, assisted: 64 },
+    ],
+  },
+} as const;
 
 const formatCurrency = (value: number, maximumFractionDigits = 0) =>
   new Intl.NumberFormat('pt-BR', {
@@ -277,10 +312,31 @@ const AdminStatisticsPage: React.FC = () => {
     });
   }, [selectedState, selectedCity, selectedCustomer]);
 
+  const periodConfig = periodConfigs[selectedPeriod];
+
+  const scenarioData = useMemo(() => {
+    return filteredData.map((item, index) => {
+      const revenueWeight = 1 + ((index % 4) - 1.5) * 0.045;
+      const ordersWeight = 1 + ((index % 3) - 1) * 0.05;
+      const stateWeight = selectedPeriod === 'Hoje' ? 1 : 1 + ((item.state.length % 3) - 1) * (periodConfig.stateMomentum - 1) * 0.6;
+      const regionWeight = selectedPeriod === 'Hoje' ? 1 : 1 + ((item.region.length % 4) - 1.5) * (periodConfig.regionMomentum - 1) * 0.35;
+      const channelWeight =
+        item.channel === 'SALES_ASSISTED'
+          ? 1 + periodConfig.channelShareShift
+          : 1 - periodConfig.channelShareShift * 0.75;
+
+      return {
+        ...item,
+        revenue: Math.round(item.revenue * periodConfig.revenueMultiplier * revenueWeight * stateWeight * channelWeight),
+        orders: Math.max(1, Math.round(item.orders * periodConfig.ordersMultiplier * ordersWeight * regionWeight)),
+      };
+    });
+  }, [filteredData, periodConfig, selectedPeriod]);
+
   const aggregatedCustomers = useMemo(() => {
     const grouped = new Map<string, { customer: string; city: string; state: string; orders: number; revenue: number; avgTicket: number }>();
 
-    filteredData.forEach((item) => {
+    scenarioData.forEach((item) => {
       const current = grouped.get(item.customer_name) || {
         customer: item.customer_name,
         city: item.city,
@@ -297,12 +353,12 @@ const AdminStatisticsPage: React.FC = () => {
     });
 
     return Array.from(grouped.values()).sort((a, b) => b.revenue - a.revenue);
-  }, [filteredData]);
+  }, [scenarioData]);
 
   const aggregatedRegions = useMemo(() => {
     const grouped = new Map<string, { region: string; revenue: number; orders: number }>();
 
-    filteredData.forEach((item) => {
+    scenarioData.forEach((item) => {
       const current = grouped.get(item.region) || {
         region: item.region,
         revenue: 0,
@@ -315,13 +371,13 @@ const AdminStatisticsPage: React.FC = () => {
     });
 
     return Array.from(grouped.values()).sort((a, b) => b.revenue - a.revenue);
-  }, [filteredData]);
+  }, [scenarioData]);
 
   const aggregatedStates = useMemo(() => {
     const grouped = new Map<string, { state: string; revenue: number; orders: number; customers: number }>();
     const customersByState = new Map<string, Set<string>>();
 
-    filteredData.forEach((item) => {
+    scenarioData.forEach((item) => {
       const current = grouped.get(item.state) || {
         state: item.state,
         revenue: 0,
@@ -344,16 +400,17 @@ const AdminStatisticsPage: React.FC = () => {
         customers: customersByState.get(item.state)?.size || 0,
       }))
       .sort((a, b) => b.revenue - a.revenue);
-  }, [filteredData]);
+  }, [scenarioData]);
 
-  const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalOrders = filteredData.reduce((sum, item) => sum + item.orders, 0);
-  const organicRevenue = filteredData.filter((item) => item.channel === 'ORGANIC').reduce((sum, item) => sum + item.revenue, 0);
-  const assistedRevenue = filteredData.filter((item) => item.channel === 'SALES_ASSISTED').reduce((sum, item) => sum + item.revenue, 0);
+  const totalRevenue = scenarioData.reduce((sum, item) => sum + item.revenue, 0);
+  const totalOrders = scenarioData.reduce((sum, item) => sum + item.orders, 0);
+  const organicRevenue = scenarioData.filter((item) => item.channel === 'ORGANIC').reduce((sum, item) => sum + item.revenue, 0);
+  const assistedRevenue = scenarioData.filter((item) => item.channel === 'SALES_ASSISTED').reduce((sum, item) => sum + item.revenue, 0);
   const organicShare = totalRevenue > 0 ? organicRevenue / totalRevenue : 0;
   const assistedShare = totalRevenue > 0 ? assistedRevenue / totalRevenue : 0;
   const topCustomers = aggregatedCustomers.slice(0, 4);
-  const topState = aggregatedStates[0];
+  const stateMetricStates = aggregatedStates;
+  const topState = stateMetricStates[0];
   const regionMax = Math.max(...aggregatedRegions.map((item) => item.revenue), 1);
 
   const mapHotspots = heatmapBase.map((spot) => {
@@ -375,28 +432,18 @@ const AdminStatisticsPage: React.FC = () => {
   const mapScopeLabel =
     selectedState === 'all'
       ? 'Mapa do Brasil'
-      : selectedState === 'Sao Paulo'
-        ? 'Mapa do estado de Sao Paulo'
-        : selectedState === 'Minas Gerais'
-          ? 'Mapa do estado de Minas Gerais'
-          : 'Mapa do estado do Espirito Santo';
+      : selectedState === 'Minas Gerais'
+        ? 'Mapa do estado de Minas Gerais'
+        : 'Mapa do estado do Espirito Santo';
 
   const mapSvg =
     selectedState === 'all'
       ? renderBrazilMap()
-      : selectedState === 'Sao Paulo'
-        ? renderSaoPauloMap()
-        : selectedState === 'Minas Gerais'
-          ? renderMinasMap()
-          : renderEspiritoSantoMap();
+      : selectedState === 'Minas Gerais'
+        ? renderMinasMap()
+        : renderEspiritoSantoMap();
 
-  const monthlyTrend = [
-    { label: 'JAN', organic: 10, assisted: 8 },
-    { label: 'FEV', organic: 18, assisted: 12 },
-    { label: 'MAR', organic: 32, assisted: 18 },
-    { label: 'ABR', organic: 54, assisted: 27 },
-    { label: 'MAI', organic: 61, assisted: 29 },
-  ];
+  const monthlyTrend = periodConfig.trend;
 
   const customerBadgePalette = ['bg-[#1a237e]/10 text-[#1a237e]', 'bg-[#90efef]/50 text-[#006e6e]', 'bg-[#dfe6ff] text-[#343d96]', 'bg-[#ffdad6] text-[#ba1a1a]'];
 
@@ -518,17 +565,17 @@ const AdminStatisticsPage: React.FC = () => {
           <div className={`${pageStyles.card} p-6`}>
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Vendas totais</p>
-              <span className="rounded-md bg-[#90efef]/35 px-2 py-1 text-[10px] font-extrabold text-[#006e6e]">+12.5%</span>
+              <span className="rounded-md bg-[#90efef]/35 px-2 py-1 text-[10px] font-extrabold text-[#006e6e]">{periodConfig.growthBadge}</span>
             </div>
             <div className="mt-6 text-4xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
               {formatCurrency(totalRevenue)}
             </div>
             <div className="mt-6 border-t border-[#edf1fb] pt-4">
               <p className="text-xs text-[#60697c]">
-                Meta mensal: <span className="font-bold text-[#0d1c2e]">{formatCurrency(1500000)}</span>
+                Meta mensal: <span className="font-bold text-[#0d1c2e]">{formatCurrency(periodConfig.monthlyGoal)}</span>
               </p>
               <div className="mt-3 h-1.5 w-full rounded-full bg-[#dce9ff]">
-                <div className="h-full rounded-full bg-[#006a6a]" style={{ width: `${Math.min((totalRevenue / 1500000) * 100, 100)}%` }} />
+                <div className="h-full rounded-full bg-[#006a6a]" style={{ width: `${Math.min((totalRevenue / periodConfig.monthlyGoal) * 100, 100)}%` }} />
               </div>
             </div>
           </div>
@@ -536,7 +583,7 @@ const AdminStatisticsPage: React.FC = () => {
           <div className={`${pageStyles.card} p-6`}>
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Volume de pedidos</p>
-              <span className="rounded-md bg-[#ffdbcf] px-2 py-1 text-[10px] font-extrabold text-[#822800]">-2.1%</span>
+              <span className="rounded-md bg-[#ffdbcf] px-2 py-1 text-[10px] font-extrabold text-[#822800]">{periodConfig.ordersBadge}</span>
             </div>
             <div className="mt-6 text-4xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
               {totalOrders.toLocaleString('pt-BR')}
@@ -561,7 +608,7 @@ const AdminStatisticsPage: React.FC = () => {
               {topState ? formatCompactCurrency(topState.revenue) : 'R$ 0'}
             </div>
             <div className="mt-6 space-y-3">
-              {aggregatedStates.slice(0, 3).map((state) => (
+              {stateMetricStates.slice(0, 3).map((state) => (
                 <div key={state.state}>
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <span className="font-bold text-[#60697c]">{stateLabelMap[state.state] || state.state}</span>
