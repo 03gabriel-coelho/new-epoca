@@ -4,9 +4,12 @@ import { Button } from './ui/Layout';
 import { Lock, Server, User, ArrowLeft, Key, ShieldCheck, Database, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Logo from "../lib/images/logo1.webp";
+import { AdminUser } from '../types';
+import { mockAdminUsers } from '../lib/mockData';
+import { getStoredAdminUsers, saveStoredAdminSession } from '../lib/authStorage';
 
 interface AdminLoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (user: AdminUser) => void;
   onNavigateToHome: () => void;
 }
 
@@ -26,8 +29,30 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLoginSuccess, onNavig
 
     // Simulation of WinThor Authentication API
     setTimeout(() => {
+      const availableAdmins = [...mockAdminUsers, ...getStoredAdminUsers()].reduce<AdminUser[]>((acc, admin) => {
+        if (acc.some((item) => item.id === admin.id || item.email.toLowerCase() === admin.email.toLowerCase())) {
+          return acc;
+        }
+        acc.push(admin);
+        return acc;
+      }, []);
+
+      const normalizedUsername = formData.username.trim().toLowerCase();
+      const matchedAdmin = availableAdmins.find((admin) => {
+        const matchesEmail = admin.email.trim().toLowerCase() === normalizedUsername;
+        const matchesName = admin.name.trim().toLowerCase() === normalizedUsername;
+        const expectedPassword = admin.default_password || 'Admin@123';
+        return (matchesEmail || matchesName) && expectedPassword === formData.password;
+      });
+
+      if (matchedAdmin && matchedAdmin.status === 'ACTIVE') {
+        setIsLoading(false);
+        saveStoredAdminSession(matchedAdmin);
+        onLoginSuccess(matchedAdmin);
+        return;
+      }
       // Mock validation (accepts any non-empty input for demo purposes)
-      if (formData.username && formData.password) {
+      if (false) {
         setIsLoading(false);
         onLoginSuccess();
       } else {

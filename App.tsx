@@ -14,8 +14,8 @@ import ProductDetailPage from './components/ProductDetailPage';
 import ComboDetailPage from './components/ComboDetailPage';
 import FavoritesPage from './components/FavoritesPage';
 import { Button } from './components/ui/Layout';
-import { AuthUser, CartItem, StoredOrder } from './types';
-import { clearStoredSession, getStoredSession } from './lib/authStorage';
+import { AdminUser, AuthUser, CartItem, StoredOrder } from './types';
+import { clearStoredAdminSession, clearStoredSession, getStoredAdminSession, getStoredSession } from './lib/authStorage';
 import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage';
 import { mockCombos } from './lib/mockCombos';
 import { ComboSelections, createDefaultComboSelections, resolveComboQualifyingItems } from './lib/comboUtils';
@@ -31,6 +31,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [currentAdminUser, setCurrentAdminUser] = useState<AdminUser | null>(null);
   const [nextPathAfterLogin, setNextPathAfterLogin] = useState<string | null>(null);
   const [activeZipCode, setActiveZipCode] = useState('');
 
@@ -93,15 +94,18 @@ const App = () => {
 
   useEffect(() => {
     const storedSession = getStoredSession();
+    const storedAdminSession = getStoredAdminSession();
     if (storedSession) {
       setCurrentUser(storedSession);
       setIsLoggedIn(true);
       setActiveZipCode(storedSession.zipCode || '');
-      return;
+    } else if (typeof window !== 'undefined') {
+      setActiveZipCode(window.localStorage.getItem(ACTIVE_ZIP_STORAGE_KEY) || '');
     }
 
-    if (typeof window !== 'undefined') {
-      setActiveZipCode(window.localStorage.getItem(ACTIVE_ZIP_STORAGE_KEY) || '');
+    if (storedAdminSession) {
+      setCurrentAdminUser(storedAdminSession);
+      setIsAdminLoggedIn(true);
     }
   }, []);
 
@@ -148,7 +152,9 @@ const App = () => {
   };
 
   const handleAdminLogout = () => {
+    clearStoredAdminSession();
     setIsAdminLoggedIn(false);
+    setCurrentAdminUser(null);
     navigateToHome();
   };
 
@@ -355,7 +361,8 @@ const App = () => {
     }
   };
 
-  const handleAdminLoginSuccess = () => {
+  const handleAdminLoginSuccess = (adminUser: AdminUser) => {
+    setCurrentAdminUser(adminUser);
     setIsAdminLoggedIn(true);
     navigate('/admin');
   };
@@ -638,9 +645,9 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            isAdminLoggedIn ? (
+            isAdminLoggedIn && currentAdminUser ? (
               <div className="min-h-screen flex animate-in fade-in">
-                <AdminDashboard onNavigateToHome={handleAdminLogout} />
+                <AdminDashboard currentAdminUser={currentAdminUser} onNavigateToHome={handleAdminLogout} />
               </div>
             ) : (
               <Navigate to="/admin/login" replace />

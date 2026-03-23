@@ -275,9 +275,9 @@ export const mockCustomers: Customer[] = [
 ];
 
 export const mockAdminUsers: AdminUser[] = [
-  { id: 'u1', name: 'Admin Master', email: 'admin@epoca.com.br', role: 'ADMIN', status: 'ACTIVE', last_login: 'Hoje, 09:00' },
-  { id: 'u2', name: 'Carlos Vendas', email: 'carlos@epoca.com.br', role: 'SALES', status: 'ACTIVE', last_login: 'Ontem, 14:30' },
-  { id: 'u3', name: 'Ana Marketing', email: 'ana@epoca.com.br', role: 'MARKETING', status: 'ACTIVE', last_login: '2 dias atrás' },
+  { id: 'u1', name: 'Admin Master', email: 'admin@epoca.com.br', default_password: 'Admin@123', role: 'ADMIN', status: 'ACTIVE', last_login: 'Hoje, 09:00', permissions: ['overview', 'products', 'content', 'customers', 'statistics', 'fraud', 'settings'] },
+  { id: 'u2', name: 'Carlos Vendas', email: 'carlos@epoca.com.br', default_password: 'Admin@123', role: 'SALES', status: 'ACTIVE', last_login: 'Ontem, 14:30', permissions: ['overview', 'customers', 'statistics', 'fraud'] },
+  { id: 'u3', name: 'Ana Marketing', email: 'ana@epoca.com.br', default_password: 'Admin@123', role: 'MARKETING', status: 'ACTIVE', last_login: '2 dias atrás', permissions: ['overview', 'products', 'content', 'statistics'] },
 ];
 
 export const mockActivities: ActivityLog[] = [
@@ -296,6 +296,5 @@ export const mockSalesStatistics: SalesStatisticEntry[] = [
   { id: 'ss15', customer_id: 'c8', customer_name: 'Distribuidora Leste', state: 'Espirito Santo', city: 'Vila Velha', region: 'Litoral', channel: 'ORGANIC', revenue: 118000, orders: 26, avg_ticket: 4538.46, period_label: 'Mar/2026' },
   { id: 'ss16', customer_id: 'c8', customer_name: 'Distribuidora Leste', state: 'Espirito Santo', city: 'Vila Velha', region: 'Litoral', channel: 'SALES_ASSISTED', revenue: 83000, orders: 17, avg_ticket: 4882.35, period_label: 'Mar/2026' }
 ];
-
 
 

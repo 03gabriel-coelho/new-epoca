@@ -197,7 +197,17 @@ export interface AdminUser {
   role: 'ADMIN' | 'SALES' | 'MARKETING' | 'SUPPORT';
   status: 'ACTIVE' | 'INACTIVE';
   last_login: string;
+  permissions: AdminPermission[];
 }
+
+export type AdminPermission =
+  | 'overview'
+  | 'products'
+  | 'content'
+  | 'customers'
+  | 'statistics'
+  | 'fraud'
+  | 'settings';
 
 export interface ActivityLog {
   id: string;

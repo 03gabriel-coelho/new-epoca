@@ -1,11 +1,11 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import AdminStatisticsPage from './AdminStatisticsPage';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
-import { SalesData, Customer, AdminUser, Product, AuthUser } from '../types';
-import { getStoredUsers, saveStoredUsers, updateStoredUser } from '../lib/authStorage';
+import { SalesData, Customer, AdminPermission, AdminUser, Product, AuthUser } from '../types';
+import { getStoredAdminUsers, saveStoredAdminSession, saveStoredAdminUsers, getStoredUsers, saveStoredUsers, updateStoredUser } from '../lib/authStorage';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip 
@@ -115,6 +115,99 @@ const IntegrationsHealth = () => {
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+const FraudMonitoringPage = () => {
+  const fraudOrders = mockOrders.filter((order) => order.fraud_analysis);
+  const approvedOrders = fraudOrders.filter((order) => order.fraud_analysis?.status === 'APPROVED');
+  const manualReviewOrders = fraudOrders.filter((order) => order.fraud_analysis?.status === 'MANUAL_REVIEW');
+  const averageScore = fraudOrders.length
+    ? fraudOrders.reduce((sum, order) => sum + (order.fraud_analysis?.score || 0), 0) / fraudOrders.length
+    : 0;
+
+  return (
+    <div className="space-y-6 animate-in fade-in">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Monitoramento de Fraude</h2>
+          <p className="text-sm text-slate-500">Central dedicada para acompanhar o fluxo antifraude da ClearSale.</p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+          <ShieldCheck className="h-4 w-4" />
+          ClearSale conectado
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-slate-500">Pedidos monitorados</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">{fraudOrders.length}</p>
+            <p className="mt-2 text-xs text-slate-400">Pedidos com análise antifraude registrada.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-slate-500">Aprovados automaticamente</p>
+            <p className="mt-2 text-3xl font-bold text-emerald-700">{approvedOrders.length}</p>
+            <p className="mt-2 text-xs text-slate-400">Fluxo com liberação automática via ClearSale.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-slate-500">Média de score</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">{averageScore.toFixed(1)}</p>
+            <p className="mt-2 text-xs text-slate-400">{manualReviewOrders.length} pedido(s) em revisão manual.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-600" /> Monitoramento de Fraude (ClearSale)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-3">Pedido</th>
+                <th className="px-6 py-3">Data</th>
+                <th className="px-6 py-3">Valor</th>
+                <th className="px-6 py-3">Score Fraude</th>
+                <th className="px-6 py-3">Status CS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fraudOrders.map((order) => (
+                <tr key={order.id} className="border-b border-slate-100 last:border-b-0">
+                  <td className="px-6 py-3 font-mono">#{order.winthor_numped}</td>
+                  <td className="px-6 py-3">{new Date(order.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-3 font-bold">R$ {order.total_value.toLocaleString()}</td>
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className={`h-full ${order.fraud_analysis?.score! > 50 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${order.fraud_analysis?.score}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-mono">{order.fraud_analysis?.score.toFixed(1)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    {order.fraud_analysis?.status === 'APPROVED' && <Badge variant="success">Aprovado</Badge>}
+                    {order.fraud_analysis?.status === 'MANUAL_REVIEW' && <Badge variant="warning">Revisão Manual</Badge>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
@@ -591,7 +684,52 @@ const AdminSidebar = ({ activeTab, setActiveTab, onLogout }: { activeTab: string
   );
 };
 
+const AdminNavigationSidebar = ({ activeTab, setActiveTab, onLogout, availableTabs }: { activeTab: AdminPermission, setActiveTab: (t: AdminPermission) => void, onLogout: () => void, availableTabs: AdminPermission[] }) => {
+  const menuItems = [
+    { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'products', label: 'Catálogo ERP', icon: ShoppingBag },
+    { id: 'content', label: 'Marketing / CMS', icon: ImageIcon },
+    { id: 'customers', label: 'Gestão de Usuários', icon: Users },
+    { id: 'statistics', label: 'Estatísticas', icon: BarChart3 },
+    { id: 'fraud', label: 'Monitoramento Fraude', icon: ShieldCheck },
+    { id: 'settings', label: 'Configurações', icon: Settings },
+  ];
+
+  return (
+    <div className="hidden h-full w-64 flex-col border-r border-slate-200 bg-white lg:flex">
+      <div className="p-6">
+        <img className="h-12" src={Logo} />
+      </div>
+      <nav className="flex-1 space-y-1 px-4">
+        {menuItems.filter((item) => availableTabs.includes(item.id as AdminPermission)).map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id as AdminPermission)}
+            className={`flex w-full items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+              activeTab === item.id
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <item.icon className={`mr-3 h-5 w-5 ${activeTab === item.id ? 'text-emerald-600' : 'text-slate-400'}`} />
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="space-y-1 border-t border-slate-100 p-4">
+        <button onClick={onLogout} className="flex w-full items-center rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
+          <Globe className="mr-3 h-5 w-5" /> Ir para Loja
+        </button>
+        <button onClick={onLogout} className="flex w-full items-center rounded-lg px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">
+          <LogOut className="mr-3 h-5 w-5" /> Sair
+        </button>
+      </div>
+    </div>
+  );
+};
+
 interface AdminDashboardProps {
+  currentAdminUser: AdminUser;
   onNavigateToHome: () => void;
 }
 
@@ -714,9 +852,34 @@ const emptyAdminForm = () => ({
   role: 'SALES' as AdminUser['role'],
   status: 'ACTIVE' as AdminUser['status'],
   default_password: ADMIN_DEFAULT_PASSWORD,
+  permissions: ['overview', 'customers', 'statistics', 'fraud'] as AdminPermission[],
 });
 
 const ADMIN_ROLES: AdminUser['role'][] = ['ADMIN', 'SALES', 'MARKETING', 'SUPPORT'];
+const ADMIN_PERMISSION_ORDER: AdminPermission[] = ['overview', 'products', 'content', 'customers', 'statistics', 'fraud', 'settings'];
+const ADMIN_PERMISSION_LABELS: Record<AdminPermission, { label: string; description: string }> = {
+  overview: { label: 'Visão Geral', description: 'KPIs executivos e saúde da operação.' },
+  products: { label: 'Catálogo ERP', description: 'Produtos, imagens e sincronização de catálogo.' },
+  content: { label: 'Marketing / CMS', description: 'Banners e vídeo institucional.' },
+  customers: { label: 'Gestão de Usuários', description: 'Clientes B2B e equipe interna.' },
+  statistics: { label: 'Estatísticas', description: 'Painel de performance comercial.' },
+  fraud: { label: 'Monitoramento de Fraude', description: 'Acompanhamento ClearSale e análise antifraude.' },
+  settings: { label: 'Configurações', description: 'Parâmetros operacionais do admin.' },
+};
+
+const getDefaultPermissionsByRole = (role: AdminUser['role']): AdminPermission[] => {
+  switch (role) {
+    case 'ADMIN':
+      return [...ADMIN_PERMISSION_ORDER];
+    case 'MARKETING':
+      return ['overview', 'products', 'content', 'statistics'];
+    case 'SUPPORT':
+      return ['overview', 'customers', 'fraud'];
+    case 'SALES':
+    default:
+      return ['overview', 'customers', 'statistics', 'fraud'];
+  }
+};
 
 const isCustomerRecord = (value: unknown): value is Customer => {
   if (!value || typeof value !== 'object') {
@@ -745,6 +908,14 @@ const isAdminRecord = (value: unknown): value is AdminUser => {
     && typeof candidate.cnpj !== 'string'
     && typeof candidate.company_name !== 'string';
 };
+
+const normalizeAdminRecord = (admin: AdminUser): AdminUser => ({
+  ...admin,
+  default_password: admin.default_password || ADMIN_DEFAULT_PASSWORD,
+  permissions: Array.isArray(admin.permissions) && admin.permissions.length > 0
+    ? admin.permissions.filter((permission): permission is AdminPermission => ADMIN_PERMISSION_ORDER.includes(permission as AdminPermission))
+    : getDefaultPermissionsByRole(admin.role),
+});
 
 const toAuthUserFromCustomerForm = (form: ReturnType<typeof emptyClientForm>, customerId: string): AuthUser => {
   const fullAddress = [
@@ -803,9 +974,67 @@ const UserFormModal: React.FC<{
   </div>
 );
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => {
+const AdminPermissionsPanel: React.FC<{
+  value: AdminPermission[];
+  onChange: (permissions: AdminPermission[]) => void;
+}> = ({ value, onChange }) => {
+  const togglePermission = (permission: AdminPermission) => {
+    onChange(
+      value.includes(permission)
+        ? value.filter((item) => item !== permission)
+        : [...value, permission]
+    );
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Permissões de acesso</p>
+          <p className="mt-1 text-xs text-slate-500">Selecione exatamente quais áreas este usuário interno pode abrir no painel.</p>
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+          {value.length} acesso(s)
+        </span>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        {ADMIN_PERMISSION_ORDER.map((permission) => {
+          const isSelected = value.includes(permission);
+          const item = ADMIN_PERMISSION_LABELS[permission];
+
+          return (
+            <button
+              key={permission}
+              type="button"
+              onClick={() => togglePermission(permission)}
+              className={`rounded-2xl border px-4 py-3 text-left transition-all ${
+                isSelected
+                  ? 'border-emerald-300 bg-white shadow-sm'
+                  : 'border-slate-200 bg-white/70 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p>
+                </div>
+                <div className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border ${
+                  isSelected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white text-transparent'
+                }`}>
+                  <Check className="h-3 w-3" />
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentAdminUser, onNavigateToHome }) => {
   const PRODUCT_BATCH_SIZE = 80;
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState<AdminPermission>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [products, setProducts] = useState<Product[]>(mockProducts);
@@ -851,7 +1080,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
       return [...mockCustomers, ...storedCustomers.filter((stored) => !mockCustomers.some((customer) => customer.id === stored.id))];
   });
-  const [admins, setAdmins] = useState<AdminUser[]>(mockAdminUsers);
+  const [admins, setAdmins] = useState<AdminUser[]>(() => {
+      const storedAdmins = getStoredAdminUsers().map(normalizeAdminRecord);
+      const baseAdmins = mockAdminUsers.map(normalizeAdminRecord);
+      return [...baseAdmins, ...storedAdmins.filter((stored) => !baseAdmins.some((admin) => admin.id === stored.id))];
+  });
   
   // Temporary State for forms
   const [newClient, setNewClient] = useState(emptyClientForm);
@@ -898,11 +1131,29 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
   const visibleProducts = filteredProducts.slice(0, visibleProductCount);
   const visibleCustomers = customers.filter(isCustomerRecord);
-  const visibleAdmins = admins.filter(isAdminRecord);
+  const visibleAdmins = admins.filter(isAdminRecord).map(normalizeAdminRecord);
+  const currentAdminRecord = useMemo(
+      () => normalizeAdminRecord(admins.find((admin) => admin.id === currentAdminUser.id) || currentAdminUser),
+      [admins, currentAdminUser]
+  );
+  const allowedTabs = currentAdminRecord.permissions.length > 0 ? currentAdminRecord.permissions : getDefaultPermissionsByRole(currentAdminRecord.role);
 
   useEffect(() => {
       setVisibleProductCount(PRODUCT_BATCH_SIZE);
   }, [productSearchTerm, activeTab]);
+
+  useEffect(() => {
+      saveStoredAdminUsers(admins.map(normalizeAdminRecord));
+  }, [admins]);
+
+  useEffect(() => {
+      const normalizedCurrentAdmin = normalizeAdminRecord(currentAdminRecord);
+      saveStoredAdminSession(normalizedCurrentAdmin);
+
+      if (!allowedTabs.includes(activeTab)) {
+          setActiveTab(allowedTabs[0] || 'overview');
+      }
+  }, [activeTab, allowedTabs, currentAdminRecord]);
 
   useEffect(() => {
       if (userTab !== 'clients') {
@@ -1059,17 +1310,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
   const handleCreateAdmin = (e: React.FormEvent) => {
       e.preventDefault();
+      const normalizedPermissions = Array.from(new Set(newAdmin.permissions)).filter((permission): permission is AdminPermission =>
+          ADMIN_PERMISSION_ORDER.includes(permission)
+      );
+
+      if (normalizedPermissions.length === 0) {
+          window.alert('Selecione pelo menos uma permissão de acesso para o usuário interno.');
+          return;
+      }
+
       const admin: AdminUser = {
           id: `u${Date.now()}`,
           name: newAdmin.name,
           email: newAdmin.email,
           phone: newAdmin.phone,
           default_password: newAdmin.default_password,
-          role: newAdmin.role as any,
+          role: newAdmin.role,
           status: newAdmin.status,
-          last_login: '-'
+          last_login: '-',
+          permissions: normalizedPermissions,
       };
-      setAdmins((prev) => [...prev, admin]);
+      setAdmins((prev) => [...prev, normalizeAdminRecord(admin)]);
       setCreatedCredential({
           type: 'admin',
           name: admin.name,
@@ -1115,6 +1376,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
           role: admin.role,
           status: admin.status,
           default_password: admin.default_password || ADMIN_DEFAULT_PASSWORD,
+          permissions: normalizeAdminRecord(admin).permissions,
       });
   };
 
@@ -1174,10 +1436,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
       e.preventDefault();
       if (!editingAdmin) return;
 
+      const normalizedPermissions = Array.from(new Set(editAdminForm.permissions)).filter((permission): permission is AdminPermission =>
+          ADMIN_PERMISSION_ORDER.includes(permission)
+      );
+
+      if (normalizedPermissions.length === 0) {
+          window.alert('Selecione pelo menos uma permissão de acesso para o usuário interno.');
+          return;
+      }
+
       setAdmins((prev) =>
           prev.map((admin) =>
               admin.id === editingAdmin.id
-                  ? {
+                  ? normalizeAdminRecord({
                         ...admin,
                         name: editAdminForm.name,
                         email: editAdminForm.email,
@@ -1185,7 +1456,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                         role: editAdminForm.role,
                         status: editAdminForm.status,
                         default_password: editAdminForm.default_password,
-                    }
+                        permissions: normalizedPermissions,
+                    })
                   : admin
           )
       );
@@ -1267,6 +1539,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
   };
 
   const renderContent = () => {
+    if (!allowedTabs.includes(activeTab)) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <Card className="max-w-lg">
+            <CardContent className="py-10 text-center">
+              <ShieldCheck className="mx-auto h-12 w-12 text-slate-300" />
+              <h3 className="mt-4 text-xl font-bold text-slate-900">Acesso restrito</h3>
+              <p className="mt-2 text-sm text-slate-500">Este usuário não possui permissão para visualizar esta área do backoffice.</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'overview':
         return (
@@ -1494,6 +1780,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
         );
       case 'statistics':
         return <AdminStatisticsPage />;
+      case 'fraud':
+        return <FraudMonitoringPage />;
       case 'content':
         return (
            <div className="space-y-6 animate-in fade-in">
@@ -1624,6 +1912,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                 <th className="px-6 py-3 font-medium text-slate-500">Nome</th>
                                                 <th className="px-6 py-3 font-medium text-slate-500">Email</th>
                                                 <th className="px-6 py-3 font-medium text-slate-500">Cargo</th>
+                                                <th className="px-6 py-3 font-medium text-slate-500">Permissões</th>
                                                 <th className="px-6 py-3 font-medium text-slate-500">Status</th>
                                                 <th className="px-6 py-3 font-medium text-slate-500">Último Acesso</th>
                                             </>
@@ -1678,6 +1967,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                 </td>
                                                 <td className="px-6 py-3 text-slate-500">{a.email}</td>
                                                 <td className="px-6 py-3"><Badge variant="default">{a.role}</Badge></td>
+                                                <td className="px-6 py-3">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {normalizeAdminRecord(a).permissions.slice(0, 2).map((permission) => (
+                                                            <span key={permission} className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-600">
+                                                                {ADMIN_PERMISSION_LABELS[permission].label}
+                                                            </span>
+                                                        ))}
+                                                        {normalizeAdminRecord(a).permissions.length > 2 && (
+                                                            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-700">
+                                                                +{normalizeAdminRecord(a).permissions.length - 2}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
                                                 <td className="px-6 py-3">{a.status === 'ACTIVE' ? <Badge variant="success">Ativo</Badge> : <Badge variant="destructive">Inativo</Badge>}</td>
                                                 <td className="px-6 py-3 text-slate-400 text-xs">{a.last_login}</td>
                                                 <td className="px-6 py-3 text-right"><Button variant="ghost" className="h-8 text-xs" onClick={() => handleOpenAdminEditor(a)}>Editar</Button></td>
@@ -1699,7 +2002,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                             </p>
                         </div>
                     )}
-                    {userTab === 'clients' && (
+                    {false && (
                         <div className="mt-8">
                              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600"/> Monitoramento de Fraude (ClearSale)</h3>
                              <Card>
@@ -1846,7 +2149,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                       </div>
                                       <div className="grid gap-2">
                                           <label className="text-sm font-medium">Função</label>
-                                          <select className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newAdmin.role} onChange={e => setNewAdmin({...newAdmin, role: e.target.value})}>
+                                          <select className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newAdmin.role} onChange={e => setNewAdmin({...newAdmin, role: e.target.value as AdminUser['role'], permissions: getDefaultPermissionsByRole(e.target.value as AdminUser['role'])})}>
                                               <option value="ADMIN">Administrador</option>
                                               <option value="SALES">Vendas</option>
                                               <option value="MARKETING">Marketing</option>
@@ -1857,6 +2160,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                           <label className="text-sm font-medium">Telefone</label>
                                           <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newAdmin.phone} onChange={e => setNewAdmin({...newAdmin, phone: e.target.value})} placeholder="(31) 99999-0000" />
                                       </div>
+                                      <AdminPermissionsPanel value={newAdmin.permissions} onChange={(permissions) => setNewAdmin({ ...newAdmin, permissions })} />
                                       <Button type="submit" className="w-full bg-emerald-600 text-white hover:bg-emerald-700">Criar Usuário</Button>
                                   </form>
                               )}
@@ -1925,7 +2229,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                 <input required type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.name} onChange={e => setEditAdminForm({...editAdminForm, name: e.target.value})} placeholder="Nome completo" />
                 <input required type="email" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.email} onChange={e => setEditAdminForm({...editAdminForm, email: e.target.value})} placeholder="Email corporativo" />
                 <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.phone} onChange={e => setEditAdminForm({...editAdminForm, phone: e.target.value})} placeholder="Telefone" />
-                <select className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.role} onChange={e => setEditAdminForm({...editAdminForm, role: e.target.value as AdminUser['role']})}>
+                <select className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.role} onChange={e => setEditAdminForm({...editAdminForm, role: e.target.value as AdminUser['role'], permissions: getDefaultPermissionsByRole(e.target.value as AdminUser['role'])})}>
                   <option value="ADMIN">Administrador</option>
                   <option value="SALES">Vendas</option>
                   <option value="MARKETING">Marketing</option>
@@ -1936,6 +2240,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                   <option value="INACTIVE">Inativo</option>
                 </select>
               </div>
+              <AdminPermissionsPanel value={editAdminForm.permissions} onChange={(permissions) => setEditAdminForm({ ...editAdminForm, permissions })} />
               <div className="flex justify-end gap-3">
                 <Button variant="ghost" type="button" onClick={() => setEditingAdmin(null)}>Cancelar</Button>
                 <Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700">Salvar Usuário</Button>
@@ -1960,7 +2265,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
             onConfirm={handleConfirmOnDemandImageImport}
           />
        )}
-       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onNavigateToHome} />
+       <AdminNavigationSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={onNavigateToHome} availableTabs={allowedTabs} />
        <main className="flex-1 overflow-auto p-8 relative">
           {renderContent()}
        </main>

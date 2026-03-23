@@ -1,7 +1,9 @@
-import { AuthUser } from '../types';
+import { AdminUser, AuthUser } from '../types';
 
 const USERS_STORAGE_KEY = 'epoca_b2b_users';
 const SESSION_STORAGE_KEY = 'epoca_b2b_session';
+const ADMIN_USERS_STORAGE_KEY = 'epoca_b2b_admin_users';
+const ADMIN_SESSION_STORAGE_KEY = 'epoca_b2b_admin_session';
 
 const safeWindow = () => (typeof window !== 'undefined' ? window : null);
 
@@ -125,4 +127,59 @@ export const updateStoredUser = (userId: string, updates: Partial<AuthUser>) => 
   }
 
   return nextUser;
+};
+
+export const getStoredAdminUsers = (): AdminUser[] => {
+  const browserWindow = safeWindow();
+  if (!browserWindow) {
+    return [];
+  }
+
+  try {
+    const raw = browserWindow.localStorage.getItem(ADMIN_USERS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AdminUser[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveStoredAdminUsers = (users: AdminUser[]) => {
+  const browserWindow = safeWindow();
+  if (!browserWindow) {
+    return;
+  }
+
+  browserWindow.localStorage.setItem(ADMIN_USERS_STORAGE_KEY, JSON.stringify(users));
+};
+
+export const getStoredAdminSession = (): AdminUser | null => {
+  const browserWindow = safeWindow();
+  if (!browserWindow) {
+    return null;
+  }
+
+  try {
+    const raw = browserWindow.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AdminUser) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const saveStoredAdminSession = (user: AdminUser | null) => {
+  const browserWindow = safeWindow();
+  if (!browserWindow) {
+    return;
+  }
+
+  if (!user) {
+    browserWindow.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY);
+    return;
+  }
+
+  browserWindow.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(user));
+};
+
+export const clearStoredAdminSession = () => {
+  saveStoredAdminSession(null);
 };
