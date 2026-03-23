@@ -6,7 +6,7 @@ export const mockProducts = mockProductsFromERP;
 
 export const mockOrders: Order[] = [
   { 
-    id: 'o1', 
+    id: '01', 
     winthor_numped: 50231, 
     date: '2023-10-25', 
     total_value: 1250.00, 
@@ -15,7 +15,7 @@ export const mockOrders: Order[] = [
     fraud_analysis: { provider: 'CLEARSALE', score: 2.5, status: 'APPROVED', transaction_id: 'CS-998811' }
   },
   { 
-    id: 'o2', 
+    id: '02', 
     winthor_numped: 50235, 
     date: '2023-10-26', 
     total_value: 340.50, 
@@ -24,7 +24,7 @@ export const mockOrders: Order[] = [
     fraud_analysis: { provider: 'CLEARSALE', score: 1.0, status: 'APPROVED', transaction_id: 'CS-998812' }
   },
   { 
-    id: 'o3', 
+    id: '03', 
     winthor_numped: 50240, 
     date: '2023-10-27', 
     total_value: 8900.00, 
@@ -33,7 +33,7 @@ export const mockOrders: Order[] = [
     fraud_analysis: { provider: 'CLEARSALE', score: 85.0, status: 'MANUAL_REVIEW', transaction_id: 'CS-998813' }
   },
   { 
-    id: 'o4', 
+    id: '04', 
     winthor_numped: 50242, 
     date: '2023-10-28', 
     total_value: 450.00, 

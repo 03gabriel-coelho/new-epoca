@@ -35,6 +35,8 @@ export interface Product {
   department: string;
   price: number;
   basePrice?: number;
+  listPrice?: number;
+  baseListPrice?: number;
   regionalAdjustment?: number;
   image_path: string;
   gallery_images?: string[];

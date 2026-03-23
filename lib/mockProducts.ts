@@ -6,7 +6,9 @@ type RawMockProduct = {
   NOME: string;
   CODBARRAS: number | string;
   FORNECEDOR: string;
+  DESCONTO?: number;
   PVENDA: number;
+  PTABELA?: number;
   OFERTA: number;
   QTUNIT: number;
   DADOSTECNICOS?: string | null;
@@ -34,7 +36,8 @@ const toImageUrl = (imageName?: string | null) => {
 };
 
 export const mockProductsFromERP: Product[] = (rawMockProducts as RawMockProduct[]).map((item) => {
-  const price = item.OFERTA && item.OFERTA > 0 ? item.OFERTA : item.PVENDA;
+  const price = item.PVENDA;
+  const hasDiscount = item.DESCONTO === 1 && typeof item.PTABELA === 'number' && item.PTABELA > item.PVENDA;
   const galleryImages = [
     item.FOTO_CAPA,
     item.IMAGE2,
@@ -52,6 +55,9 @@ export const mockProductsFromERP: Product[] = (rawMockProducts as RawMockProduct
     description: item.NOME,
     department: (item.DEPARTAMENTO || 'GERAL').trim(),
     price,
+    basePrice: price,
+    listPrice: hasDiscount ? item.PTABELA : undefined,
+    baseListPrice: hasDiscount ? item.PTABELA : undefined,
     image_path: toImageUrl(item.FOTO_CAPA),
     gallery_images: galleryImages,
     long_description: item.DADOSTECNICOS || item.NOME,

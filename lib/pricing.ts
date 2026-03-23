@@ -59,10 +59,14 @@ export const getPricedProduct = (product: Product, zipCode?: string | null): Pro
   const multiplier = getRegionalPriceMultiplier(zipCode);
   const basePrice = product.basePrice ?? product.price;
   const price = roundCurrency(basePrice * multiplier);
+  const baseListPrice = product.baseListPrice ?? product.listPrice;
+  const listPrice = baseListPrice ? roundCurrency(baseListPrice * multiplier) : undefined;
 
   return {
     ...product,
     basePrice,
+    baseListPrice,
+    listPrice,
     price,
     regionalAdjustment: roundCurrency(price - basePrice),
   };

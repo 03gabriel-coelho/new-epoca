@@ -98,10 +98,23 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
                   </div>
 
                   <div className="mt-auto">
+                    {product.listPrice && product.listPrice > product.price && (
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-full bg-[#fff1f0] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#be342e]">
+                          Oferta
+                        </span>
+                        <span className="text-xs text-slate-400 line-through">R$ {product.listPrice.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
                       <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
                     </div>
+                    {product.listPrice && product.listPrice > product.price && (
+                      <span className="mt-1 block text-xs font-medium text-emerald-700">
+                        Economia de R$ {(product.listPrice - product.price).toFixed(2)}
+                      </span>
+                    )}
                     <span className="text-[10px] text-slate-500">cada</span>
                   </div>
 

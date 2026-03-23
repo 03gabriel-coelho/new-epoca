@@ -9,6 +9,11 @@ import { AuthUser, CartItem, Product } from '../types';
 import { getPricedProducts } from '../lib/pricing';
 import Logo from "../lib/images/logo1.webp";
 
+const formatPriceParts = (value: number) => {
+  const [whole, decimal] = value.toFixed(2).split('.');
+  return { whole, decimal };
+};
+
 interface ProductsPageProps {
   currentUser: AuthUser | null;
   currentZipCode: string;
@@ -274,6 +279,9 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                           </div>
                         </div>
                         <div className="text-right">
+                          {product.listPrice && product.listPrice > product.price && (
+                            <div className="text-[11px] text-slate-400 line-through">R$ {product.listPrice.toFixed(2)}</div>
+                          )}
                           <span className="font-bold text-[#be342e] text-sm">R$ {product.price.toFixed(2)}</span>
                           <div className="mt-1">
                             <PixBadge />
@@ -410,10 +418,23 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                       </div>
 
                       <div className="mt-auto">
+                        {product.listPrice && product.listPrice > product.price && (
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded-full bg-[#fff1f0] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#be342e]">
+                              Oferta
+                            </span>
+                            <span className="text-xs text-slate-400 line-through">R$ {product.listPrice.toFixed(2)}</span>
+                          </div>
+                        )}
                         <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-bold text-slate-900">R$ {Math.floor(product.price)}</span>
-                          <span className="text-sm font-bold text-slate-900">,{(product.price % 1).toFixed(2).split('.')[1]}</span>
+                          <span className="text-2xl font-bold text-slate-900">R$ {formatPriceParts(product.price).whole}</span>
+                          <span className="text-sm font-bold text-slate-900">,{formatPriceParts(product.price).decimal}</span>
                         </div>
+                        {product.listPrice && product.listPrice > product.price && (
+                          <p className="mt-1 text-xs font-medium text-emerald-700">
+                            Economia de R$ {(product.listPrice - product.price).toFixed(2)}
+                          </p>
+                        )}
                         <div className="mt-1">
                           <PixBadge label="no PIX" />
                         </div>

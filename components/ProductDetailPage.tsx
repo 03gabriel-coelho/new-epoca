@@ -172,10 +172,23 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </div>
 
                   <div className="mb-6">
+                     {product.listPrice && product.listPrice > product.price && (
+                       <div className="mb-2 flex items-center gap-3">
+                          <span className="rounded-full bg-[#fff1f0] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#be342e]">
+                            Desconto ativo
+                          </span>
+                          <span className="text-sm text-slate-400 line-through">R$ {product.listPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                       </div>
+                     )}
                      <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-bold text-slate-900">R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         <span className="text-sm text-slate-500">/{product.details?.unit || 'un'}</span>
                      </div>
+                     {product.listPrice && product.listPrice > product.price && (
+                       <p className="mt-2 text-sm font-medium text-emerald-700">
+                         Você economiza R$ {(product.listPrice - product.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                       </p>
+                     )}
                      <div className="mt-2">
                         <PixBadge label="preco valido no PIX" className="text-[11px]" />
                      </div>
