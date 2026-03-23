@@ -87,6 +87,22 @@ const getOrderStatusBadge = (status: OrderStatus) => {
   }
 };
 
+const getPaymentMethodLabel = (paymentMethod: StoredOrder['payment_method']) => {
+  return paymentMethod === 'PIX' ? 'PIX' : paymentMethod === 'BOLETO' ? 'Boleto' : 'Cartao';
+};
+
+const getPaymentStatusLabel = (order: StoredOrder) => {
+  if (order.payment_method === 'PIX') {
+    return 'Pagamento confirmado';
+  }
+
+  if (order.payment_method === 'BOLETO') {
+    return 'Aguardando pagamento do boleto';
+  }
+
+  return 'Aguardando confirmacao do pagamento';
+};
+
 const getClientOrders = (currentUser: AuthUser | null) => {
   const storedOrders = currentUser ? getStoredOrdersByCustomer(currentUser.id) : [];
   return [...storedOrders, ...mockOrders].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
@@ -949,9 +965,10 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                 <p className="text-sm text-slate-500">{selectedOrder.tracking_message}</p>
               </div>
 
-              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-3">
+              <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
                 <p><span className="font-bold text-slate-800">Data:</span> {new Date(selectedOrder.date).toLocaleString('pt-BR')}</p>
-                <p><span className="font-bold text-slate-800">Pagamento:</span> {selectedOrder.payment_method === 'PIX' ? 'PIX' : selectedOrder.payment_method === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
+                <p><span className="font-bold text-slate-800">Pagamento:</span> {getPaymentMethodLabel(selectedOrder.payment_method)}</p>
+                <p><span className="font-bold text-slate-800">Status do pagamento:</span> {getPaymentStatusLabel(selectedOrder)}</p>
                 <p><span className="font-bold text-slate-800">Entrega:</span> {selectedOrder.address}</p>
               </div>
 

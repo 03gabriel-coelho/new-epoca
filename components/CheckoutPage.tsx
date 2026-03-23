@@ -183,7 +183,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       company_name: currentUser.companyName,
       date: new Date().toISOString(),
       total_value: paymentAdjustedTotal,
-      status: paymentMethod === 'BOLETO' ? OrderStatus.ABERTO : OrderStatus.LIBERADO,
+      status: paymentMethod === 'PIX' ? OrderStatus.LIBERADO : OrderStatus.ABERTO,
       items_count: displayItemCount,
       address,
       payment_method: paymentMethod,
@@ -194,8 +194,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         paymentMethod === 'PIX'
           ? 'Pagamento confirmado e pedido encaminhado para separacao.'
           : paymentMethod === 'BOLETO'
-            ? 'Pedido recebido e aguardando compensacao do boleto.'
-            : 'Pedido aprovado e encaminhado para separacao.',
+            ? 'Pedido recebido e aguardando pagamento do boleto para liberacao.'
+            : 'Pedido recebido e aguardando confirmacao do pagamento para liberacao.',
       items: cart
         .map((item) => {
           const product = pricedProducts.find((entry) => entry.id === item.product_id);
@@ -637,7 +637,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <p className="text-slate-500 mb-8 text-lg">
         {paymentMethod === 'PIX'
           ? 'Pagamento PIX confirmado e pedido enviado para separacao.'
-          : `Seu pedido #${createdOrder?.winthor_numped || '--'} foi enviado para separacao.`}
+          : paymentMethod === 'BOLETO'
+            ? `Seu pedido #${createdOrder?.winthor_numped || '--'} foi criado e esta aguardando pagamento do boleto.`
+            : `Seu pedido #${createdOrder?.winthor_numped || '--'} foi criado e esta aguardando confirmacao do pagamento.`}
       </p>
 
       <div className="max-w-md mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 text-left">
@@ -646,7 +648,18 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereco:</span> {createdOrder?.address || address}</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Previsao:</span> 3 dias uteis</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pagamento:</span> {paymentMethod === 'PIX' ? 'PIX' : paymentMethod === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
-        <p className="text-sm text-slate-600"><span className="font-bold">Total Pago:</span> R$ {(createdOrder?.total_value || paymentAdjustedTotal).toFixed(2)}</p>
+        <p className="text-sm text-slate-600 mb-1">
+          <span className="font-bold">Status do pagamento:</span>{' '}
+          {paymentMethod === 'PIX'
+            ? 'Pagamento confirmado'
+            : paymentMethod === 'BOLETO'
+              ? 'Aguardando pagamento do boleto'
+              : 'Aguardando confirmacao do pagamento'}
+        </p>
+        <p className="text-sm text-slate-600">
+          <span className="font-bold">{paymentMethod === 'PIX' ? 'Total Pago:' : 'Total do pedido:'}</span>{' '}
+          R$ {(createdOrder?.total_value || paymentAdjustedTotal).toFixed(2)}
+        </p>
       </div>
 
       <div className="flex justify-center gap-4">
