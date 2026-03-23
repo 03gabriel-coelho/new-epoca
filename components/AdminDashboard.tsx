@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from
 import AdminStatisticsPage from './AdminStatisticsPage';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
-import { SalesData, Customer, AdminUser, Product } from '../types';
+import { SalesData, Customer, AdminUser, Product, AuthUser } from '../types';
+import { getStoredUsers, saveStoredUsers, updateStoredUser } from '../lib/authStorage';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip 
@@ -592,6 +593,184 @@ interface AdminDashboardProps {
   onNavigateToHome: () => void;
 }
 
+const CLIENT_DEFAULT_PASSWORD = 'Epoca@123';
+const ADMIN_DEFAULT_PASSWORD = 'Admin@123';
+
+interface OpenCnpjPhone {
+  ddd?: string;
+  numero?: string;
+  is_fax?: boolean;
+}
+
+interface OpenCnpjResponse {
+  cnpj?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  email?: string;
+  telefones?: OpenCnpjPhone[];
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  municipio?: string;
+  cidade?: string;
+  uf?: string;
+  endereco?: {
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    cidade?: string;
+    uf?: string;
+  };
+  estabelecimento?: {
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    municipio?: string;
+    cidade?: string;
+    uf?: string;
+  };
+}
+
+const getDigits = (value: string) => value.replace(/\D/g, '');
+
+const formatCnpj = (value: string) => {
+  const digits = getDigits(value).slice(0, 14);
+
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
+const formatZipCode = (value: string) => {
+  const digits = getDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+};
+
+const formatPhone = (phone?: OpenCnpjPhone) => {
+  const digits = `${phone?.ddd ?? ''}${phone?.numero ?? ''}`.replace(/\D/g, '');
+
+  if (digits.length === 10) {
+    return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+  }
+
+  if (digits.length === 11) {
+    return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  }
+
+  return digits;
+};
+
+const extractAddressFromCnpj = (data: OpenCnpjResponse) => {
+  const address = data.estabelecimento || data.endereco || data;
+  return {
+    zip_code: formatZipCode(address.cep || ''),
+    street: address.logradouro || '',
+    address_number: address.numero || '',
+    address_complement: address.complemento || '',
+    district: address.bairro || '',
+    city: address.municipio || address.cidade || '',
+    state: address.uf || '',
+    reference_point: '',
+  };
+};
+
+const emptyClientForm = () => ({
+  company_name: '',
+  trade_name: '',
+  cnpj: '',
+  email: '',
+  email2: '',
+  phone: '',
+  phone2: '',
+  zip_code: '',
+  street: '',
+  district: '',
+  address_number: '',
+  address_complement: '',
+  city: '',
+  state: '',
+  reference_point: '',
+  credit_limit: '0',
+  status: 'ACTIVE' as Customer['status'],
+  default_password: CLIENT_DEFAULT_PASSWORD,
+});
+
+const emptyAdminForm = () => ({
+  name: '',
+  email: '',
+  phone: '',
+  role: 'SALES' as AdminUser['role'],
+  status: 'ACTIVE' as AdminUser['status'],
+  default_password: ADMIN_DEFAULT_PASSWORD,
+});
+
+const toAuthUserFromCustomerForm = (form: ReturnType<typeof emptyClientForm>, customerId: string): AuthUser => {
+  const fullAddress = [
+    [form.street, form.address_number].filter(Boolean).join(', '),
+    [form.district, form.city, form.state].filter(Boolean).join(' - '),
+    form.zip_code,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    id: customerId,
+    cnpj: form.cnpj,
+    companyName: form.company_name,
+    tradeName: form.trade_name || form.company_name,
+    legalName: form.company_name,
+    email: form.email,
+    email2: form.email2 || '',
+    phone: form.phone,
+    phone2: form.phone2 || '',
+    password: form.default_password,
+    createdAt: new Date().toISOString(),
+    fullAddress,
+    referencePoint: form.reference_point || '',
+    zipCode: form.zip_code || '',
+    street: form.street || '',
+    district: form.district || '',
+    addressNumber: form.address_number || '',
+    addressComplement: form.address_complement || '',
+    city: form.city || '',
+    state: form.state || '',
+  };
+};
+
+const UserFormModal: React.FC<{
+  title: string;
+  subtitle: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ title, subtitle, onClose, children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
+    <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+        <div>
+          <h3 className="text-2xl font-bold text-slate-900">{title}</h3>
+          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        </div>
+        <Button variant="ghost" className="rounded-full" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="max-h-[80vh] overflow-y-auto p-6">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => {
   const PRODUCT_BATCH_SIZE = 80;
   const [activeTab, setActiveTab] = useState('overview');
@@ -613,12 +792,50 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
   // States for Customer Management Tab
   const [userTab, setUserTab] = useState<'clients' | 'admins'>('clients');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+      const storedUsers = getStoredUsers();
+      const storedCustomers: Customer[] = storedUsers.map((user) => ({
+          id: user.id,
+          company_name: user.companyName,
+          trade_name: user.tradeName || user.companyName,
+          cnpj: user.cnpj,
+          email: user.email,
+          email2: user.email2,
+          phone: user.phone,
+          phone2: user.phone2,
+          zip_code: user.zipCode,
+          street: user.street,
+          district: user.district,
+          address_number: user.addressNumber,
+          address_complement: user.addressComplement,
+          city: user.city,
+          state: user.state,
+          reference_point: user.referencePoint,
+          default_password: user.password,
+          status: 'ACTIVE',
+          credit_limit: 0,
+          last_order_date: '-',
+      }));
+
+      return [...mockCustomers, ...storedCustomers.filter((stored) => !mockCustomers.some((customer) => customer.id === stored.id))];
+  });
   const [admins, setAdmins] = useState<AdminUser[]>(mockAdminUsers);
   
   // Temporary State for forms
-  const [newClient, setNewClient] = useState({ company_name: '', cnpj: '', email: '' });
-  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', role: 'SALES' });
+  const [newClient, setNewClient] = useState(emptyClientForm);
+  const [newAdmin, setNewAdmin] = useState(emptyAdminForm);
+  const [editingClient, setEditingClient] = useState<Customer | null>(null);
+  const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
+  const [editClientForm, setEditClientForm] = useState(emptyClientForm);
+  const [editAdminForm, setEditAdminForm] = useState(emptyAdminForm);
+  const [createdCredential, setCreatedCredential] = useState<null | {
+      type: 'client' | 'admin';
+      name: string;
+      identifier: string;
+      password: string;
+  }>(null);
+  const [isFetchingClientCnpj, setIsFetchingClientCnpj] = useState(false);
+  const [clientCnpjFeedback, setClientCnpjFeedback] = useState<null | { type: 'success' | 'error'; message: string }>(null);
 
   // State for Cart Inspection
   const [viewingCart, setViewingCart] = useState<Customer | null>(null);
@@ -672,19 +889,132 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
       return () => observer.disconnect();
   }, [activeTab, filteredProducts.length, visibleProductCount]);
 
+  useEffect(() => {
+      if (!isCreatingUser || userTab !== 'clients') {
+          return;
+      }
+
+      const cnpjDigits = getDigits(newClient.cnpj);
+
+      if (cnpjDigits.length !== 14) {
+          setIsFetchingClientCnpj(false);
+          setClientCnpjFeedback(null);
+          return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(async () => {
+          setIsFetchingClientCnpj(true);
+          setClientCnpjFeedback(null);
+
+          try {
+              const response = await fetch(`https://api.opencnpj.org/${cnpjDigits}`, {
+                  signal: controller.signal,
+              });
+
+              if (!response.ok) {
+                  if (response.status === 404) {
+                      throw new Error('CNPJ nao encontrado na base publica.');
+                  }
+
+                  if (response.status === 429) {
+                      throw new Error('Limite de consultas atingido. Tente novamente em instantes.');
+                  }
+
+                  throw new Error('Nao foi possivel consultar o CNPJ agora.');
+              }
+
+              const data = (await response.json()) as OpenCnpjResponse;
+              const companyName = data.razao_social || data.nome_fantasia || '';
+              const phone = formatPhone(data.telefones?.find(item => !item.is_fax) || data.telefones?.[0]);
+              const addressData = extractAddressFromCnpj(data);
+
+              setNewClient((current) => ({
+                  ...current,
+                  company_name: companyName || current.company_name,
+                  trade_name: data.nome_fantasia || companyName || current.trade_name,
+                  email: data.email || current.email,
+                  phone: phone || current.phone,
+                  ...addressData,
+              }));
+              setClientCnpjFeedback({
+                  type: 'success',
+                  message: 'Dados da empresa preenchidos automaticamente.',
+              });
+          } catch (error) {
+              if (controller.signal.aborted) {
+                  return;
+              }
+
+              setClientCnpjFeedback({
+                  type: 'error',
+                  message: error instanceof Error ? error.message : 'Falha ao consultar o CNPJ.',
+              });
+          } finally {
+              if (!controller.signal.aborted) {
+                  setIsFetchingClientCnpj(false);
+              }
+          }
+      }, 500);
+
+      return () => {
+          controller.abort();
+          window.clearTimeout(timeoutId);
+      };
+  }, [isCreatingUser, newClient.cnpj, userTab]);
+
   const handleCreateClient = (e: React.FormEvent) => {
       e.preventDefault();
+      const customerId = `c${Date.now()}`;
+      const authUser = toAuthUserFromCustomerForm(newClient, customerId);
+
+      const existingUsers = getStoredUsers();
+      const normalizedEmail = authUser.email.trim().toLowerCase();
+      const normalizedCnpj = authUser.cnpj.replace(/\D/g, '');
+      const alreadyExists = existingUsers.some((storedUser) => {
+          const sameEmail = storedUser.email.trim().toLowerCase() === normalizedEmail;
+          const sameCnpj = storedUser.cnpj.replace(/\D/g, '') === normalizedCnpj;
+          return sameEmail || sameCnpj;
+      });
+
+      if (alreadyExists) {
+          window.alert('Ja existe uma empresa cadastrada com este CNPJ ou email.');
+          return;
+      }
+
+      saveStoredUsers([...existingUsers, authUser]);
+
       const client: Customer = {
-          id: `c${Date.now()}`,
+          id: customerId,
           company_name: newClient.company_name,
+          trade_name: newClient.trade_name,
           cnpj: newClient.cnpj,
+          email: newClient.email,
+          email2: newClient.email2,
+          phone: newClient.phone,
+          phone2: newClient.phone2,
+          zip_code: newClient.zip_code,
+          street: newClient.street,
+          district: newClient.district,
+          address_number: newClient.address_number,
+          address_complement: newClient.address_complement,
+          city: newClient.city,
+          state: newClient.state,
+          reference_point: newClient.reference_point,
+          default_password: newClient.default_password,
           status: 'ACTIVE',
-          credit_limit: 0,
+          credit_limit: Number(newClient.credit_limit) || 0,
           last_order_date: '-'
       };
-      setCustomers([...customers, client]);
+      setCustomers((prev) => [...prev, client]);
+      setCreatedCredential({
+          type: 'client',
+          name: client.company_name,
+          identifier: client.email || client.cnpj,
+          password: newClient.default_password,
+      });
       setIsCreatingUser(false);
-      setNewClient({ company_name: '', cnpj: '', email: '' });
+      setNewClient(emptyClientForm());
   };
 
   const handleCreateAdmin = (e: React.FormEvent) => {
@@ -693,13 +1023,134 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
           id: `u${Date.now()}`,
           name: newAdmin.name,
           email: newAdmin.email,
+          phone: newAdmin.phone,
+          default_password: newAdmin.default_password,
           role: newAdmin.role as any,
-          status: 'ACTIVE',
+          status: newAdmin.status,
           last_login: '-'
       };
-      setAdmins([...admins, admin]);
+      setAdmins((prev) => [...prev, admin]);
+      setCreatedCredential({
+          type: 'admin',
+          name: admin.name,
+          identifier: admin.email,
+          password: newAdmin.default_password,
+      });
       setIsCreatingUser(false);
-      setNewAdmin({ name: '', email: '', role: 'SALES' });
+      setNewAdmin(emptyAdminForm());
+  };
+
+  const handleOpenClientEditor = (client: Customer) => {
+      setEditingAdmin(null);
+      setEditingClient(client);
+      setEditClientForm({
+          company_name: client.company_name,
+          trade_name: client.trade_name || '',
+          cnpj: client.cnpj,
+          email: client.email || '',
+          email2: client.email2 || '',
+          phone: client.phone || '',
+          phone2: client.phone2 || '',
+          zip_code: client.zip_code || '',
+          street: client.street || '',
+          district: client.district || '',
+          address_number: client.address_number || '',
+          address_complement: client.address_complement || '',
+          city: client.city || '',
+          state: client.state || '',
+          reference_point: client.reference_point || '',
+          credit_limit: String(client.credit_limit || 0),
+          status: client.status,
+          default_password: client.default_password || CLIENT_DEFAULT_PASSWORD,
+      });
+  };
+
+  const handleOpenAdminEditor = (admin: AdminUser) => {
+      setEditingClient(null);
+      setEditingAdmin(admin);
+      setEditAdminForm({
+          name: admin.name,
+          email: admin.email,
+          phone: admin.phone || '',
+          role: admin.role,
+          status: admin.status,
+          default_password: admin.default_password || ADMIN_DEFAULT_PASSWORD,
+      });
+  };
+
+  const handleSaveClientEdit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingClient) return;
+
+      const nextCustomer: Customer = {
+          ...editingClient,
+          company_name: editClientForm.company_name,
+          trade_name: editClientForm.trade_name,
+          email: editClientForm.email,
+          email2: editClientForm.email2,
+          phone: editClientForm.phone,
+          phone2: editClientForm.phone2,
+          zip_code: editClientForm.zip_code,
+          street: editClientForm.street,
+          district: editClientForm.district,
+          address_number: editClientForm.address_number,
+          address_complement: editClientForm.address_complement,
+          city: editClientForm.city,
+          state: editClientForm.state,
+          reference_point: editClientForm.reference_point,
+          credit_limit: Number(editClientForm.credit_limit) || 0,
+          status: editClientForm.status,
+          default_password: editClientForm.default_password,
+      };
+
+      setCustomers((prev) => prev.map((customer) => (customer.id === editingClient.id ? nextCustomer : customer)));
+
+      try {
+          updateStoredUser(editingClient.id, {
+              companyName: editClientForm.company_name,
+              tradeName: editClientForm.trade_name || editClientForm.company_name,
+              legalName: editClientForm.company_name,
+              email: editClientForm.email,
+              email2: editClientForm.email2 || '',
+              phone: editClientForm.phone,
+              phone2: editClientForm.phone2 || '',
+              referencePoint: editClientForm.reference_point || '',
+              zipCode: editClientForm.zip_code || '',
+              street: editClientForm.street || '',
+              district: editClientForm.district || '',
+              addressNumber: editClientForm.address_number || '',
+              addressComplement: editClientForm.address_complement || '',
+              city: editClientForm.city || '',
+              state: editClientForm.state || '',
+          });
+      } catch {
+          // Mock customers may not exist in local auth storage yet.
+      }
+
+      setEditingClient(null);
+  };
+
+  const handleSaveAdminEdit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingAdmin) return;
+
+      setAdmins((prev) =>
+          prev.map((admin) =>
+              admin.id === editingAdmin.id
+                  ? {
+                        ...admin,
+                        name: editAdminForm.name,
+                        email: editAdminForm.email,
+                        phone: editAdminForm.phone,
+                        role: editAdminForm.role,
+                        status: editAdminForm.status,
+                        default_password: editAdminForm.default_password,
+                    }
+                  : admin
+          )
+      );
+
+      setEditingAdmin(null);
   };
 
   const handleOpenProductEditor = (product: Product) => {
@@ -1167,7 +1618,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                               <ShoppingBag className="h-4 w-4" />
                                                           </Button>
                                                        </Tooltip>
-                                                       <Button variant="ghost" className="h-8 text-xs">Editar</Button>
+                                                       <Button variant="ghost" className="h-8 text-xs" onClick={() => handleOpenClientEditor(c)}>Editar</Button>
                                                    </div>
                                                 </td>
                                             </tr>
@@ -1185,7 +1636,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                                 <td className="px-6 py-3"><Badge variant="default">{a.role}</Badge></td>
                                                 <td className="px-6 py-3">{a.status === 'ACTIVE' ? <Badge variant="success">Ativo</Badge> : <Badge variant="destructive">Inativo</Badge>}</td>
                                                 <td className="px-6 py-3 text-slate-400 text-xs">{a.last_login}</td>
-                                                <td className="px-6 py-3 text-right"><Button variant="ghost" className="h-8 text-xs">Editar</Button></td>
+                                                <td className="px-6 py-3 text-right"><Button variant="ghost" className="h-8 text-xs" onClick={() => handleOpenAdminEditor(a)}>Editar</Button></td>
                                             </tr>
                                         ))
                                     )}
@@ -1194,6 +1645,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                         </CardContent>
                     </Card>
 
+                    {createdCredential && (
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                            <p className="text-sm font-bold text-emerald-800">
+                                {createdCredential.type === 'client' ? 'Cliente criado com sucesso.' : 'Usuario criado com sucesso.'}
+                            </p>
+                            <p className="mt-1 text-sm text-emerald-700">
+                                Login: {createdCredential.identifier} | Senha padrao: <span className="font-mono font-bold">{createdCredential.password}</span>
+                            </p>
+                        </div>
+                    )}
                     {userTab === 'clients' && (
                         <div className="mt-8">
                              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-emerald-600"/> Monitoramento de Fraude (ClearSale)</h3>
@@ -1251,22 +1712,86 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                           <CardContent>
                               {userTab === 'clients' ? (
                                   <form onSubmit={handleCreateClient} className="space-y-4">
-                                      <div className="grid gap-2">
-                                          <label className="text-sm font-medium">Razão Social</label>
-                                          <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.company_name} onChange={e => setNewClient({...newClient, company_name: e.target.value})} placeholder="Ex: Supermercado Silva LTDA" />
+                                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                                          Senha padrao do cliente: <span className="font-mono font-bold">{newClient.default_password}</span>
                                       </div>
                                       <div className="grid gap-2">
                                           <label className="text-sm font-medium">CNPJ</label>
-                                          <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.cnpj} onChange={e => setNewClient({...newClient, cnpj: e.target.value})} placeholder="00.000.000/0001-00" />
+                                          <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.cnpj} onChange={e => setNewClient({...newClient, cnpj: formatCnpj(e.target.value)})} placeholder="00.000.000/0001-00" />
+                                      </div>
+                                      {isFetchingClientCnpj && <p className="text-xs text-slate-500">Consultando dados do CNPJ...</p>}
+                                      {clientCnpjFeedback && (
+                                          <p className={`text-xs ${clientCnpjFeedback.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                              {clientCnpjFeedback.message}
+                                          </p>
+                                      )}
+                                      <div className="grid gap-2">
+                                          <label className="text-sm font-medium">Razão Social</label>
+                                          <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.company_name} onChange={e => setNewClient({...newClient, company_name: e.target.value})} placeholder="Nome da empresa" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Nome Fantasia</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.trade_name} onChange={e => setNewClient({...newClient, trade_name: e.target.value})} placeholder="Ex: Supermercado Silva" />
                                       </div>
                                       <div className="grid gap-2">
                                           <label className="text-sm font-medium">Email de Acesso</label>
                                           <input required type="email" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.email} onChange={e => setNewClient({...newClient, email: e.target.value})} placeholder="compras@cliente.com.br" />
                                       </div>
-                                      <Button type="submit" className="w-full bg-emerald-600 text-white hover:bg-emerald-700">Criar Cliente e Enviar Convite</Button>
+                                      <div className="grid gap-2">
+                                          <label className="text-sm font-medium">Telefone</label>
+                                          <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.phone} onChange={e => setNewClient({...newClient, phone: e.target.value})} placeholder="(31) 99999-0000" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Email Secundario</label>
+                                          <input type="email" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.email2} onChange={e => setNewClient({...newClient, email2: e.target.value})} placeholder="financeiro@cliente.com.br" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Telefone 2</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.phone2} onChange={e => setNewClient({...newClient, phone2: e.target.value})} placeholder="(31) 3333-0000" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">CEP</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.zip_code} onChange={e => setNewClient({...newClient, zip_code: e.target.value})} placeholder="00000-000" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Rua</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.street} onChange={e => setNewClient({...newClient, street: e.target.value})} placeholder="Rua, avenida..." />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Bairro</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.district} onChange={e => setNewClient({...newClient, district: e.target.value})} placeholder="Bairro" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Numero</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.address_number} onChange={e => setNewClient({...newClient, address_number: e.target.value})} placeholder="123" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Complemento</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.address_complement} onChange={e => setNewClient({...newClient, address_complement: e.target.value})} placeholder="Sala, bloco..." />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Cidade</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.city} onChange={e => setNewClient({...newClient, city: e.target.value})} placeholder="Cidade" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Estado</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.state} onChange={e => setNewClient({...newClient, state: e.target.value})} placeholder="UF" />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Ponto de Referencia</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.reference_point} onChange={e => setNewClient({...newClient, reference_point: e.target.value})} placeholder="Portao lateral, esquina..." />
+                                      </div>
+                                      <div className="hidden grid gap-2">
+                                          <label className="text-sm font-medium">Limite de Credito</label>
+                                          <input type="number" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newClient.credit_limit} onChange={e => setNewClient({...newClient, credit_limit: e.target.value})} placeholder="0" />
+                                      </div>
+                                      <Button type="submit" className="w-full bg-emerald-600 text-white hover:bg-emerald-700">Criar Cliente</Button>
                                   </form>
                               ) : (
                                   <form onSubmit={handleCreateAdmin} className="space-y-4">
+                                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                                          Senha padrao do usuario: <span className="font-mono font-bold">{newAdmin.default_password}</span>
+                                      </div>
                                       <div className="grid gap-2">
                                           <label className="text-sm font-medium">Nome Completo</label>
                                           <input required type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newAdmin.name} onChange={e => setNewAdmin({...newAdmin, name: e.target.value})} placeholder="Ex: João da Silva" />
@@ -1284,6 +1809,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
                                               <option value="SUPPORT">Suporte</option>
                                           </select>
                                       </div>
+                                      <div className="grid gap-2">
+                                          <label className="text-sm font-medium">Telefone</label>
+                                          <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={newAdmin.phone} onChange={e => setNewAdmin({...newAdmin, phone: e.target.value})} placeholder="(31) 99999-0000" />
+                                      </div>
                                       <Button type="submit" className="w-full bg-emerald-600 text-white hover:bg-emerald-700">Criar Usuário</Button>
                                   </form>
                               )}
@@ -1300,6 +1829,76 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateToHome }) => 
 
   return (
     <div className="h-screen w-full flex bg-slate-50 overflow-hidden font-sans text-slate-900">
+       {editingClient && (
+          <UserFormModal
+            title="Editar Cliente"
+            subtitle="Atualize os dados cadastrais e de acesso do cliente."
+            onClose={() => setEditingClient(null)}
+          >
+            <form onSubmit={handleSaveClientEdit} className="space-y-4">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Senha padrao atual: <span className="font-mono font-bold">{editClientForm.default_password}</span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <input required type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.company_name} onChange={e => setEditClientForm({...editClientForm, company_name: e.target.value})} placeholder="Razao social" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.trade_name} onChange={e => setEditClientForm({...editClientForm, trade_name: e.target.value})} placeholder="Nome fantasia" />
+                <input required type="email" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.email} onChange={e => setEditClientForm({...editClientForm, email: e.target.value})} placeholder="Email de acesso" />
+                <input type="email" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.email2} onChange={e => setEditClientForm({...editClientForm, email2: e.target.value})} placeholder="Email secundario" />
+                <input required type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.phone} onChange={e => setEditClientForm({...editClientForm, phone: e.target.value})} placeholder="Telefone" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.phone2} onChange={e => setEditClientForm({...editClientForm, phone2: e.target.value})} placeholder="Telefone 2" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.zip_code} onChange={e => setEditClientForm({...editClientForm, zip_code: e.target.value})} placeholder="CEP" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.street} onChange={e => setEditClientForm({...editClientForm, street: e.target.value})} placeholder="Rua" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.district} onChange={e => setEditClientForm({...editClientForm, district: e.target.value})} placeholder="Bairro" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.address_number} onChange={e => setEditClientForm({...editClientForm, address_number: e.target.value})} placeholder="Numero" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.address_complement} onChange={e => setEditClientForm({...editClientForm, address_complement: e.target.value})} placeholder="Complemento" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.city} onChange={e => setEditClientForm({...editClientForm, city: e.target.value})} placeholder="Cidade" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.state} onChange={e => setEditClientForm({...editClientForm, state: e.target.value})} placeholder="Estado" />
+                <input type="number" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.credit_limit} onChange={e => setEditClientForm({...editClientForm, credit_limit: e.target.value})} placeholder="Limite de credito" />
+                <select className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.status} onChange={e => setEditClientForm({...editClientForm, status: e.target.value as Customer['status']})}>
+                  <option value="ACTIVE">Ativo</option>
+                  <option value="BLOCKED">Bloqueado</option>
+                </select>
+              </div>
+              <input type="text" className="h-10 w-full rounded-md border border-slate-200 px-3 bg-slate-50" value={editClientForm.reference_point} onChange={e => setEditClientForm({...editClientForm, reference_point: e.target.value})} placeholder="Ponto de referencia" />
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" type="button" onClick={() => setEditingClient(null)}>Cancelar</Button>
+                <Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700">Salvar Cliente</Button>
+              </div>
+            </form>
+          </UserFormModal>
+       )}
+       {editingAdmin && (
+          <UserFormModal
+            title="Editar Usuário"
+            subtitle="Atualize os dados e permissões do usuário interno."
+            onClose={() => setEditingAdmin(null)}
+          >
+            <form onSubmit={handleSaveAdminEdit} className="space-y-4">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Senha padrao atual: <span className="font-mono font-bold">{editAdminForm.default_password}</span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <input required type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.name} onChange={e => setEditAdminForm({...editAdminForm, name: e.target.value})} placeholder="Nome completo" />
+                <input required type="email" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.email} onChange={e => setEditAdminForm({...editAdminForm, email: e.target.value})} placeholder="Email corporativo" />
+                <input type="text" className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.phone} onChange={e => setEditAdminForm({...editAdminForm, phone: e.target.value})} placeholder="Telefone" />
+                <select className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.role} onChange={e => setEditAdminForm({...editAdminForm, role: e.target.value as AdminUser['role']})}>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="SALES">Vendas</option>
+                  <option value="MARKETING">Marketing</option>
+                  <option value="SUPPORT">Suporte</option>
+                </select>
+                <select className="h-10 rounded-md border border-slate-200 px-3 bg-slate-50" value={editAdminForm.status} onChange={e => setEditAdminForm({...editAdminForm, status: e.target.value as AdminUser['status']})}>
+                  <option value="ACTIVE">Ativo</option>
+                  <option value="INACTIVE">Inativo</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" type="button" onClick={() => setEditingAdmin(null)}>Cancelar</Button>
+                <Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700">Salvar Usuário</Button>
+              </div>
+            </form>
+          </UserFormModal>
+       )}
        {editingProduct && (
           <ProductImageEditModal
             product={editingProduct}
