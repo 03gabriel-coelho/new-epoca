@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import ClientDashboard, { ClientFinancialPage, ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
@@ -427,7 +427,7 @@ const App = () => {
     <div className="h-screen overflow-hidden bg-slate-100 animate-in fade-in">
       <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-slate-800 bg-slate-900 p-4 text-slate-300 shadow-2xl">
         <div className="mb-8 flex cursor-pointer items-center gap-1 px-2 text-xl font-bold text-white" onClick={navigateToHome}>
-          Epoca <span className="text-[#be342e]">B2B</span>
+          Epoca <span className="text-[#13733D]">B2B</span>
         </div>
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
           <NavLink
@@ -661,3 +661,4 @@ const App = () => {
 };
 
 export default App;
+

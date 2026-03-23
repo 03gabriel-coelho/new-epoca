@@ -1,4 +1,4 @@
-
+﻿
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -73,10 +73,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
       {/* HEADER (Standard) */}
-      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#13733D] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
-             <Button variant="primary" onClick={onNavigateToHome} className="pl-0 hover:bg-[#b70e0c] text-white rounded-full px-4">
+             <Button variant="primary" onClick={onNavigateToHome} className="pl-0 hover:bg-[#0F5C31] text-white rounded-full px-4">
                <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
              </Button>
              
@@ -86,15 +86,15 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white">
               <User className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">{displayName}</span>
             </button>
-            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white">
               <Heart className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">Favoritos</span>
             </button>
-            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
+            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white relative">
                 <ShoppingCart className="w-5 h-5 mb-0.5" />
                 <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
@@ -126,12 +126,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   />
                   <div className="absolute top-4 right-4 flex flex-col gap-2">
                      <button
-                       className={`p-2 rounded-full bg-slate-50 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-400 hover:bg-slate-100 hover:text-red-500'}`}
+                       className={`p-2 rounded-full bg-slate-50 transition-colors ${isFavorite ? 'text-[#13733D]' : 'text-slate-400 hover:bg-slate-100 hover:text-[#13733D]'}`}
                        onClick={() => toggleFavorite(product.id)}
                      >
                         <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                      </button>
-                     <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-[#be342e] transition-colors">
+                     <button className="p-2 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-[#13733D] transition-colors">
                         <Share2 className="w-6 h-6" />
                      </button>
                   </div>
@@ -143,7 +143,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                        type="button"
                        key={`${product.id}-${index}`}
                        onClick={() => setSelectedImage(image)}
-                       className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer overflow-hidden ${selectedImage === image ? 'border-[#be342e]' : 'border-slate-100 hover:border-slate-300'}`}
+                       className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer overflow-hidden ${selectedImage === image ? 'border-[#13733D]' : 'border-slate-100 hover:border-slate-300'}`}
                      >
                          <ProductImage
                            src={image}
@@ -159,7 +159,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Right Column: Buy Box & Info */}
             <div className="lg:col-span-5 space-y-6">
                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                  <Badge variant="brand" className="mb-2 uppercase text-[10px] tracking-wider bg-blue-50 text-[#be342e] border-blue-100">Cód: {product.winthor_codprod}</Badge>
+                  <Badge variant="brand" className="mb-2 uppercase text-[10px] tracking-wider bg-[#EEF8F1] text-[#13733D] border-blue-100">CÃ³d: {product.winthor_codprod}</Badge>
                   <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 leading-tight">{product.description}</h1>
                   
                   <div className="flex items-center gap-2 mb-6">
@@ -168,13 +168,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      </div>
                      <span className="text-xs text-slate-500">(12 avaliações)</span>
                      <span className="text-slate-300">|</span>
-                     <span className="text-xs text-[#be342e] font-bold">Marca: {product.details?.brand || 'Genérica'}</span>
+                     <span className="text-xs text-[#13733D] font-bold">Marca: {product.details?.brand || 'GenÃ©rica'}</span>
                   </div>
 
                   <div className="mb-6">
                      {product.listPrice && product.listPrice > product.price && (
                        <div className="mb-2 flex items-center gap-3">
-                          <span className="rounded-full bg-[#fff1f0] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#be342e]">
+                          <span className="rounded-full bg-[#E9F6EE] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#13733D]">
                             Desconto ativo
                           </span>
                           <span className="text-sm text-slate-400 line-through">R$ {product.listPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
@@ -196,21 +196,21 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                   <div className="space-y-4">
                      {quantityInCart > 0 ? (
-                        <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-3 py-2">
+                        <div className="flex items-center justify-between rounded-full border border-[#13733D] bg-[#F4FBF6] px-3 py-2">
                            <button
                              onClick={() => removeFromCart(product.id)}
-                             className="flex h-10 w-10 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                             className="flex h-10 w-10 items-center justify-center rounded-full text-[#13733D] hover:bg-[#13733D] hover:text-white transition-colors"
                              aria-label={`Remover uma unidade de ${product.description}`}
                            >
                              <Minus className="w-5 h-5" />
                            </button>
-                           <div className="flex items-center gap-2 text-[#be342e]">
+                           <div className="flex items-center gap-2 text-[#13733D]">
                              <ShoppingCart className="w-5 h-5" />
                              <span className="text-lg font-bold">{quantityInCart}</span>
                            </div>
                            <button
                              onClick={() => addToCart(product.id)}
-                             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31] transition-colors"
                              aria-label={`Adicionar uma unidade de ${product.description}`}
                            >
                              <Plus className="w-5 h-5" />
@@ -219,7 +219,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                      ) : (
                         <Button 
                            onClick={() => addToCart(product.id)}
-                           className="w-full h-12 rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white font-bold text-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
+                           className="w-full h-12 rounded-full bg-[#13733D] hover:bg-[#0F5C31] text-white font-bold text-lg shadow-lg shadow-green-900/10 flex items-center justify-center gap-2"
                         >
                            <ShoppingCart className="w-5 h-5" />
                            Adicionar ao Carrinho
@@ -233,7 +233,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <p className="text-sm text-slate-600">
                            O valor deste item ja considera a politica comercial da sua regiao. No checkout voce apenas confirma o endereco de entrega.
                         </p>
-                        <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" className="text-[10px] text-[#be342e] underline mt-2 block">Não sei meu CEP</a>
+                        <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" className="text-[10px] text-[#13733D] underline mt-2 block">NÃ£o sei meu CEP</a>
                      </div>
                   </div>
                </div>
@@ -241,7 +241,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                {/* Quick Specs Card */}
                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                      <Info className="w-5 h-5 text-[#be342e]" /> Destaques
+                      <Info className="w-5 h-5 text-[#13733D]" /> Destaques
                    </h3>
                    <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-start gap-3">
@@ -282,13 +282,13 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
            <div className="flex border-b border-slate-200">
               <button 
                 onClick={() => setActiveTab('desc')}
-                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'desc' ? 'border-b-4 border-[#be342e] text-[#be342e] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'desc' ? 'border-b-4 border-[#13733D] text-[#13733D] bg-[#EEF8F1]/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
                  Descrição do Produto
               </button>
               <button 
                 onClick={() => setActiveTab('specs')}
-                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'specs' ? 'border-b-4 border-[#be342e] text-[#be342e] bg-blue-50/50' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`px-8 py-4 font-bold text-sm transition-colors ${activeTab === 'specs' ? 'border-b-4 border-[#13733D] text-[#13733D] bg-[#EEF8F1]/50' : 'text-slate-500 hover:bg-slate-50'}`}
               >
                  Especificações Técnicas
               </button>
@@ -302,8 +302,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                        {product.long_description || product.description}
                     </p>
                     <p className="mt-4 leading-relaxed">
-                       Ideal para abastecimento de gôndolas de varejo, mercearias e supermercados. Produto de alto giro com validade estendida e garantia de procedência direto da indústria. Acondicionado em embalagem resistente para transporte logístico.
-                    </p>
+                      Ideal para abastecimento de gôndolas de varejo, mercearias e supermercados. Produto de alto giro com validade estendida e garantia de procedência direto da indústria. Acondicionado em embalagem resistente para transporte logístico.
                  </div>
               ) : (
                  <div className="overflow-x-auto">
@@ -350,3 +349,4 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 };
 
 export default ProductDetailPage;
+

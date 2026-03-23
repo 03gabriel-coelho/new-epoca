@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { ArrowLeft, Check, Gift, Heart, Info, Minus, Package2, Percent, Plus, ShoppingCart, Star, Tags, User } from 'lucide-react';
 import { Button, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -94,10 +94,10 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 pb-20">
-      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#13733D] text-white shadow-md">
         <div className="container mx-auto flex h-20 items-center justify-between gap-6 px-4">
           <div className="flex flex-shrink-0 items-center gap-6">
-            <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full px-4 pl-0 text-white hover:bg-[#b70e0c]">
+            <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full px-4 pl-0 text-white hover:bg-[#0F5C31]">
               <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
             </Button>
             <div className="flex cursor-pointer items-center gap-1" onClick={onNavigateToHome}>
@@ -106,15 +106,15 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <User className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">{displayName}</span>
             </button>
-            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <Heart className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">Favoritos</span>
             </button>
-            <button onClick={onNavigateToCheckout} className="relative flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToCheckout} className="relative flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <ShoppingCart className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">
                 R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -140,7 +140,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
           <div className="space-y-6 lg:col-span-7">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-800">
-                <Tags className="h-5 w-5 text-[#be342e]" /> Produtos Gatilho
+                <Tags className="h-5 w-5 text-[#13733D]" /> Produtos Gatilho
               </h3>
 
               <div className="space-y-6">
@@ -151,7 +151,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                         <h4 className="font-bold text-slate-900">{group.label}</h4>
                         {group.helper_text ? <p className="mt-1 text-sm text-slate-500">{group.helper_text}</p> : null}
                       </div>
-                      <div className="rounded-full bg-white px-4 py-2 text-sm font-bold text-[#be342e]">
+                      <div className="rounded-full bg-white px-4 py-2 text-sm font-bold text-[#13733D]">
                         {getSelectionGroupQuantity(group.id, comboSelections)} / {group.required_quantity}
                       </div>
                     </div>
@@ -180,23 +180,23 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                                 <button type="button" onClick={() => onProductClick(product.id)} className="text-left">
                                   <p className="font-semibold text-slate-800">{product.description}</p>
                                 </button>
-                                <p className="mt-1 text-sm font-bold text-[#be342e]">
+                                <p className="mt-1 text-sm font-bold text-[#13733D]">
                                   R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="mt-4 flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                            <div className="mt-4 flex items-center justify-between rounded-full border border-[#13733D] bg-[#F4FBF6] px-2 py-1">
                               <button
                                 onClick={() => updateSelection(group.id, product.id, selectedQuantity - 1)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] transition-colors hover:bg-[#be342e] hover:text-white"
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-[#13733D] transition-colors hover:bg-[#13733D] hover:text-white"
                               >
                                 <Minus className="h-4 w-4" />
                               </button>
-                              <span className="text-sm font-bold text-[#be342e]">{selectedQuantity}</span>
+                              <span className="text-sm font-bold text-[#13733D]">{selectedQuantity}</span>
                               <button
                                 onClick={() => updateSelection(group.id, product.id, selectedQuantity + 1)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white transition-colors hover:bg-[#b70e0c]"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#13733D] text-white transition-colors hover:bg-[#0F5C31]"
                               >
                                 <Plus className="h-4 w-4" />
                               </button>
@@ -228,7 +228,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                           <div className="flex-1">
                             <p className="font-semibold text-slate-800">{item.product.description}</p>
                             <p className="mt-1 text-xs text-slate-400">Quantidade exigida: {item.quantity}</p>
-                            <p className="mt-2 text-sm font-bold text-[#be342e]">
+                            <p className="mt-2 text-sm font-bold text-[#13733D]">
                               R$ {item.product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                           </div>
@@ -241,7 +241,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-800">
-                <Gift className="h-5 w-5 text-[#be342e]" /> Premio / Beneficio
+                <Gift className="h-5 w-5 text-[#13733D]" /> Prêmio / Benefício
               </h3>
 
               {rewardProducts.length > 0 ? (
@@ -262,11 +262,11 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                       <div className="flex-1">
                         <p className="font-semibold text-slate-800">{item.product.description}</p>
                         <p className="mt-1 text-xs text-slate-400">Quantidade premio: {item.quantity}</p>
-                        <p className="mt-2 text-sm font-bold text-[#be342e]">
+                        <p className="mt-2 text-sm font-bold text-[#13733D]">
                           R$ {item.product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
-                      <Gift className="h-4 w-4 text-[#be342e]" />
+                      <Gift className="h-4 w-4 text-[#13733D]" />
                     </button>
                   ))}
                 </div>
@@ -289,7 +289,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                 <Badge variant="warning" className="border-none bg-[#FFC220] text-slate-900">
                   {combo.benefit_label}
                 </Badge>
-                <Badge variant="brand" className="bg-[#fff4f3] text-[#be342e]">
+                <Badge variant="brand" className="bg-[#EEF8F1] text-[#13733D]">
                   {combo.category}
                 </Badge>
               </div>
@@ -328,34 +328,34 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                   </p>
                 )}
                 {rewardValue > 0 && (
-                  <p className="mt-1 text-xs font-bold text-[#be342e]">
+                  <p className="mt-1 text-xs font-bold text-[#13733D]">
                     Premio estimado em R$ {rewardValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 )}
               </div>
 
               {quantityInCart > 0 ? (
-                <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-3 py-2">
+                <div className="flex items-center justify-between rounded-full border border-[#13733D] bg-[#F4FBF6] px-3 py-2">
                   <button
                     onClick={() => removeComboFromCart(combo.id)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-[#be342e] transition-colors hover:bg-[#be342e] hover:text-white"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-[#13733D] transition-colors hover:bg-[#13733D] hover:text-white"
                   >
                     <Minus className="h-5 w-5" />
                   </button>
-                  <div className="flex items-center gap-2 text-[#be342e]">
+                  <div className="flex items-center gap-2 text-[#13733D]">
                     <Package2 className="h-5 w-5" />
                     <span className="text-lg font-bold">{quantityInCart}</span>
                   </div>
                   <button
                     onClick={() => addComboToCart(combo.id)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#be342e] text-white transition-colors hover:bg-[#b70e0c]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#13733D] text-white transition-colors hover:bg-[#0F5C31]"
                   >
                     <Plus className="h-5 w-5" />
                   </button>
                 </div>
               ) : (
                 <Button
-                  className="h-12 w-full rounded-full bg-[#be342e] text-lg font-bold text-white hover:bg-[#b70e0c] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-12 w-full rounded-full bg-[#13733D] text-lg font-bold text-white hover:bg-[#0F5C31] disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => addComboToCart(combo.id, comboSelections)}
                   disabled={!isSelectionComplete}
                 >
@@ -371,7 +371,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 
               <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-                  <Info className="h-4 w-4 text-[#be342e]" /> Leitura da regra
+                  <Info className="h-4 w-4 text-[#13733D]" /> Leitura da regra
                 </p>
                 <div className="space-y-3 text-sm text-slate-600">
                   <div className="flex items-start gap-3">
@@ -379,11 +379,11 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
                     <span>Itens que precisam ser comprados: {qualifyingProducts.length}</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Gift className="mt-0.5 h-4 w-4 text-[#be342e]" />
+                    <Gift className="mt-0.5 h-4 w-4 text-[#13733D]" />
                     <span>Itens premio: {rewardProducts.length > 0 ? rewardProducts.length : 'nao se aplica'}</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <Percent className="mt-0.5 h-4 w-4 text-[#be342e]" />
+                    <Percent className="mt-0.5 h-4 w-4 text-[#13733D]" />
                     <span>Desconto: {combo.discount_percentage ? `${combo.discount_percentage}%` : 'nao se aplica'}</span>
                   </div>
                 </div>
@@ -392,7 +392,7 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 flex items-center gap-2 font-bold text-slate-800">
-                <Tags className="h-5 w-5 text-[#be342e]" /> Premio cadastrado
+                <Tags className="h-5 w-5 text-[#13733D]" /> Prêmio cadastrado
               </h3>
               <p className="text-sm text-slate-600">{combo.prize_text || combo.benefit_label}</p>
             </div>
@@ -404,3 +404,4 @@ const ComboDetailPage: React.FC<ComboDetailPageProps> = ({
 };
 
 export default ComboDetailPage;
+

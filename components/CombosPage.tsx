@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { ArrowLeft, CalendarDays, Gift, Heart, Minus, Package2, Percent, Plus, Search, ShoppingCart, Tags, User } from 'lucide-react';
 import { Button, Badge } from './ui/Layout';
 import ComboImage from './ui/ComboImage';
@@ -87,10 +87,10 @@ const CombosPage: React.FC<CombosPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900">
-      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#13733D] text-white shadow-md">
         <div className="container mx-auto flex h-20 items-center justify-between gap-6 px-4">
           <div className="flex flex-shrink-0 items-center gap-6">
-            <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full px-4 pl-0 text-white hover:bg-[#b70e0c]">
+            <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full px-4 pl-0 text-white hover:bg-[#0F5C31]">
               <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
             </Button>
             <div className="flex cursor-pointer items-center gap-1" onClick={onNavigateToHome}>
@@ -112,15 +112,15 @@ const CombosPage: React.FC<CombosPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <User className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">{displayName}</span>
             </button>
-            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <Heart className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">Favoritos</span>
             </button>
-            <button onClick={onNavigateToCheckout} className="relative flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#b70e0c]">
+            <button onClick={onNavigateToCheckout} className="relative flex flex-col items-center justify-center rounded-full px-3 py-1 text-white hover:bg-[#0F5C31]">
               <ShoppingCart className="mb-0.5 h-5 w-5" />
               <span className="text-[10px] font-bold">
                 R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -136,10 +136,10 @@ const CombosPage: React.FC<CombosPageProps> = ({
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 rounded-3xl bg-white p-8 shadow-sm sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <Badge variant="brand" className="mb-3 bg-[#fff4f3] text-[#be342e]">
+            <Badge variant="brand" className="mb-3 bg-[#EEF8F1] text-[#13733D]">
               Regras Comerciais
             </Badge>
-            <h1 className="text-3xl font-bold text-slate-900">Combos com varios tipos de beneficio</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Combos com varios tipos de benefício</h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-500">
               Desconto por linha, compre e ganhe, combo casado e meta por valor. Confira as regras comerciais disponiveis para sua compra.
             </p>
@@ -165,7 +165,7 @@ const CombosPage: React.FC<CombosPageProps> = ({
                         {combo.benefit_label}
                       </Badge>
                       <h2 className="mt-3 text-xl font-bold text-slate-900">{combo.name}</h2>
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#fff4f3] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#be342e]">
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#EEF8F1] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#13733D]">
                         <CalendarDays className="h-3.5 w-3.5" />
                         Validade: {formatComboValidity(combo.valid_until)}
                       </div>
@@ -193,7 +193,7 @@ const CombosPage: React.FC<CombosPageProps> = ({
                       ))}
                       {rewardProducts.slice(0, 2).map((item) => (
                         <p key={item.product.id} className="text-xs text-slate-500">
-                          Premio: <span className="font-semibold text-[#be342e]">{item.quantity}x {item.product.description}</span>
+                          Prêmio: <span className="font-semibold text-[#13733D]">{item.quantity}x {item.product.description}</span>
                         </p>
                       ))}
                     </div>
@@ -219,30 +219,30 @@ const CombosPage: React.FC<CombosPageProps> = ({
 
                     <Button
                       variant="outline"
-                      className="mt-4 h-10 w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#fff4f3]"
+                      className="mt-4 h-10 w-full rounded-full border-[#13733D] text-[#13733D] hover:bg-[#EEF8F1]"
                       onClick={() => onComboClick(combo.id)}
                     >
                       Ver detalhes do combo
                     </Button>
 
                     {quantityInCart > 0 ? (
-                      <div className="mt-3 flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                      <div className="mt-3 flex items-center justify-between rounded-full border border-[#13733D] bg-[#F4FBF6] px-2 py-1">
                         <button
                           onClick={() => removeComboFromCart(combo.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] transition-colors hover:bg-[#be342e] hover:text-white"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#13733D] transition-colors hover:bg-[#13733D] hover:text-white"
                         >
                           <Minus className="h-4 w-4" />
                         </button>
-                        <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
+                        <span className="text-sm font-bold text-[#13733D]">{quantityInCart}</span>
                         <button
                           onClick={() => addComboToCart(combo.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white transition-colors hover:bg-[#b70e0c]"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#13733D] text-white transition-colors hover:bg-[#0F5C31]"
                         >
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
-                      <Button className="mt-3 h-10 w-full rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={() => addComboToCart(combo.id)}>
+                      <Button className="mt-3 h-10 w-full rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={() => addComboToCart(combo.id)}>
                         <Package2 className="mr-2 h-4 w-4" /> Adicionar combo
                       </Button>
                     )}
@@ -264,3 +264,4 @@ const CombosPage: React.FC<CombosPageProps> = ({
 };
 
 export default CombosPage;
+

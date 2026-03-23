@@ -33,15 +33,14 @@ export const Button = ({
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
 }) => {
-  // Walmart buttons are usually strictly rounded-full
-  const baseStyle = "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-5 py-2";
+  const baseStyle = "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#13733D]/30 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
   
   const variants = {
-    primary: "bg-brand-blue text-white hover:bg-brand-dark shadow-md hover:shadow-lg", // Walmart Blue
-    brand: "bg-brand-yellow text-slate-900 hover:bg-yellow-400", // Walmart Yellow
-    outline: "border border-slate-300 bg-white hover:bg-brand-light hover:border-brand-blue text-slate-900",
-    ghost: "hover:bg-slate-100 text-slate-700",
-    destructive: "bg-red-600 text-white hover:bg-red-700",
+    primary: "bg-[#13733D] text-white shadow-md hover:bg-[#0F5C31] hover:shadow-lg",
+    brand: "bg-[#E7F5EC] text-[#13733D] hover:bg-[#D3EEDC]",
+    outline: "border border-[#B8DCC5] bg-white  hover:border-[#13733D] hover:bg-[#EEF8F1]",
+    ghost: "text-[#13733D] hover:bg-[#EEF8F1]",
+    destructive: "hover:bg-[#0F5C31] text-white hover:bg-[#0F5C31]",
   };
 
   return (
@@ -59,10 +58,10 @@ export const Button = ({
 export const Badge = ({ children, variant = 'default', className = '' }: { children?: React.ReactNode, variant?: 'default' | 'success' | 'warning' | 'destructive' | 'brand', className?: string }) => {
   const styles = {
     default: "bg-slate-100 text-slate-900",
-    success: "bg-green-100 text-green-800",
+    success: "bg-[#E7F5EC] text-[#13733D]",
     warning: "bg-yellow-100 text-yellow-800",
-    destructive: "bg-red-100 text-red-800",
-    brand: "bg-brand-light text-brand-dark border border-brand-blue/20", // Blue Theme
+    destructive: "bg-[#13733D] text-red-800",
+    brand: "border border-[#13733D]/20 bg-[#EEF8F1] text-[#13733D]",
   };
   
   return (

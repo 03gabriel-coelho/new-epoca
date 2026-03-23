@@ -171,7 +171,7 @@ const ClientOrderDetailsModal: React.FC<{
             </div>
             <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
               <span className="text-sm font-bold text-slate-800">Total do pedido</span>
-              <span className="text-lg font-bold text-[#be342e]">
+              <span className="text-lg font-bold text-[#13733D]">
                 R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -231,7 +231,7 @@ const NotificationCenter = () => {
       <Tooltip content="Notificacoes">
         <Button
           variant="outline"
-          className="relative h-10 w-10 rounded-full border-slate-200 p-0 hover:bg-slate-100 hover:text-[#be342e]"
+          className="relative h-10 w-10 rounded-full border-slate-200 p-0 hover:bg-slate-100 hover:text-[#13733D]"
           onClick={() => setIsOpen((prev) => !prev)}
         >
           <Bell className="h-5 w-5 text-slate-600 absolute"/>
@@ -248,7 +248,7 @@ const NotificationCenter = () => {
             {unreadCount > 0 && (
               <button
                 onClick={() => setNotifications((prev) => prev.map((item) => ({ ...item, read: true })))}
-                className="text-xs font-medium text-[#be342e] hover:underline"
+                className="text-xs font-medium text-[#13733D] hover:underline"
               >
                 Marcar todas como lidas
               </button>
@@ -265,10 +265,10 @@ const NotificationCenter = () => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`group relative cursor-default border-b border-slate-50 px-4 py-3 transition-colors last:border-0 hover:bg-slate-50 ${!notification.read ? 'bg-blue-50/30' : ''}`}
+                  className={`group relative cursor-default border-b border-slate-50 px-4 py-3 transition-colors last:border-0 hover:bg-slate-50 ${!notification.read ? 'bg-[#EEF8F1]/30' : ''}`}
                 >
                   <div className="flex gap-3">
-                    <div className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${!notification.read ? 'bg-[#be342e]' : 'bg-slate-200'}`} />
+                    <div className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${!notification.read ? 'bg-[#13733D]' : 'bg-slate-200'}`} />
                     <div className="flex-1 space-y-1">
                       <div className="flex items-start justify-between">
                         <span className={`text-sm font-medium ${!notification.read ? 'text-slate-900' : 'text-slate-600'}`}>
@@ -313,7 +313,7 @@ const CreditLimitCard = () => {
   else if (percentage > 50) barColor = 'bg-yellow-500';
 
   return (
-    <Card className="col-span-1 border-t-4 border-t-[#be342e] shadow-md md:col-span-1">
+    <Card className="col-span-1 border-t-4 border-t-[#13733D] shadow-md md:col-span-1">
       <CardHeader className="rounded-t-xl border-b border-slate-100/50 bg-gradient-to-r from-slate-100 via-slate-50 to-white">
         <CardTitle className="flex items-center justify-between text-lg">
           <span>Limite de Credito</span>
@@ -372,12 +372,12 @@ const OrdersTable: React.FC<{
             <table className="w-full caption-bottom text-left text-sm">
               <thead className="[&_tr]:border-b bg-slate-50/50">
                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">NÂº Pedido (RCA)</th>
+                  <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Nº Pedido (RCA)</th>
                   <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Data</th>
                   <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Itens</th>
                   <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor Total</th>
                   <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
-                  <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">Acoes</th>
+                  <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">Ações</th>
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
@@ -406,7 +406,7 @@ const OrdersTable: React.FC<{
                         </Button>
                         <Button
                           variant="outline"
-                          className="h-8 rounded-full border-[#be342e] text-xs text-[#be342e] hover:bg-blue-50"
+                          className="h-8 rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
                           onClick={(event) => {
                             event.stopPropagation();
                             onNavigateToCheckout();
@@ -421,7 +421,7 @@ const OrdersTable: React.FC<{
               </tbody>
             </table>
             <div className="flex items-center justify-end gap-2 rounded-b-xl border-t border-slate-100 bg-slate-50/30 p-4 text-xs text-slate-400">
-              <ShieldCheck className="h-4 w-4 text-[#be342e]" />
+              <ShieldCheck className="h-4 w-4 text-[#13733D]" />
               <span>Transacoes protegidas por ClearSale Antifraude</span>
             </div>
           </div>
@@ -430,7 +430,7 @@ const OrdersTable: React.FC<{
             <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
             <h3 className="text-lg font-bold text-slate-900">Nenhum pedido recente</h3>
             <p className="mt-1 max-w-sm text-sm text-slate-500">Assim que um pedido for finalizado no checkout, ele aparecera aqui.</p>
-            <Button className="mt-5 rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+            <Button className="mt-5 rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={onNavigateToCheckout}>
               Fazer novo pedido
             </Button>
           </div>
@@ -500,7 +500,7 @@ const FinancialTitles = () => {
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Parcela</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Vencimento</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Valor</th>
-                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Metodo de pagamento</th>
+                <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Método de pagamento</th>
                 <th className="h-12 px-6 align-middle font-medium text-muted-foreground">Status</th>
                 <th className="h-12 px-6 align-middle text-right font-medium text-muted-foreground">2a Via</th>
               </tr>
@@ -521,7 +521,7 @@ const FinancialTitles = () => {
                   <td className="p-6 align-middle">R$ {title.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="p-6 align-middle">
                     <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${title.paymentMethod === 'Boleto' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                      <span className={`h-2 w-2 rounded-full ${title.paymentMethod === 'Boleto' ? 'bg-amber-500' : 'bg-[#EEF8F1]'}`} />
                       {title.paymentMethod}
                     </div>
                     {false && (title.bank_data?.bank_name === 'ITAÃš' ? (
@@ -541,7 +541,7 @@ const FinancialTitles = () => {
                     {title.paymentMethod === 'Boleto' ? (
                       <Button
                         variant="outline"
-                        className="h-9 rounded-full border-[#be342e] px-4 text-xs font-semibold text-[#be342e] hover:bg-blue-50"
+                        className="h-9 rounded-full border-[#13733D] px-4 text-xs font-semibold text-[#13733D] hover:bg-[#EEF8F1]"
                         onClick={() => {
                           setLoadingId(title.id);
                           setTimeout(() => {
@@ -562,7 +562,7 @@ const FinancialTitles = () => {
                         )}
                       </Button>
                     ) : (
-                      <span className="text-xs text-slate-400">Nao se aplica</span>
+                      <span className="text-xs text-slate-400">Não se aplica</span>
                     )}
                     {false && title.status !== 'PAID' && (
                       <Tooltip content="Gerar 2a via Itau (API)">
@@ -617,7 +617,7 @@ const ProfileField = ({
   const sharedClassName = `w-full rounded-xl border px-4 py-3 text-sm outline-none transition-all ${
     disabled
       ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500'
-      : 'border-slate-200 bg-white text-slate-900 focus:border-[#be342e] focus:ring-4 focus:ring-[#be342e]/10'
+      : 'border-slate-200 bg-white text-slate-900 focus:border-[#13733D] focus:ring-4 focus:ring-[#13733D]/10'
   }`;
 
   return (
@@ -626,7 +626,7 @@ const ProfileField = ({
         {label}{required ? ' *' : ''}
       </span>
       <div className="relative">
-        <Icon className={`absolute left-3 top-3.5 h-4 w-4 ${disabled ? 'text-slate-400' : 'text-[#be342e]'}`} />
+        <Icon className={`absolute left-3 top-3.5 h-4 w-4 ${disabled ? 'text-slate-400' : 'text-[#13733D]'}`} />
         {multiline ? (
           <textarea
             value={value}
@@ -791,9 +791,9 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
 
   return (
     <Card className="overflow-hidden border-slate-200 shadow-sm">
-      <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#fff4f3] via-white to-slate-50">
+      <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#EEF8F1] via-white to-slate-50">
         <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#be342e] text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#13733D] text-white">
             <Building2 className="h-5 w-5" />
           </span>
           Dados do Cliente
@@ -883,7 +883,7 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
               href={WHATSAPP_SUPPORT_URL}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-[#be342e] underline underline-offset-2"
+              className="font-medium text-[#13733D] underline underline-offset-2"
             >
               fale com seu consultor Epoca
             </a>
@@ -909,7 +909,7 @@ const ClientProfileCard: React.FC<{ currentUser: AuthUser | null; onCurrentUserU
               </span>
             )}
             <Button
-              className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]"
+              className="rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]"
               onClick={handleSave}
               disabled={saveStatus === 'saving'}
             >
@@ -937,7 +937,7 @@ const ClientHeader: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateT
       <p className="text-muted-foreground">Bem-vindo de volta, {currentUser?.companyName || 'Cliente B2B'}.</p>
     </div>
     <div className="flex items-center gap-2">
-      <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full text-[#be342e] hover:bg-blue-50">
+      <Button variant="ghost" onClick={onNavigateToHome} className="rounded-full text-[#13733D] hover:bg-[#EEF8F1]">
         <Store className="mr-2 h-4 w-4" /> Ir para Loja
       </Button>
       <NotificationCenter />
@@ -948,7 +948,7 @@ const ClientHeader: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateT
       >
         Falar com Vendedor
       </Button>
-      <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+      <Button className="rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={onNavigateToCheckout}>
         <ShoppingCart className="mr-2 h-4 w-4" /> Novo Pedido
       </Button>
     </div>
@@ -1004,9 +1004,9 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
 
       <div className="grid gap-6">
         <Card className="overflow-hidden border-slate-200 shadow-sm">
-          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#fff4f3] via-white to-slate-50">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#EEF8F1] via-white to-slate-50">
             <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#be342e] text-white">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#13733D] text-white">
                 <PackageSearch className="h-5 w-5" />
               </span>
               Meus Pedidos
@@ -1034,7 +1034,7 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                     </div>
                     <div className="text-left md:text-right">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Valor total</p>
-                      <p className="text-lg font-bold text-[#be342e]">
+                      <p className="text-lg font-bold text-[#13733D]">
                         R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                     </div>
@@ -1046,7 +1046,7 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                 <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
                 <h3 className="text-lg font-bold text-slate-900">Nenhum pedido encontrado</h3>
                 <p className="mt-1 max-w-sm text-sm text-slate-500">Assim que um pedido for finalizado no checkout, ele aparecera aqui para acompanhamento.</p>
-                <Button className="mt-5 rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c]" onClick={onNavigateToCheckout}>
+                <Button className="mt-5 rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={onNavigateToCheckout}>
                   Fazer novo pedido
                 </Button>
               </div>
@@ -1096,4 +1096,5 @@ export const ClientFinancialPage: React.FC<ClientDashboardProps> = ({
 };
 
 export default ClientDashboard;
+
 

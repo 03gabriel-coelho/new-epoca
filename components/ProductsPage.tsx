@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
@@ -202,7 +202,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 flex flex-col">
-      <header className="sticky top-0 z-50 bg-[#be342e] text-white shadow-md">
+      <header className="sticky top-0 z-50 bg-[#13733D] text-white shadow-md">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between gap-6">
           <div className="flex items-center gap-6 flex-shrink-0">
             <Button variant="destructive" onClick={onNavigateToHome} className="pl-0 text-white rounded-full px-4">
@@ -262,7 +262,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                       <li
                         key={product.id}
                         onClick={() => handleSuggestionClick(product.description)}
-                        className="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
+                        className="flex items-center gap-3 p-3 hover:bg-[#EEF8F1] cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
                       >
                         <ProductImage
                           src={product.image_path}
@@ -271,7 +271,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                           imgClassName="w-full h-full object-cover"
                         />
                         <div className="flex-1">
-                          <p className="text-sm font-bold text-slate-700 group-hover:text-[#be342e]">{product.description}</p>
+                          <p className="text-sm font-bold text-slate-700 group-hover:text-[#13733D]">{product.description}</p>
                           <div className="flex items-center gap-2 text-xs text-slate-400">
                             <span>{product.department}</span>
                             <span>•</span>
@@ -282,7 +282,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                           {product.listPrice && product.listPrice > product.price && (
                             <div className="text-[11px] text-slate-400 line-through">R$ {product.listPrice.toFixed(2)}</div>
                           )}
-                          <span className="font-bold text-[#be342e] text-sm">R$ {product.price.toFixed(2)}</span>
+                          <span className="font-bold text-[#13733D] text-sm">R$ {product.price.toFixed(2)}</span>
                           <div className="mt-1">
                             <PixBadge />
                           </div>
@@ -301,15 +301,15 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+            <button onClick={onNavigateToClient} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white">
               <User className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">{displayName}</span>
             </button>
-            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white">
+            <button onClick={onNavigateToFavorites} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white">
               <Heart className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">Favoritos</span>
             </button>
-            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#b70e0c] rounded-full py-1 text-white relative">
+            <button onClick={onNavigateToCheckout} className="flex flex-col items-center justify-center px-3 hover:bg-[#0F5C31] rounded-full py-1 text-white relative">
               <ShoppingCart className="w-5 h-5 mb-0.5" />
               <span className="text-[10px] font-bold">R$ {cartTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <span className="absolute top-0 right-1 w-4 h-4 bg-[#FFC220] text-slate-900 rounded-full text-[10px] flex items-center justify-center font-bold">{cartCount}</span>
@@ -335,8 +335,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                   }}
                   className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-bold transition-all flex justify-between items-center group ${
                     selectedCategory === category && !searchTerm
-                      ? 'bg-white text-[#be342e] border-l-4 border-[#be342e] shadow-sm'
-                      : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#be342e]'
+                      ? 'bg-white text-[#13733D] border-l-4 border-[#13733D] shadow-sm'
+                      : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-[#13733D]'
                   }`}
                 >
                   {category}
@@ -349,7 +349,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
               <p className="font-bold text-lg mb-2 text-slate-800">Ajuda B2B</p>
               <p className="text-slate-500 text-sm mb-4">Precisa de uma cotacao especial para grandes volumes?</p>
               <Button
-                className="w-full bg-[#be342e] hover:bg-[#b70e0c] text-white rounded-full font-bold text-xs h-9"
+                className="w-full bg-[#13733D] hover:bg-[#0F5C31] text-white rounded-full font-bold text-xs h-9"
                 onClick={() => window.open('https://wa.me/5531999999999', '_blank')}
               >
                 Falar com Consultor
@@ -363,7 +363,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
             <div>
               <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                 {searchTerm ? (
-                  <>Resultados para <span className="text-[#be342e]">"{searchTerm}"</span></>
+                  <>Resultados para <span className="text-[#13733D]">"{searchTerm}"</span></>
                 ) : (
                   selectedCategory
                 )}
@@ -376,7 +376,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
             </div>
             <div className="flex gap-2">
               <select
-                className="h-10 rounded-full border border-slate-300 bg-white text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#be342e] cursor-pointer shadow-sm text-slate-700 font-medium"
+                className="h-10 rounded-full border border-slate-300 bg-white text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#13733D] cursor-pointer shadow-sm text-slate-700 font-medium"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'RELEVANCE' | 'LOWEST_PRICE' | 'HIGHEST_PRICE' | 'BEST_SELLERS')}
               >
@@ -396,7 +396,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                   const isFavorite = favoriteIds.includes(product.id);
 
                   return (
-                    <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#be342e] group">
+                    <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col min-h-[390px] border border-transparent hover:border-[#13733D] group">
                       <div className="h-44 mb-4 relative flex items-center justify-center cursor-pointer" onClick={() => onProductClick(product.id)}>
                         <div className="w-full h-full p-3 bg-slate-50 rounded-xl border border-slate-100">
                           <ProductImage
@@ -407,7 +407,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                           />
                         </div>
                         <button
-                          className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-red-500' : 'text-slate-300 hover:text-red-500'}`}
+                          className={`absolute top-0 right-0 p-2 transition-colors ${isFavorite ? 'text-[#13733D]' : 'text-slate-300 hover:text-[#13733D]'}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleFavorite(product.id);
@@ -420,7 +420,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                       <div className="mt-auto">
                         {product.listPrice && product.listPrice > product.price && (
                           <div className="mb-2 flex items-center gap-2">
-                            <span className="rounded-full bg-[#fff1f0] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#be342e]">
+                            <span className="rounded-full bg-[#E9F6EE] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#13733D]">
                               Oferta
                             </span>
                             <span className="text-xs text-slate-400 line-through">R$ {product.listPrice.toFixed(2)}</span>
@@ -447,25 +447,25 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                       <p className="text-[10px] text-slate-400 mb-3 font-mono">COD: {product.winthor_codprod}</p>
 
                       {quantityInCart > 0 ? (
-                        <div className="flex items-center justify-between rounded-full border border-[#be342e] bg-[#fff5f5] px-2 py-1">
+                        <div className="flex items-center justify-between rounded-full border border-[#13733D] bg-[#F4FBF6] px-2 py-1">
                           <button
                             onClick={() => removeFromCart(product.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#be342e] hover:bg-[#be342e] hover:text-white transition-colors"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#13733D] hover:bg-[#13733D] hover:text-white transition-colors"
                             aria-label={`Remover uma unidade de ${product.description}`}
                           >
                             <Minus className="w-4 h-4" />
                           </button>
-                          <span className="text-sm font-bold text-[#be342e]">{quantityInCart}</span>
+                          <span className="text-sm font-bold text-[#13733D]">{quantityInCart}</span>
                           <button
                             onClick={() => addToCart(product.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] transition-colors"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31] transition-colors"
                             aria-label={`Adicionar uma unidade de ${product.description}`}
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#be342e] text-[#be342e] hover:bg-[#be342e] hover:text-[#FFF] font-bold h-9 text-xs transition-colors">
+                        <Button onClick={() => addToCart(product.id)} variant="outline" className="w-full rounded-full border-[#13733D] text-[#13733D] hover:bg-[#13733D] hover:text-[#FFF] font-bold h-9 text-xs transition-colors">
                           Adicionar
                         </Button>
                       )}
@@ -489,7 +489,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-1">Nenhum resultado encontrado</h3>
               <p className="text-slate-500 max-w-xs mx-auto mb-6">Nao encontramos produtos correspondentes a sua busca em "{selectedCategory}".</p>
-              <Button className="bg-[#be342e] text-white rounded-full" onClick={clearSearch}>Limpar Filtros</Button>
+              <Button className="bg-[#13733D] text-white rounded-full" onClick={clearSearch}>Limpar Filtros</Button>
             </div>
           )}
         </main>
@@ -499,3 +499,4 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 };
 
 export default ProductsPage;
+

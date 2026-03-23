@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import ProductImage from './ProductImage';
 import { Product } from '../../types';
 
@@ -32,7 +32,7 @@ const ComboImage: React.FC<ComboImageProps> = ({ products, alt, className = '' }
         ))}
       </div>
       {products.length > 4 && (
-        <div className="absolute bottom-3 right-3 rounded-full bg-[#be342e] px-2 py-1 text-[10px] font-bold text-white">
+        <div className="absolute bottom-3 right-3 rounded-full bg-[#13733D] px-2 py-1 text-[10px] font-bold text-white">
           +{products.length - 4}
         </div>
       )}
@@ -41,3 +41,4 @@ const ComboImage: React.FC<ComboImageProps> = ({ products, alt, className = '' }
 };
 
 export default ComboImage;
+

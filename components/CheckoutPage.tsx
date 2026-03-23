@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from './ui/Layout';
 import ProductImage from './ui/ProductImage';
 import { CreditCard, Barcode, MapPin, ShieldCheck, CheckCircle, AlertCircle, Plus, Trash2, Minus, ShoppingCart, Loader2, Zap, Copy, QrCode, Gift, Tags, Percent } from 'lucide-react';
@@ -259,7 +259,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <Card className="border-none shadow-sm">
         <CardHeader className="bg-slate-50 border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-slate-800">
-            <ShoppingCart className="text-[#be342e]" /> Revisão do Carrinho
+            <ShoppingCart className="text-[#13733D]" /> Revisão do Carrinho
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -286,12 +286,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       <p className="text-xs text-slate-500 mb-1">Cod: {product.winthor_codprod}</p>
                       {rewardQuantitiesByProductId.get(product.id) ? (
                         <div className="mb-2 flex flex-wrap gap-2">
-                          <Badge className="bg-[#fff4f3] text-[#be342e] border border-[#f3c1bd]">
+                          <Badge className="bg-[#EEF8F1] text-[#13733D] border border-[#B8DCC5]">
                             <Gift className="mr-1 h-3 w-3" /> {rewardQuantitiesByProductId.get(product.id)} un em premio
                           </Badge>
                         </div>
                       ) : null}
-                      <p className="text-[#be342e] font-bold">R$ {product.price.toFixed(2)} / un</p>
+                      <p className="text-[#13733D] font-bold">R$ {product.price.toFixed(2)} / un</p>
                       <p className="text-[10px] text-slate-400">Preco base em PIX</p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -305,7 +305,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         <span className="font-bold text-slate-900">{displayQuantity}</span>
                         <button
                           onClick={() => addToCart(item.product_id)}
-                          className="w-8 h-8 rounded-full bg-[#be342e] hover:bg-[#b70e0c] flex items-center justify-center text-white transition-colors"
+                          className="w-8 h-8 rounded-full bg-[#13733D] hover:bg-[#0F5C31] flex items-center justify-center text-white transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -323,7 +323,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <div className="p-8 text-center text-slate-500">
               <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p>Seu carrinho esta vazio.</p>
-              <Button variant="ghost" onClick={onNavigateToHome} className="mt-4 text-[#be342e]">
+              <Button variant="ghost" onClick={onNavigateToHome} className="mt-4 text-[#13733D]">
                 Voltar a comprar
               </Button>
             </div>
@@ -333,9 +333,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
       {appliedCombos.length > 0 && (
         <Card className="border-none shadow-sm">
-          <CardHeader className="bg-[#fff4f3] border-b border-[#f3d2cf]">
+          <CardHeader className="bg-[#EEF8F1] border-b border-[#CFE7D6]">
             <CardTitle className="flex items-center gap-2 text-slate-800">
-              <Tags className="text-[#be342e]" /> Combos aplicados ao pedido
+              <Tags className="text-[#13733D]" /> Combos aplicados ao pedido
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
@@ -425,13 +425,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="bg-slate-50 border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-slate-800">
-            <MapPin className="text-[#be342e]" /> Endereco de Entrega
+            <MapPin className="text-[#13733D]" /> Endereço de Entrega
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Endereco cadastrado</p>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Endereço cadastrado</p>
               <p className="mt-2 text-sm text-slate-700">
                 {address || 'Nenhum endereco cadastrado para este usuario.'}
               </p>
@@ -458,7 +458,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <Card className="border-none shadow-sm">
         <CardHeader className="bg-slate-50 border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-slate-800">
-            <CreditCard className="text-[#be342e]" /> Forma de Pagamento
+            <CreditCard className="text-[#13733D]" /> Forma de Pagamento
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -474,7 +474,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 onClick={() => setPaymentMethod(method.id as 'CREDIT_CARD' | 'TWO_CARDS' | 'PIX' | 'BOLETO')}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm whitespace-nowrap transition-all border ${
                   paymentMethod === method.id
-                    ? 'bg-[#e6f1fc] text-[#be342e] border-[#be342e]'
+                    ? 'bg-[#E7F5EC] text-[#13733D] border-[#13733D]'
                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -507,7 +507,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
-                  <Badge className="absolute -top-2 -left-2 bg-[#be342e]">Cartao 1</Badge>
+                  <Badge className="absolute -top-2 -left-2 bg-[#13733D]">Cartão 1</Badge>
                   <div className="mb-4">
                     <label className="text-xs font-bold text-slate-500 uppercase">Valor a Cobrar</label>
                     <div className="relative">
@@ -556,7 +556,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
-                  <Badge className="absolute -top-2 -left-2 bg-[#FFC220] text-slate-900">Cartao 2</Badge>
+                  <Badge className="absolute -top-2 -left-2 bg-[#FFC220] text-slate-900">Cartão 2</Badge>
                   <div className="mb-4">
                     <label className="text-xs font-bold text-slate-500 uppercase">Valor Restante</label>
                     <div className="relative">
@@ -616,13 +616,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     ))}
                   </div>
                   <p className="text-xs font-bold text-slate-700 mt-4">Escaneie o QR Code</p>
-                  <p className="text-[11px] text-slate-500 mt-1">Pagamento identificado automaticamente apos a confirmacao.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Pagamento identificado automaticamente após a confirmação.</p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-bold text-slate-800">Pague com PIX</p>
-                    <p className="text-sm text-slate-500 mt-1">Abra o app do banco, copie o codigo abaixo e conclua o pagamento no valor de PIX.</p>
+                    <p className="text-sm text-slate-500 mt-1">Abra o app do banco, copie o código abaixo e conclua o pagamento no valor de PIX.</p>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -634,14 +634,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <Button
                       onClick={handleCopyPixCode}
                       variant="outline"
-                      className="rounded-full border-[#be342e] text-[#be342e]"
+                      className="rounded-full border-[#13733D] text-[#13733D]"
                     >
                       <Copy className="w-4 h-4 mr-2" /> {pixCopied ? 'Codigo copiado' : 'Copiar codigo PIX'}
                     </Button>
                     <Button
                       onClick={handleSimulatePixPayment}
                       disabled={pixPaid || isProcessingPix}
-                      className="rounded-full bg-[#be342e] hover:bg-[#b70e0c] text-white"
+                      className="rounded-full bg-[#13733D] hover:bg-[#0F5C31] text-white"
                     >
                       {isProcessingPix ? (
                         <>
@@ -675,8 +675,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           {paymentMethod === 'BOLETO' && (
             <div className="p-6 bg-slate-50 rounded-xl border border-slate-200 text-center animate-in fade-in">
               <Barcode className="w-12 h-12 mx-auto text-slate-400 mb-3" />
-              <p className="font-bold text-slate-700">Boleto Bancario Itau</p>
-              <p className="text-sm text-slate-500">O boleto sera gerado apos a confirmacao do pedido.</p>
+              <p className="font-bold text-slate-700">Boleto Bancário Itaú</p>
+              <p className="text-sm text-slate-500">O boleto sera gerado após a confirmação do pedido.</p>
               <p className="text-xs text-slate-400 mt-2">Vencimento em 3 dias uteis.</p>
             </div>
           )}
@@ -688,7 +688,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <Button
           onClick={handlePlaceOrder}
           disabled={paymentMethod === 'PIX' && !pixPaid}
-          className="h-12 px-8 rounded-full bg-[#FFC220] hover:bg-yellow-400 text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-12 px-8 rounded-full text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {paymentMethod === 'PIX' && !pixPaid ? 'Aguardando PIX' : 'Finalizar Pedido'}
         </Button>
@@ -713,8 +713,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <div className="max-w-md mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 text-left">
         <p className="font-bold text-slate-700 mb-4 border-b pb-2">Resumo da Entrega</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pedido:</span> #{createdOrder?.winthor_numped || '--'}</p>
-        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereco:</span> {createdOrder?.address || address}</p>
-        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Previsao:</span> 3 dias uteis</p>
+        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Endereço:</span> {createdOrder?.address || address}</p>
+        <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Previsão:</span> 3 dias uteis</p>
         <p className="text-sm text-slate-600 mb-1"><span className="font-bold">Pagamento:</span> {paymentMethod === 'PIX' ? 'PIX' : paymentMethod === 'BOLETO' ? 'Boleto' : 'Cartao'}</p>
         <p className="text-sm text-slate-600 mb-1">
           <span className="font-bold">Status do pagamento:</span>{' '}
@@ -732,7 +732,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
       <div className="flex justify-center gap-4">
         <Button onClick={onNavigateToHome} variant="outline" className="rounded-full h-10">Voltar para Loja</Button>
-        <Button className="rounded-full bg-[#be342e] text-white hover:bg-[#b70e0c] h-10" onClick={onNavigateToOrders}>Acompanhar Pedido</Button>
+        <Button className="rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31] h-10" onClick={onNavigateToOrders}>Acompanhar Pedido</Button>
       </div>
     </div>
   );
@@ -742,7 +742,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 h-20 flex items-center shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="rounded-xl flex items-center bg-[#be342e] p-2 gap-1 cursor-pointer" onClick={onNavigateToHome}>
+            <div className="rounded-xl flex items-center bg-[#13733D] p-2 gap-1 cursor-pointer" onClick={onNavigateToHome}>
               <img className="h-12" src={Logo} />
             </div>
             <div className="h-6 w-px bg-slate-300 mx-2 hidden md:block"></div>
@@ -751,18 +751,18 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
           {step < 4 && (
             <div className="flex items-center gap-2 md:gap-4">
-              <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#be342e] font-bold' : 'text-slate-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 1 ? 'bg-[#be342e] text-white' : 'bg-slate-200'}`}>1</div>
+              <div className={`flex items-center gap-2 ${step >= 1 ? 'text-[#13733D] font-bold' : 'text-slate-400'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 1 ? 'bg-[#13733D] text-white' : 'bg-slate-200'}`}>1</div>
                 <span className="hidden md:inline">Carrinho</span>
               </div>
               <div className="w-8 h-px bg-slate-300"></div>
-              <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#be342e] font-bold' : 'text-slate-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 2 ? 'bg-[#be342e] text-white' : 'bg-slate-200'}`}>2</div>
+              <div className={`flex items-center gap-2 ${step >= 2 ? 'text-[#13733D] font-bold' : 'text-slate-400'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 2 ? 'bg-[#13733D] text-white' : 'bg-slate-200'}`}>2</div>
                 <span className="hidden md:inline">Endereco</span>
               </div>
               <div className="w-8 h-px bg-slate-300"></div>
-              <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#be342e] font-bold' : 'text-slate-400'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 3 ? 'bg-[#be342e] text-white' : 'bg-slate-200'}`}>3</div>
+              <div className={`flex items-center gap-2 ${step >= 3 ? 'text-[#13733D] font-bold' : 'text-slate-400'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step >= 3 ? 'bg-[#13733D] text-white' : 'bg-slate-200'}`}>3</div>
                 <span className="hidden md:inline">Pagamento</span>
               </div>
             </div>
@@ -814,21 +814,21 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   )}
                   <div className="border-t border-slate-100 pt-3 flex justify-between text-lg">
                     <span className="font-bold text-slate-800">Total</span>
-                    <span className="font-bold text-[#be342e]">R$ {paymentAdjustedTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span className="font-bold text-[#13733D]">R$ {paymentAdjustedTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
 
-                <div className="bg-[#e6f1fc] p-4 rounded-xl mb-4">
-                  <p className="text-xs font-bold text-[#be342e] mb-1 flex items-center gap-1">
+                <div className="bg-[#E7F5EC] p-4 rounded-xl mb-4">
+                  <p className="text-xs font-bold text-[#13733D] mb-1 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> Compra Garantida
                   </p>
                   <p className="text-xs text-slate-600 leading-tight">
-                    Seus dados estao protegidos com criptografia de ponta a ponta.
+                    Seus dados estão protegidos com criptografia de ponta a ponta.
                   </p>
                 </div>
 
                 <Button
-                  variant="outline"
+                  variant="brand"
                   onClick={onNavigateToHome}
                   className="w-full border-[#FFC220] bg-[#FFC220] text-slate-900 shadow-sm hover:border-yellow-400 hover:bg-yellow-400"
                 >
@@ -844,3 +844,4 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 };
 
 export default CheckoutPage;
+
