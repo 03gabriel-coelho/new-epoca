@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Bell,
+  CalendarDays,
   ChevronDown,
   Download,
   HelpCircle,
@@ -264,6 +265,13 @@ const formatCompactCurrency = (value: number) =>
     maximumFractionDigits: 1,
   }).format(value);
 
+const formatDisplayDate = (value: string) => {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+};
+
 const selectClassName =
   'appearance-none border-none bg-transparent pr-6 font-medium text-[#0d1c2e] outline-none ring-0 focus:ring-0';
 
@@ -275,6 +283,11 @@ const AdminStatisticsPage: React.FC = () => {
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
   const [isFullReportOpen, setIsFullReportOpen] = useState(false);
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+  const [rangeStartDate, setRangeStartDate] = useState('');
+  const [rangeEndDate, setRangeEndDate] = useState('');
+  const [draftRangeStartDate, setDraftRangeStartDate] = useState('');
+  const [draftRangeEndDate, setDraftRangeEndDate] = useState('');
 
   const states = Array.from(new Set(mockSalesStatistics.map((item) => item.state))).sort((a, b) => a.localeCompare(b));
 
@@ -338,14 +351,65 @@ const AdminStatisticsPage: React.FC = () => {
     });
   }, [selectedState, selectedCity, selectedCustomer, customerSearchTerm]);
 
-  const periodConfig = periodConfigs[selectedPeriod];
+  const customRangeMeta = useMemo(() => {
+    if (!rangeStartDate || !rangeEndDate) {
+      return null;
+    }
+
+    const start = new Date(`${rangeStartDate}T00:00:00`);
+    const end = new Date(`${rangeEndDate}T00:00:00`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+      return null;
+    }
+
+    const daySpan = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+    const boundedSpan = Math.min(daySpan, 31);
+    const progress = (boundedSpan - 1) / 30;
+
+    return {
+      days: daySpan,
+      label: `${formatDisplayDate(rangeStartDate)} ate ${formatDisplayDate(rangeEndDate)}`,
+      config: {
+        revenueMultiplier: Number((1 + progress * 0.42).toFixed(3)),
+        ordersMultiplier: Number((1 + progress * 0.28).toFixed(3)),
+        channelShareShift: Number((0.01 + progress * 0.04).toFixed(3)),
+        stateMomentum: Number((1 + progress * 0.12).toFixed(3)),
+        regionMomentum: Number((1 + progress * 0.16).toFixed(3)),
+        growthBadge: `+${(8 + progress * 21).toFixed(1)}%`,
+        ordersBadge: `${progress > 0.28 ? '+' : '-'}${Math.abs(-1.5 + progress * 16).toFixed(1)}%`,
+        monthlyGoal: Math.round(1500000 + progress * 6300000),
+        trend: [
+          { label: 'P1', organic: Math.round(14 + progress * 10), assisted: Math.round(10 + progress * 8) },
+          { label: 'P2', organic: Math.round(22 + progress * 13), assisted: Math.round(16 + progress * 11) },
+          { label: 'P3', organic: Math.round(34 + progress * 16), assisted: Math.round(24 + progress * 15) },
+          { label: 'P4', organic: Math.round(48 + progress * 18), assisted: Math.round(33 + progress * 19) },
+          { label: 'P5', organic: Math.round(58 + progress * 16), assisted: Math.round(41 + progress * 23) },
+        ],
+      },
+    };
+  }, [rangeEndDate, rangeStartDate]);
+
+  const periodConfig = customRangeMeta?.config ?? periodConfigs[selectedPeriod];
+  const activePeriodLabel = customRangeMeta?.label ?? selectedPeriod;
+  const activePeriodDays = customRangeMeta?.days ?? (selectedPeriod === 'Hoje' ? 1 : selectedPeriod === '7 Dias' ? 7 : 30);
+  const isCustomRangeActive = Boolean(customRangeMeta);
+  const hasDraftDateRange = Boolean(draftRangeStartDate || draftRangeEndDate);
+  const hasInvalidDraftRange = useMemo(() => {
+    if (!draftRangeStartDate || !draftRangeEndDate) {
+      return false;
+    }
+
+    const start = new Date(`${draftRangeStartDate}T00:00:00`);
+    const end = new Date(`${draftRangeEndDate}T00:00:00`);
+    return Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start;
+  }, [draftRangeEndDate, draftRangeStartDate]);
 
   const scenarioData = useMemo(() => {
     return filteredData.map((item, index) => {
       const revenueWeight = 1 + ((index % 4) - 1.5) * 0.045;
       const ordersWeight = 1 + ((index % 3) - 1) * 0.05;
-      const stateWeight = selectedPeriod === 'Hoje' ? 1 : 1 + ((item.state.length % 3) - 1) * (periodConfig.stateMomentum - 1) * 0.6;
-      const regionWeight = selectedPeriod === 'Hoje' ? 1 : 1 + ((item.region.length % 4) - 1.5) * (periodConfig.regionMomentum - 1) * 0.35;
+      const stateWeight = activePeriodDays === 1 ? 1 : 1 + ((item.state.length % 3) - 1) * (periodConfig.stateMomentum - 1) * 0.6;
+      const regionWeight = activePeriodDays === 1 ? 1 : 1 + ((item.region.length % 4) - 1.5) * (periodConfig.regionMomentum - 1) * 0.35;
       const channelWeight =
         item.channel === 'SALES_ASSISTED'
           ? 1 + periodConfig.channelShareShift
@@ -357,7 +421,7 @@ const AdminStatisticsPage: React.FC = () => {
         orders: Math.max(1, Math.round(item.orders * periodConfig.ordersMultiplier * ordersWeight * regionWeight)),
       };
     });
-  }, [filteredData, periodConfig, selectedPeriod]);
+  }, [activePeriodDays, filteredData, periodConfig]);
 
   const aggregatedCustomers = useMemo(() => {
     const grouped = new Map<string, { customer: string; city: string; state: string; orders: number; revenue: number; avgTicket: number }>();
@@ -531,7 +595,7 @@ const AdminStatisticsPage: React.FC = () => {
                   Tendencia de Canais
                 </h3>
                 <p className="mt-2 text-sm text-[#60697c]">
-                  Panorama expandido de {selectedPeriod.toLowerCase()} com foco em orgânico vs assistido
+                  Panorama expandido de {activePeriodLabel} com foco em orgânico vs assistido
                   {selectedState !== 'all' ? `, filtrado para ${stateLabelMap[selectedState] || selectedState}` : ''}.
                 </p>
               </div>
@@ -569,7 +633,7 @@ const AdminStatisticsPage: React.FC = () => {
                       </div>
                       <div className="inline-flex items-center gap-2 rounded-full bg-[#eef4ff] px-4 py-2 text-xs font-bold text-[#000666]">
                         <TrendingUp className="h-4 w-4" />
-                        Atualizado para {selectedPeriod}
+                        Atualizado para {activePeriodLabel}
                       </div>
                     </div>
 
@@ -761,14 +825,124 @@ const AdminStatisticsPage: React.FC = () => {
               {(['Hoje', '7 Dias', '30 Dias'] as const).map((period) => (
                 <button
                   key={period}
-                  onClick={() => setSelectedPeriod(period)}
+                  onClick={() => {
+                    setSelectedPeriod(period);
+                    setRangeStartDate('');
+                    setRangeEndDate('');
+                    setDraftRangeStartDate('');
+                    setDraftRangeEndDate('');
+                    setIsDateRangeOpen(false);
+                  }}
                   className={`rounded-full px-4 py-2 text-xs font-bold transition-colors ${
-                    selectedPeriod === period ? 'bg-[#000666] text-white' : 'text-[#60697c] hover:bg-[#eef4ff]'
+                    !isCustomRangeActive && selectedPeriod === period ? 'bg-[#000666] text-white' : 'text-[#60697c] hover:bg-[#eef4ff]'
                   }`}
                 >
                   {period}
                 </button>
               ))}
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftRangeStartDate(rangeStartDate);
+                  setDraftRangeEndDate(rangeEndDate);
+                  setIsDateRangeOpen((current) => !current);
+                }}
+                className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold shadow-sm transition-all ${
+                  isDateRangeOpen || isCustomRangeActive
+                    ? 'border-[#000666] bg-[#eef4ff] text-[#000666]'
+                    : 'border-[#e5eaf7] bg-white text-[#0d1c2e] hover:border-[#cfd8ee] hover:bg-[#f7f9ff]'
+                }`}
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span>{isCustomRangeActive ? activePeriodLabel : 'Periodo customizado'}</span>
+              </button>
+
+              {isDateRangeOpen && (
+                <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(92vw,24rem)] overflow-hidden rounded-[28px] border border-[#dce4f8] bg-white shadow-[0_24px_60px_-24px_rgba(9,18,40,0.35)]">
+                  <div className="border-b border-[#eef2fb] bg-[linear-gradient(180deg,_#f8faff_0%,_#eef4ff_100%)] px-5 py-4">
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Filtro por data</p>
+                    <h3 className="mt-2 text-lg font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                      Escolha um intervalo especifico
+                    </h3>
+                    <p className="mt-1 text-sm text-[#60697c]">
+                      Simule uma leitura personalizada para datas de inicio e fim.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 px-5 py-5">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#60697c]">Data inicial</span>
+                        <input
+                          type="date"
+                          value={draftRangeStartDate}
+                          max={draftRangeEndDate || undefined}
+                          onChange={(event) => setDraftRangeStartDate(event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-[#dce4f8] bg-[#f8f9ff] px-4 py-3 text-sm font-medium text-[#0d1c2e] outline-none transition-colors focus:border-[#000666]"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#60697c]">Data final</span>
+                        <input
+                          type="date"
+                          value={draftRangeEndDate}
+                          min={draftRangeStartDate || undefined}
+                          onChange={(event) => setDraftRangeEndDate(event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-[#dce4f8] bg-[#f8f9ff] px-4 py-3 text-sm font-medium text-[#0d1c2e] outline-none transition-colors focus:border-[#000666]"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="rounded-2xl bg-[#f5f8ff] px-4 py-3 text-sm text-[#445068]">
+                      {draftRangeStartDate && draftRangeEndDate && !hasInvalidDraftRange ? (
+                        <span>
+                          Intervalo selecionado: <strong className="text-[#000666]">{formatDisplayDate(draftRangeStartDate)}</strong> ate{' '}
+                          <strong className="text-[#000666]">{formatDisplayDate(draftRangeEndDate)}</strong>
+                        </span>
+                      ) : (
+                        <span>Defina as duas datas para aplicar um recorte especifico.</span>
+                      )}
+                    </div>
+
+                    {hasInvalidDraftRange && (
+                      <p className="text-sm font-medium text-[#ba1a1a]">A data final precisa ser igual ou posterior a data inicial.</p>
+                    )}
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRangeStartDate('');
+                          setRangeEndDate('');
+                          setDraftRangeStartDate('');
+                          setDraftRangeEndDate('');
+                          setIsDateRangeOpen(false);
+                        }}
+                        className="rounded-full px-4 py-2 text-sm font-bold text-[#60697c] transition-colors hover:bg-[#f3f6ff] hover:text-[#0d1c2e]"
+                      >
+                        Limpar intervalo
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={!draftRangeStartDate || !draftRangeEndDate || hasInvalidDraftRange}
+                        onClick={() => {
+                          setRangeStartDate(draftRangeStartDate);
+                          setRangeEndDate(draftRangeEndDate);
+                          setIsDateRangeOpen(false);
+                        }}
+                        className="rounded-full bg-[#000666] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#00088a] disabled:cursor-not-allowed disabled:bg-[#c7d2f4] disabled:text-white/80"
+                      >
+                        Aplicar intervalo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="relative flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-[#e5eaf7]">
