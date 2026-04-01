@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import ProductImage from './ui/ProductImage';
 import { AuthUser, OrderStatus, StoredOrder } from '../types';
 import { updateStoredUser } from '../lib/authStorage';
@@ -23,7 +24,8 @@ import {
   Phone,
   Mail,
   Save,
-  PackageSearch
+  PackageSearch,
+  ArrowLeft
 } from 'lucide-react';
 
 const WHATSAPP_SUPPORT_URL = 'https://api.whatsapp.com/send/?phone=5531997935059&text&type=phone_number&app_absent=0';
@@ -102,85 +104,73 @@ const getPaymentStatusLabel = (order: StoredOrder) => {
   return 'Aguardando confirmacao do pagamento';
 };
 
-const ClientOrderDetailsModal: React.FC<{
-  order: StoredOrder | null;
-  onClose: () => void;
-}> = ({ order, onClose }) => {
-  if (!order) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Detalhes do Pedido</p>
-            <div className="mt-2 flex items-center gap-3">
-              <span className="text-lg font-bold text-slate-900">#{order.winthor_numped}</span>
-              {getOrderStatusBadge(order.status)}
-            </div>
-          </div>
-          <Button variant="ghost" className="rounded-full" onClick={onClose}>
-            Fechar
-          </Button>
-        </div>
-
-        <div className="max-h-[calc(90vh-88px)] space-y-5 overflow-y-auto p-6">
-          <div>
-            <p className="text-sm text-slate-500">{order.tracking_message}</p>
-          </div>
-
-          <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
-            <p><span className="font-bold text-slate-800">Data:</span> {new Date(order.date).toLocaleString('pt-BR')}</p>
-            <p><span className="font-bold text-slate-800">Pagamento:</span> {getPaymentMethodLabel(order.payment_method)}</p>
-            <p><span className="font-bold text-slate-800">Status do pagamento:</span> {getPaymentStatusLabel(order)}</p>
-            <p><span className="font-bold text-slate-800">Entrega:</span> {order.address}</p>
-          </div>
-
-          <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
-            <div className="space-y-3">
-              {order.items.map((item) => (
-                <div key={`${order.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
-                  <ProductImage
-                    src={item.image_path}
-                    alt={item.description}
-                    className="h-14 w-14 rounded-xl border border-slate-100"
-                    imgClassName="h-full w-full object-contain"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
-                    <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
-                    <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-green-700">Beneficio de combos</span>
-              <span className="font-bold text-green-700">
-                R$ {order.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
-              <span className="text-sm font-bold text-slate-800">Total do pedido</span>
-              <span className="text-lg font-bold text-[#13733D]">
-                R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-          </div>
+const ClientOrderDetailsContent: React.FC<{
+  order: StoredOrder;
+}> = ({ order }) => (
+  <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Detalhes do Pedido</p>
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-lg font-bold text-slate-900">#{order.winthor_numped}</span>
+          {getOrderStatusBadge(order.status)}
         </div>
       </div>
     </div>
-  );
-};
+
+    <div className="space-y-5 p-6">
+      <div>
+        <p className="text-sm text-slate-500">{order.tracking_message}</p>
+      </div>
+
+      <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
+        <p><span className="font-bold text-slate-800">Data:</span> {new Date(order.date).toLocaleString('pt-BR')}</p>
+        <p><span className="font-bold text-slate-800">Pagamento:</span> {getPaymentMethodLabel(order.payment_method)}</p>
+        <p><span className="font-bold text-slate-800">Status do pagamento:</span> {getPaymentStatusLabel(order)}</p>
+        <p><span className="font-bold text-slate-800">Entrega:</span> {order.address}</p>
+      </div>
+
+      <div>
+        <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Itens do pedido</p>
+        <div className="space-y-3">
+          {order.items.map((item) => (
+            <div key={`${order.id}-${item.product_id}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3">
+              <ProductImage
+                src={item.image_path}
+                alt={item.description}
+                className="h-14 w-14 rounded-xl border border-slate-100"
+                imgClassName="h-full w-full object-contain"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-sm font-semibold text-slate-800">{item.description}</p>
+                <p className="text-xs text-slate-400">Cod. {item.winthor_codprod}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-slate-800">{item.quantity}x</p>
+                <p className="text-xs text-slate-500">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium text-green-700">Beneficio de combos</span>
+          <span className="font-bold text-green-700">
+            R$ {order.combo_savings_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </span>
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-green-100 pt-3">
+          <span className="text-sm font-bold text-slate-800">Total do pedido</span>
+          <span className="text-lg font-bold text-[#13733D]">
+            R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const buildInitialProfileData = (currentUser: AuthUser | null): ClientProfileFormData => ({
   cnpj: currentUser?.cnpj || '',
@@ -347,19 +337,8 @@ const OrdersTable: React.FC<{
   currentUser,
   onNavigateToCheckout
 }) => {
+  const navigate = useNavigate();
   const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
-  const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
-
-  useEffect(() => {
-    setSelectedOrder((currentSelectedOrder) => {
-      if (!currentUser || orders.length === 0 || !currentSelectedOrder) {
-        return null;
-      }
-
-      const hasSelectedOrder = orders.some((order) => order.id === currentSelectedOrder.id);
-      return hasSelectedOrder ? currentSelectedOrder : null;
-    });
-  }, [currentUser?.id, orders]);
 
   return (
     <Card className="col-span-1 shadow-sm md:col-span-2">
@@ -384,8 +363,7 @@ const OrdersTable: React.FC<{
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="cursor-pointer border-b transition-colors hover:bg-muted/50"
-                    onClick={() => setSelectedOrder(order)}
+                    className="border-b transition-colors hover:bg-muted/50"
                   >
                     <td className="p-6 align-middle font-medium">{order.winthor_numped}</td>
                     <td className="p-6 align-middle">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
@@ -397,20 +375,14 @@ const OrdersTable: React.FC<{
                         <Button
                           variant="ghost"
                           className="h-8 rounded-full text-xs text-slate-500 hover:text-slate-900"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setSelectedOrder(order);
-                          }}
+                          onClick={() => navigate(`/cliente/pedidos/${order.id}`)}
                         >
-                          <Truck className="mr-1 h-3 w-3" /> Rastrear
+                          <Truck className="mr-1 h-3 w-3" /> Ver detalhes
                         </Button>
                         <Button
                           variant="outline"
                           className="h-8 rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onNavigateToCheckout();
-                          }}
+                          onClick={onNavigateToCheckout}
                         >
                           Repetir
                         </Button>
@@ -436,8 +408,68 @@ const OrdersTable: React.FC<{
           </div>
         )}
       </CardContent>
-      <ClientOrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
     </Card>
+  );
+};
+
+export const ClientOrderDetailsPage: React.FC<ClientDashboardProps> = ({
+  currentUser,
+  onNavigateToHome,
+  onNavigateToCheckout
+}) => {
+  const navigate = useNavigate();
+  const { orderId } = useParams();
+  const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
+  const order = orders.find((entry) => entry.id === orderId);
+
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Meus Pedidos</p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">
+              {order ? `Pedido #${order.winthor_numped}` : 'Pedido nao encontrado'}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {order
+                ? 'Consulte os itens, pagamento e status da entrega em uma tela dedicada.'
+                : 'Esse pedido nao esta disponivel para o usuario atual.'}
+            </p>
+          </div>
+          <Button variant="outline" className="rounded-full" onClick={() => navigate('/cliente/pedidos')}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para pedidos
+          </Button>
+        </div>
+
+        {order ? (
+          <ClientOrderDetailsContent order={order} />
+        ) : (
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
+              <h3 className="text-lg font-bold text-slate-900">Pedido nao encontrado</h3>
+              <p className="mt-1 max-w-sm text-sm text-slate-500">
+                Volte para a lista de pedidos para selecionar um pedido valido.
+              </p>
+              <Button className="mt-5 rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={() => navigate('/cliente/pedidos')}>
+                Ver meus pedidos
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -976,23 +1008,8 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
   onNavigateToHome,
   onNavigateToCheckout
 }) => {
+  const navigate = useNavigate();
   const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
-  const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
-
-  useEffect(() => {
-    setSelectedOrder((currentSelectedOrder) => {
-      if (!currentUser || orders.length === 0) {
-        return null;
-      }
-
-      if (!currentSelectedOrder) {
-        return null;
-      }
-
-      const hasSelectedOrder = orders.some((order) => order.id === currentSelectedOrder.id);
-      return hasSelectedOrder ? currentSelectedOrder : null;
-    });
-  }, [currentUser?.id, orders]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -1017,11 +1034,9 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
             {orders.length > 0 ? (
               <div className="divide-y divide-slate-100">
                 {orders.map((order) => (
-                  <button
+                  <div
                     key={order.id}
-                    type="button"
-                    onClick={() => setSelectedOrder('customer_id' in order ? order : null)}
-                    className="flex w-full flex-col gap-4 px-6 py-5 text-left transition-colors hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
+                    className="flex flex-col gap-4 px-6 py-5 transition-colors hover:bg-slate-50 md:flex-row md:items-center md:justify-between"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
@@ -1029,16 +1044,23 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                         {getOrderStatusBadge(order.status)}
                       </div>
                       <p className="mt-1 text-sm text-slate-500">
-                        {new Date(order.date).toLocaleDateString('pt-BR')} â€¢ {order.items_count} itens
+                        {new Date(order.date).toLocaleDateString('pt-BR')} - {order.items_count} itens
                       </p>
                     </div>
-                    <div className="text-left md:text-right">
+                    <div className="flex flex-col gap-3 text-left md:items-end md:text-right">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Valor total</p>
                       <p className="text-lg font-bold text-[#13733D]">
                         R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
+                      <Button
+                        variant="outline"
+                        className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
+                        onClick={() => navigate(`/cliente/pedidos/${order.id}`)}
+                      >
+                        Ver detalhes
+                      </Button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -1054,8 +1076,6 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
           </CardContent>
         </Card>
       </div>
-
-      <ClientOrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
     </div>
   );
 };
