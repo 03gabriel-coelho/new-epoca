@@ -46,6 +46,104 @@ const initialNotifications: Notification[] = [
   { id: '4', title: 'Novo Produto Disponivel', message: 'A linha premium de vinhos chilenos acabou de chegar.', time: '1 dia atras', type: 'info', read: true }
 ];
 
+type OrderHelpTopicId =
+  | 'problema-produto'
+  | 'pacote-sem-produto'
+  | 'envio-nao-chegou'
+  | 'opinar-entrega'
+  | 'cuidar-produto-devolver'
+  | 'ajuda-nfe'
+  | 'pagamento-duplicado';
+
+interface OrderHelpTopic {
+  id: OrderHelpTopicId;
+  title: string;
+  description: string;
+  expectedResponse: string;
+  messageLabel: string;
+  messagePlaceholder: string;
+  attachmentLabel?: string;
+  allowAttachment?: boolean;
+  tips: string[];
+}
+
+const orderHelpTopics: OrderHelpTopic[] = [
+  {
+    id: 'problema-produto',
+    title: 'Recebi o produto com um problema',
+    description: 'Abra um chamado de avaria, vencimento, embalagem danificada ou item divergente.',
+    expectedResponse: 'Analise do time de atendimento em ate 1 dia util.',
+    messageLabel: 'Descreva o problema encontrado',
+    messagePlaceholder: 'Ex.: A caixa chegou amassada e 3 unidades vieram vazando. Gostaria de orientacao para troca.',
+    attachmentLabel: 'Anexar fotos do produto ou da embalagem',
+    allowAttachment: true,
+    tips: ['Informe quais itens foram afetados.', 'Se puder, adicione fotos mostrando lote, validade ou dano visivel.']
+  },
+  {
+    id: 'pacote-sem-produto',
+    title: 'Recebi um pacote sem o produto',
+    description: 'Registre falta de item ou volume com conferencia de embalagem e nota.',
+    expectedResponse: 'Conferencia com logistica e retorno em ate 24 horas.',
+    messageLabel: 'Conte o que faltou no pacote',
+    messagePlaceholder: 'Ex.: O volume 2 chegou lacrado, mas o item detergente 5L nao veio dentro da caixa.',
+    attachmentLabel: 'Anexar foto do pacote e da NF-e',
+    allowAttachment: true,
+    tips: ['Informe o nome do item faltante.', 'Se houver divergencia entre volumes e nota, mencione isso na mensagem.']
+  },
+  {
+    id: 'envio-nao-chegou',
+    title: 'Nao chegou o envio',
+    description: 'Simule uma solicitacao de atraso ou pedido nao entregue.',
+    expectedResponse: 'Acionamento da transportadora e atualizacao do rastreio.',
+    messageLabel: 'Informe o que aconteceu com a entrega',
+    messagePlaceholder: 'Ex.: A previsao era ontem, mas o pedido ainda nao chegou e nao houve tentativa registrada.',
+    tips: ['Confirme se houve tentativa de entrega.', 'Se o endereco ou contato mudou, sinalize no texto.']
+  },
+  {
+    id: 'opinar-entrega',
+    title: 'Opinar sobre a entrega e o entregador',
+    description: 'Compartilhe elogio, reclamacao ou comentario sobre a experiencia da entrega.',
+    expectedResponse: 'Registro enviado para a central de qualidade e operacao.',
+    messageLabel: 'Como foi sua experiencia?',
+    messagePlaceholder: 'Ex.: O entregador foi muito atencioso e chegou dentro da janela combinada.',
+    tips: ['Voce pode registrar elogios ou pontos de melhoria.', 'Use este canal para feedback sobre atendimento na entrega.']
+  },
+  {
+    id: 'cuidar-produto-devolver',
+    title: 'Como cuidar do produto se precisar devolver',
+    description: 'Mostra orientacoes praticas antes da coleta ou devolucao do item.',
+    expectedResponse: 'Fluxo guiado com orientacoes de armazenamento e preparo para coleta.',
+    messageLabel: 'Se quiser, deixe uma observacao adicional',
+    messagePlaceholder: 'Ex.: Preciso devolver alimentos refrigerados e quero confirmar como armazenar ate a coleta.',
+    tips: ['Mantenha o produto nas condicoes originais de armazenamento.', 'Nao descarte embalagem, lote nem etiqueta ate receber retorno.']
+  },
+  {
+    id: 'ajuda-nfe',
+    title: 'Preciso de ajuda com a NF-e',
+    description: 'Solicite segunda via, correcao de dados ou esclarecimentos sobre a nota fiscal.',
+    expectedResponse: 'Encaminhamento para o fiscal com retorno pelo protocolo do pedido.',
+    messageLabel: 'Qual ajuda voce precisa com a NF-e?',
+    messagePlaceholder: 'Ex.: Preciso da chave de acesso e do XML da nota para conferencia no financeiro.',
+    attachmentLabel: 'Anexar comprovante ou documento de apoio',
+    allowAttachment: true,
+    tips: ['Mencione se precisa de XML, DANFE ou correcao cadastral.', 'Se houver divergencia fiscal, descreva exatamente o dado incorreto.']
+  },
+  {
+    id: 'pagamento-duplicado',
+    title: 'O pagamento foi duplicado no meu cartao',
+    description: 'Abra uma contestacao para cobranca em duplicidade.',
+    expectedResponse: 'Triagem financeira com validacao das capturas do cartao.',
+    messageLabel: 'Descreva a cobranca duplicada',
+    messagePlaceholder: 'Ex.: A compra apareceu duas vezes na fatura com o mesmo valor e mesma data.',
+    attachmentLabel: 'Anexar print da fatura ou comprovante',
+    allowAttachment: true,
+    tips: ['Informe os ultimos 4 digitos do cartao, se quiser.', 'Anexe print com data e valor para agilizar a conferencia.']
+  }
+];
+
+const getOrderHelpTopicById = (topicId?: string) =>
+  orderHelpTopics.find((topic) => topic.id === topicId);
+
 interface ClientDashboardProps {
   currentUser: AuthUser | null;
   onNavigateToHome: () => void;
@@ -102,6 +200,218 @@ const getPaymentStatusLabel = (order: StoredOrder) => {
   }
 
   return 'Aguardando confirmacao do pagamento';
+};
+
+const getOrderHelpTopicIcon = (topicId: OrderHelpTopicId) => {
+  switch (topicId) {
+    case 'problema-produto':
+      return AlertCircle;
+    case 'pacote-sem-produto':
+      return PackageSearch;
+    case 'envio-nao-chegou':
+      return Truck;
+    case 'opinar-entrega':
+      return CheckCircle;
+    case 'cuidar-produto-devolver':
+      return ShieldCheck;
+    case 'ajuda-nfe':
+      return FileText;
+    case 'pagamento-duplicado':
+      return CreditCard;
+    default:
+      return FileText;
+  }
+};
+
+const OrderHelpButton: React.FC<{
+  orderId: string;
+  className?: string;
+}> = ({ orderId, className }) => {
+  const navigate = useNavigate();
+
+  return (
+    <Button
+      variant="outline"
+      className={className ?? 'rounded-full border-[#13733D] text-[#13733D] hover:bg-[#EEF8F1]'}
+      onClick={() => navigate(`/cliente/pedidos/${orderId}/ajuda`)}
+    >
+      <FileText className="mr-2 h-4 w-4" />
+      Ajuda com o pedido
+    </Button>
+  );
+};
+
+const OrderHelpOptionCard: React.FC<{
+  orderId: string;
+  topic: OrderHelpTopic;
+}> = ({ orderId, topic }) => {
+  const navigate = useNavigate();
+  const Icon = getOrderHelpTopicIcon(topic.id);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/cliente/pedidos/${orderId}/ajuda/${topic.id}`)}
+      className="group flex w-full items-start gap-4 rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#13733D]/30 hover:shadow-md"
+    >
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF8F1] text-[#13733D]">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-base font-bold text-slate-900">{topic.title}</span>
+        <span className="mt-1 block text-sm leading-6 text-slate-500">{topic.description}</span>
+        <span className="mt-3 inline-flex items-center text-xs font-bold uppercase tracking-[0.14em] text-[#13733D]">
+          Ver atendimento
+        </span>
+      </span>
+    </button>
+  );
+};
+
+const OrderHelpTopicFlow: React.FC<{
+  order: StoredOrder;
+  topic: OrderHelpTopic;
+}> = ({ order, topic }) => {
+  const navigate = useNavigate();
+  const Icon = getOrderHelpTopicIcon(topic.id);
+  const [message, setMessage] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-slate-200 shadow-sm">
+        <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#EEF8F1] via-white to-slate-50">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#13733D] text-white">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Ajuda com o pedido #{order.winthor_numped}</p>
+                <CardTitle className="mt-1 text-2xl text-slate-900">{topic.title}</CardTitle>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{topic.description}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => navigate(`/cliente/pedidos/${order.id}/ajuda`)}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para categorias
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Descreva a solicitacao</p>
+              <label className="mt-4 block text-sm font-semibold text-slate-800">{topic.messageLabel}</label>
+              <textarea
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder={topic.messagePlaceholder}
+                className="mt-2 min-h-[160px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-[#13733D] focus:ring-4 focus:ring-[#13733D]/10"
+              />
+
+              {topic.allowAttachment && (
+                <label className="mt-4 flex cursor-pointer items-center justify-between rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 transition-colors hover:border-[#13733D]/40 hover:bg-[#EEF8F1]/40">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-[#13733D] shadow-sm">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{topic.attachmentLabel}</p>
+                      <p className="text-xs text-slate-500">Envie foto, print, XML ou documento de apoio.</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full border border-[#13733D]/20 bg-white px-3 py-1 text-xs font-bold text-[#13733D]">
+                    Escolher arquivo
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf,.xml,.doc,.docx"
+                    onChange={(event) => setSelectedFileName(event.target.files?.[0]?.name || '')}
+                  />
+                </label>
+              )}
+
+              {selectedFileName && (
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600">
+                  <FileText className="h-3.5 w-3.5 text-[#13733D]" />
+                  {selectedFileName}
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button
+                  className="rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]"
+                  onClick={() => setSubmitted(true)}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Enviar solicitacao
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => {
+                    setMessage('');
+                    setSelectedFileName('');
+                    setSubmitted(false);
+                  }}
+                >
+                  Limpar formulario
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">O que acontece depois</p>
+                <p className="mt-3 text-sm font-semibold text-slate-800">{topic.expectedResponse}</p>
+                <div className="mt-4 space-y-3">
+                  {topic.tips.map((tip) => (
+                    <div key={tip} className="flex items-start gap-3 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#13733D]" />
+                      <span>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">Dados do atendimento</p>
+                <div className="mt-3 space-y-2">
+                  <p><span className="font-bold">Pedido:</span> #{order.winthor_numped}</p>
+                  <p><span className="font-bold">Entrega:</span> {order.address}</p>
+                  <p><span className="font-bold">Pagamento:</span> {getPaymentMethodLabel(order.payment_method)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {submitted && (
+            <div className="rounded-3xl border border-green-200 bg-green-50 p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-600 text-white">
+                  <CheckCircle className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold uppercase tracking-[0.14em] text-green-700">Chamado criado</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">Protocolo #{order.winthor_numped}-{topic.id.toUpperCase()}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Sua mensagem foi registrada com sucesso{selectedFileName ? ` e o arquivo "${selectedFileName}" foi anexado.` : '.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 const ClientOrderDetailsContent: React.FC<{
@@ -167,6 +477,14 @@ const ClientOrderDetailsContent: React.FC<{
             R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Precisa resolver algo neste pedido?</p>
+          <p className="text-sm text-slate-500">Abra uma jornada de ajuda para entrega, NF-e, pagamento e devolucao.</p>
+        </div>
+        <OrderHelpButton orderId={order.id} />
       </div>
     </div>
   </div>
@@ -379,6 +697,10 @@ const OrdersTable: React.FC<{
                         >
                           <Truck className="mr-1 h-3 w-3" /> Ver detalhes
                         </Button>
+                        <OrderHelpButton
+                          orderId={order.id}
+                          className="h-8 rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
+                        />
                         <Button
                           variant="outline"
                           className="h-8 rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
@@ -467,6 +789,134 @@ export const ClientOrderDetailsPage: React.FC<ClientDashboardProps> = ({
               </Button>
             </CardContent>
           </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const ClientOrderHelpPage: React.FC<ClientDashboardProps> = ({
+  currentUser,
+  onNavigateToHome,
+  onNavigateToCheckout
+}) => {
+  const navigate = useNavigate();
+  const { orderId, topicId } = useParams();
+  const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
+  const order = orders.find((entry) => entry.id === orderId);
+  const selectedTopic = getOrderHelpTopicById(topicId);
+
+  if (!currentUser) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <ClientHeader
+        currentUser={currentUser}
+        onNavigateToHome={onNavigateToHome}
+        onNavigateToCheckout={onNavigateToCheckout}
+      />
+
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Ajuda com o Pedido</p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">
+              {order ? `Pedido #${order.winthor_numped}` : 'Pedido nao encontrado'}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {order
+                ? 'Escolha o assunto e siga o fluxo de atendimento com mensagem, anexos e protocolo.'
+                : 'Esse pedido nao esta disponivel para o usuario atual.'}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {order && (
+              <Button
+                variant="outline"
+                className="rounded-full"
+                onClick={() => navigate(`/cliente/pedidos/${order.id}`)}
+              >
+                Ver detalhes do pedido
+              </Button>
+            )}
+            <Button variant="outline" className="rounded-full" onClick={() => navigate('/cliente/pedidos')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para pedidos
+            </Button>
+          </div>
+        </div>
+
+        {!order ? (
+          <Card className="overflow-hidden border-slate-200 shadow-sm">
+            <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <PackageSearch className="mb-4 h-12 w-12 text-slate-300" />
+              <h3 className="text-lg font-bold text-slate-900">Pedido nao encontrado</h3>
+              <p className="mt-1 max-w-sm text-sm text-slate-500">
+                Volte para a lista de pedidos para selecionar um pedido valido.
+              </p>
+              <Button className="mt-5 rounded-full bg-[#13733D] text-white hover:bg-[#0F5C31]" onClick={() => navigate('/cliente/pedidos')}>
+                Ver meus pedidos
+              </Button>
+            </CardContent>
+          </Card>
+        ) : selectedTopic ? (
+          <OrderHelpTopicFlow order={order} topic={selectedTopic} />
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <Card className="overflow-hidden border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-[#EEF8F1] via-white to-slate-50">
+                <CardTitle className="flex items-center gap-3 text-xl text-slate-900">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#13733D] text-white">
+                    <FileText className="h-5 w-5" />
+                  </span>
+                  Como podemos ajudar neste pedido?
+                </CardTitle>
+                <p className="text-sm text-slate-500">
+                  Escolha uma categoria para abrir seu atendimento.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-4 p-6">
+                {orderHelpTopics.map((topic) => (
+                  <OrderHelpOptionCard key={topic.id} orderId={order.id} topic={topic} />
+                ))}
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <Card className="overflow-hidden border-slate-200 shadow-sm">
+                <CardHeader className="border-b border-slate-100 bg-slate-50">
+                  <CardTitle className="text-lg text-slate-900">Resumo do pedido</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 p-6 text-sm text-slate-600">
+                  <p><span className="font-bold text-slate-900">Pedido:</span> #{order.winthor_numped}</p>
+                  <p><span className="font-bold text-slate-900">Data:</span> {new Date(order.date).toLocaleDateString('pt-BR')}</p>
+                  <p><span className="font-bold text-slate-900">Status:</span> {getPaymentStatusLabel(order)}</p>
+                  <p><span className="font-bold text-slate-900">Entrega:</span> {order.address}</p>
+                  <p><span className="font-bold text-slate-900">Valor:</span> R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </CardContent>
+              </Card>
+
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Recursos do atendimento</p>
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#13733D]" />
+                    <span>Campos de texto para descrever ocorrencias e observacoes.</span>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <Save className="mt-0.5 h-4 w-4 shrink-0 text-[#13733D]" />
+                    <span>Envio de fotos, prints da fatura, NF-e ou comprovantes.</span>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#13733D]" />
+                    <span>Geracao de protocolo e proxima etapa do atendimento.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1052,13 +1502,19 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                       <p className="text-lg font-bold text-[#13733D]">
                         R$ {order.total_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
-                      <Button
-                        variant="outline"
-                        className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
-                        onClick={() => navigate(`/cliente/pedidos/${order.id}`)}
-                      >
-                        Ver detalhes
-                      </Button>
+                      <div className="flex flex-wrap gap-2 md:justify-end">
+                        <Button
+                          variant="outline"
+                          className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
+                          onClick={() => navigate(`/cliente/pedidos/${order.id}`)}
+                        >
+                          Ver detalhes
+                        </Button>
+                        <OrderHelpButton
+                          orderId={order.id}
+                          className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

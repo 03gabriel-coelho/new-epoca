@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
-import ClientDashboard, { ClientFinancialPage, ClientOrderDetailsPage, ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
+import ClientDashboard, { ClientFinancialPage, ClientOrderDetailsPage, ClientOrderHelpPage, ClientOrdersPage, ClientProfilePage } from './components/ClientDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLoginPage from './components/AdminLoginPage';
 import ProductsPage from './components/ProductsPage';
@@ -634,6 +634,28 @@ const App = () => {
             path="pedidos/:orderId"
             element={
               <ClientOrderDetailsPage
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/produtos')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+          <Route
+            path="pedidos/:orderId/ajuda"
+            element={
+              <ClientOrderHelpPage
+                currentUser={currentUser}
+                onNavigateToHome={navigateToHome}
+                onNavigateToCheckout={() => navigate('/produtos')}
+                onCurrentUserUpdate={handleCurrentUserUpdate}
+              />
+            }
+          />
+          <Route
+            path="pedidos/:orderId/ajuda/:topicId"
+            element={
+              <ClientOrderHelpPage
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
