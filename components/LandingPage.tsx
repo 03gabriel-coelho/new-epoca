@@ -678,8 +678,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                                         <p className="text-sm font-bold text-slate-700 group-hover:text-[#13733D] line-clamp-1">{product.description}</p>
                                         <div className="flex items-center gap-2 text-xs text-slate-400">
                                            <span>{product.department}</span>
-                                           <span>â€¢</span>
-                                           <span>CÃ³d: {product.winthor_codprod}</span>
+                                           <span>Cód: {product.winthor_codprod}</span>
                                         </div>
                                     </div>
                                       <div className="text-right">
