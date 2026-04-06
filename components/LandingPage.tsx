@@ -26,6 +26,7 @@ interface LandingPageProps {
   onNavigateToDepartment: (department: string) => void;
   onNavigateToSuppliers: () => void;
   onNavigateToInstitutional: () => void;
+  onNavigateToProductRequest: (searchTerm?: string) => void;
   onNavigateToCheckout: () => void;
   onProductClick: (id: string) => void;
   cart: CartItem[];
@@ -369,6 +370,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToDepartment,
   onNavigateToSuppliers,
   onNavigateToInstitutional,
+  onNavigateToProductRequest,
   onNavigateToCheckout,
   onProductClick,
   cart,
@@ -489,16 +491,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   }).slice(0, 5);
 
   const handleMissingProductRequest = () => {
-    const desiredProduct = searchTerm.trim();
-    const message = desiredProduct
-      ? `Olá! Não encontrei o produto "${desiredProduct}" no site e gostaria de solicitar esse item.`
-      : 'Olá! Não encontrei o produto que eu precisava no site e gostaria de solicitar esse item.';
-
-    window.open(
-      `https://api.whatsapp.com/send/?phone=5531997935059&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`,
-      '_blank',
-      'noopener,noreferrer'
-    );
+    onNavigateToProductRequest(searchTerm);
   };
   const activeChatNode = chatbotFlow[chatNode];
   const showWhatsappCta = !activeChatNode.options;
@@ -768,6 +761,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                  <button onClick={onNavigateToCombos} className="whitespace-nowrap hover:underline">Combos</button>
                  <button onClick={onNavigateToSuppliers} className="whitespace-nowrap hover:underline">Marcas Parceiras</button>
                  <button onClick={onNavigateToInstitutional} className="whitespace-nowrap hover:underline">Institucional</button>
+                 <button onClick={() => onNavigateToProductRequest()} className="whitespace-nowrap hover:underline">Produto não encontrado</button>
                  <button onClick={() => onEasyReorder(currentUser?.id)} className="whitespace-nowrap hover:underline text-[#13733D]">Recompra Fácil</button>
                  <div className="flex-1"></div>
                  <div className="flex items-center gap-4">

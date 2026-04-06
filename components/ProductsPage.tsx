@@ -21,6 +21,7 @@ interface ProductsPageProps {
   onNavigateToClient: () => void;
   onNavigateToFavorites: () => void;
   onNavigateToCheckout: () => void;
+  onNavigateToProductRequest: (searchTerm?: string) => void;
   onProductClick: (id: string) => void;
   cart: CartItem[];
   addToCart: (productId: string) => void;
@@ -57,6 +58,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   onNavigateToClient,
   onNavigateToFavorites,
   onNavigateToCheckout,
+  onNavigateToProductRequest,
   onProductClick,
   cart,
   addToCart,
@@ -202,16 +204,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
   };
 
   const handleMissingProductRequest = () => {
-    const desiredProduct = searchTerm.trim();
-    const message = desiredProduct
-      ? `Olá! Não encontrei o produto "${desiredProduct}" no site e gostaria de solicitar esse item.`
-      : 'Olá! Não encontrei o produto que eu precisava no site e gostaria de solicitar esse item.';
-
-    window.open(
-      `https://api.whatsapp.com/send/?phone=${WHATSAPP_PRODUCT_REQUEST_PHONE}&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`,
-      '_blank',
-      'noopener,noreferrer'
-    );
+    onNavigateToProductRequest(searchTerm);
   };
 
   return (

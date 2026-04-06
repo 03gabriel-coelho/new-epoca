@@ -8,6 +8,7 @@ import ProductsPage from './components/ProductsPage';
 import CombosPage from './components/CombosPage';
 import SuppliersPage from './components/SuppliersPage';
 import InstitutionalPage from './components/InstitutionalPage';
+import ProductRequestPage from './components/ProductRequestPage';
 import AuthPage from './components/AuthPage';
 import CheckoutPage from './components/CheckoutPage';
 import ProductDetailPage from './components/ProductDetailPage';
@@ -142,6 +143,16 @@ const App = () => {
   const navigateToDepartment = (department: string) => {
     const params = new URLSearchParams({ departamento: department });
     navigate(`/produtos?${params.toString()}`);
+  };
+  const handleNavigateToProductRequest = (searchTerm?: string) => {
+    const normalizedSearch = searchTerm?.trim();
+    const params = new URLSearchParams();
+
+    if (normalizedSearch) {
+      params.set('q', normalizedSearch);
+    }
+
+    navigate(`/produto-nao-encontrado${params.toString() ? `?${params.toString()}` : ''}`);
   };
   const favoriteOwnerKey = currentUser?.id || 'guest';
 
@@ -538,6 +549,7 @@ const App = () => {
               onNavigateToDepartment={navigateToDepartment}
               onNavigateToSuppliers={() => navigate('/fornecedores')}
               onNavigateToInstitutional={() => navigate('/institucional')}
+              onNavigateToProductRequest={handleNavigateToProductRequest}
               onNavigateToCheckout={handleCartClick}
               onProductClick={handleProductClick}
               favoriteIds={favoriteIds}
@@ -566,6 +578,7 @@ const App = () => {
               onNavigateToClient={handleClientAreaClick}
               onNavigateToFavorites={navigateToFavorites}
               onNavigateToCheckout={handleCartClick}
+              onNavigateToProductRequest={handleNavigateToProductRequest}
               onProductClick={handleProductClick}
               favoriteIds={favoriteIds}
               toggleFavorite={toggleFavorite}
@@ -616,6 +629,10 @@ const App = () => {
         <Route
           path="/institucional"
           element={<InstitutionalPage currentUser={currentUser} onNavigateToHome={navigateToHome} onNavigateToClient={handleClientAreaClick} />}
+        />
+        <Route
+          path="/produto-nao-encontrado"
+          element={<ProductRequestPage currentUser={currentUser} onNavigateToHome={navigateToHome} onNavigateToClient={handleClientAreaClick} />}
         />
         <Route
           path="/checkout"
