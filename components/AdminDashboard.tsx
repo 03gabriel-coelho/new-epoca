@@ -61,6 +61,10 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
 
   const totalSales = dailySalesData.reduce((sum, item) => sum + item.amount, 0);
   const averageSales = dailySalesData.length ? totalSales / dailySalesData.length : 0;
+  const visibleDailySales = dailySalesData.slice(-7).reverse();
+  const visibleSalesTotal = visibleDailySales.reduce((sum, item) => sum + item.amount, 0);
+  const visibleOrdersTotal = visibleDailySales.reduce((sum, item) => sum + item.orders, 0);
+  const visibleAvgTicket = visibleOrdersTotal > 0 ? visibleSalesTotal / visibleOrdersTotal : 0;
   const bestDay = dailySalesData.reduce<(typeof dailySalesData)[number] | null>(
     (currentBest, item) => (!currentBest || item.amount > currentBest.amount ? item : currentBest),
     null
@@ -121,7 +125,7 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
               </tr>
             </thead>
             <tbody>
-              {dailySalesData.slice(-7).reverse().map((item) => (
+              {visibleDailySales.map((item) => (
                 <tr key={item.date} className="border-t border-slate-100">
                   <td className="px-4 py-3 font-medium text-slate-900">{item.displayDate}</td>
                   <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.amount)}</td>
@@ -130,6 +134,14 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
                 </tr>
               ))}
             </tbody>
+            <tfoot className="border-t-2 border-slate-200 bg-slate-50/80">
+              <tr>
+                <td className="px-4 py-3 font-bold text-slate-900">Total</td>
+                <td className="px-4 py-3 text-right font-bold text-slate-900">{currencyFormatter.format(visibleSalesTotal)}</td>
+                <td className="px-4 py-3 text-right font-bold text-slate-900">{visibleOrdersTotal}</td>
+                <td className="px-4 py-3 text-right font-bold text-slate-900">{currencyFormatter.format(visibleAvgTicket)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </CardContent>
