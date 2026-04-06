@@ -17,6 +17,7 @@ import { Button } from './components/ui/Layout';
 import { AdminUser, AuthUser, CartItem, StoredOrder } from './types';
 import { clearStoredAdminSession, clearStoredSession, getStoredAdminSession, getStoredSession } from './lib/authStorage';
 import { getStoredFavorites, saveStoredFavorites } from './lib/favoritesStorage';
+import { getStoredOrdersByCustomer } from './lib/ordersStorage';
 import { mockCombos } from './lib/mockCombos';
 import { ComboSelections, createDefaultComboSelections, resolveComboQualifyingItems } from './lib/comboUtils';
 
@@ -34,6 +35,7 @@ const App = () => {
   const [currentAdminUser, setCurrentAdminUser] = useState<AdminUser | null>(null);
   const [nextPathAfterLogin, setNextPathAfterLogin] = useState<string | null>(null);
   const [activeZipCode, setActiveZipCode] = useState('');
+  const [pendingEasyReorder, setPendingEasyReorder] = useState(false);
 
   const upsertCartItem = (
     items: CartItem[],
@@ -163,6 +165,7 @@ const App = () => {
     setCurrentUser(null);
     setIsLoggedIn(false);
     setNextPathAfterLogin(null);
+    setPendingEasyReorder(false);
     navigateToHome();
   };
 
@@ -247,6 +250,34 @@ const App = () => {
     setCart([]);
   };
 
+  const rebuildCartFromStoredOrder = (order: StoredOrder) => {
+    return order.items.reduce<CartItem[]>((items, item) => upsertCartItem(items, item.product_id, item.quantity), []);
+  };
+
+  const handleRepeatOrder = (order: StoredOrder) => {
+    setCart(rebuildCartFromStoredOrder(order));
+    setPendingEasyReorder(false);
+    navigate('/checkout');
+  };
+
+  const handleEasyReorderClick = (customerId?: string) => {
+    if (!customerId) {
+      setPendingEasyReorder(true);
+      navigate('/auth');
+      return;
+    }
+
+    const latestOrder = getStoredOrdersByCustomer(customerId)[0];
+
+    if (latestOrder) {
+      handleRepeatOrder(latestOrder);
+      return;
+    }
+
+    setPendingEasyReorder(false);
+    navigate('/produtos');
+  };
+
   const addComboToCart = (comboId: string, selections?: ComboSelections) => {
     const combo = mockCombos.find((entry) => entry.id === comboId);
     if (!combo) {
@@ -304,6 +335,7 @@ const App = () => {
   };
 
   const handleCartClick = () => {
+    setPendingEasyReorder(false);
     if (isLoggedIn) {
       navigate('/checkout');
     } else {
@@ -313,6 +345,7 @@ const App = () => {
   };
 
   const handleClientAreaClick = () => {
+    setPendingEasyReorder(false);
     if (isLoggedIn) {
       navigate('/cliente');
     } else {
@@ -326,6 +359,7 @@ const App = () => {
   };
 
   const handleNavigateToOrders = () => {
+    setPendingEasyReorder(false);
     if (isLoggedIn) {
       navigate('/cliente/pedidos');
       return;
@@ -353,6 +387,13 @@ const App = () => {
   const handleLoginSuccess = (user: AuthUser) => {
     setCurrentUser(user);
     setIsLoggedIn(true);
+    if (pendingEasyReorder) {
+      setPendingEasyReorder(false);
+      handleEasyReorderClick(user.id);
+      setNextPathAfterLogin(null);
+      return;
+    }
+
     if (nextPathAfterLogin) {
       navigate(nextPathAfterLogin);
       setNextPathAfterLogin(null);
@@ -489,6 +530,7 @@ const App = () => {
               currentZipCode={activeZipCode}
               onZipCodeChange={setActiveZipCode}
               onNavigateToClient={handleClientAreaClick}
+              onEasyReorder={handleEasyReorderClick}
               onNavigateToAdmin={handleAdminClick}
               onNavigateToFavorites={navigateToFavorites}
               onNavigateToProducts={navigateToProducts}
@@ -604,6 +646,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -615,6 +658,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -626,6 +670,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -637,6 +682,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -648,6 +694,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -659,6 +706,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }
@@ -670,6 +718,7 @@ const App = () => {
                 currentUser={currentUser}
                 onNavigateToHome={navigateToHome}
                 onNavigateToCheckout={() => navigate('/produtos')}
+                onRepeatOrder={handleRepeatOrder}
                 onCurrentUserUpdate={handleCurrentUserUpdate}
               />
             }

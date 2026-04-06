@@ -18,6 +18,7 @@ interface LandingPageProps {
   currentZipCode: string;
   onZipCodeChange: (zipCode: string) => void;
   onNavigateToClient: () => void;
+  onEasyReorder: (customerId?: string) => void;
   onNavigateToAdmin: () => void;
   onNavigateToFavorites: () => void;
   onNavigateToProducts: () => void;
@@ -360,6 +361,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   currentZipCode,
   onZipCodeChange,
   onNavigateToClient, 
+  onEasyReorder,
   onNavigateToAdmin,
   onNavigateToFavorites,
   onNavigateToProducts,
@@ -737,7 +739,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                  <button onClick={onNavigateToCombos} className="whitespace-nowrap hover:underline">Combos</button>
                  <button onClick={onNavigateToSuppliers} className="whitespace-nowrap hover:underline">Marcas Parceiras</button>
                  <button onClick={onNavigateToInstitutional} className="whitespace-nowrap hover:underline">Institucional</button>
-                 <button onClick={onNavigateToClient} className="whitespace-nowrap hover:underline text-[#13733D]">Recompra Fácil</button>
+                 <button onClick={() => onEasyReorder(currentUser?.id)} className="whitespace-nowrap hover:underline text-[#13733D]">Recompra Fácil</button>
                  <div className="flex-1"></div>
                  <div className="flex items-center gap-4">
                     <button onClick={onNavigateToAdmin} className="whitespace-nowrap text-slate-500 hover:text-slate-800 flex items-center gap-1 group">

@@ -148,6 +148,7 @@ interface ClientDashboardProps {
   currentUser: AuthUser | null;
   onNavigateToHome: () => void;
   onNavigateToCheckout: () => void;
+  onRepeatOrder?: (order: StoredOrder) => void;
   onCurrentUserUpdate?: (user: AuthUser) => void;
 }
 
@@ -651,9 +652,11 @@ const CreditLimitCard = () => {
 const OrdersTable: React.FC<{
   currentUser: AuthUser | null;
   onNavigateToCheckout: () => void;
+  onRepeatOrder?: (order: StoredOrder) => void;
 }> = ({
   currentUser,
-  onNavigateToCheckout
+  onNavigateToCheckout,
+  onRepeatOrder
 }) => {
   const navigate = useNavigate();
   const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
@@ -704,7 +707,7 @@ const OrdersTable: React.FC<{
                         <Button
                           variant="outline"
                           className="h-8 rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
-                          onClick={onNavigateToCheckout}
+                          onClick={() => onRepeatOrder?.(order)}
                         >
                           Repetir
                         </Button>
@@ -1437,7 +1440,7 @@ const ClientHeader: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateT
   </div>
 );
 
-const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateToHome, onNavigateToCheckout }) => {
+const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNavigateToHome, onNavigateToCheckout, onRepeatOrder }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <ClientHeader
@@ -1447,7 +1450,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNaviga
       />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <CreditLimitCard />
-        <OrdersTable currentUser={currentUser} onNavigateToCheckout={onNavigateToCheckout} />
+        <OrdersTable currentUser={currentUser} onNavigateToCheckout={onNavigateToCheckout} onRepeatOrder={onRepeatOrder} />
       </div>
     </div>
   );
@@ -1456,7 +1459,8 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ currentUser, onNaviga
 export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
   currentUser,
   onNavigateToHome,
-  onNavigateToCheckout
+  onNavigateToCheckout,
+  onRepeatOrder
 }) => {
   const navigate = useNavigate();
   const orders = useMemo(() => (currentUser ? getStoredOrdersByCustomer(currentUser.id) : []), [currentUser?.id]);
@@ -1514,6 +1518,13 @@ export const ClientOrdersPage: React.FC<ClientDashboardProps> = ({
                           orderId={order.id}
                           className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
                         />
+                        <Button
+                          variant="outline"
+                          className="w-fit rounded-full border-[#13733D] text-xs text-[#13733D] hover:bg-[#EEF8F1]"
+                          onClick={() => onRepeatOrder?.(order)}
+                        >
+                          Repetir pedido
+                        </Button>
                       </div>
                     </div>
                   </div>
