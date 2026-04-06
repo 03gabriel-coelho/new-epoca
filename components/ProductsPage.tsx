@@ -48,6 +48,7 @@ const getBestSellerScore = (product: Product) => {
 };
 
 const PRODUCT_BATCH_SIZE = 24;
+const WHATSAPP_PRODUCT_REQUEST_PHONE = '5531997935059';
 
 const ProductsPage: React.FC<ProductsPageProps> = ({
   currentUser,
@@ -200,6 +201,19 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
     setShowSuggestions(false);
   };
 
+  const handleMissingProductRequest = () => {
+    const desiredProduct = searchTerm.trim();
+    const message = desiredProduct
+      ? `Olá! Não encontrei o produto "${desiredProduct}" no site e gostaria de solicitar esse item.`
+      : 'Olá! Não encontrei o produto que eu precisava no site e gostaria de solicitar esse item.';
+
+    window.open(
+      `https://api.whatsapp.com/send/?phone=${WHATSAPP_PRODUCT_REQUEST_PHONE}&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#F2F2F2] font-sans text-slate-900 flex flex-col">
       <header className="sticky top-0 z-50 bg-[#13733D] text-white shadow-md">
@@ -296,6 +310,17 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
                     <p className="text-sm">Nenhum produto encontrado.</p>
                   </div>
                 )}
+                <button
+                  type="button"
+                  onClick={handleMissingProductRequest}
+                  className="flex w-full items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-4 py-3 text-left transition-colors hover:bg-[#EEF8F1]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Não encontrou o que queria?</p>
+                    <p className="text-xs text-slate-500">Clique aqui e nos diga qual produto você está buscando.</p>
+                  </div>
+                  <Package className="h-4 w-4 shrink-0 text-[#13733D]" />
+                </button>
               </div>
             )}
           </div>
@@ -499,4 +524,3 @@ const ProductsPage: React.FC<ProductsPageProps> = ({
 };
 
 export default ProductsPage;
-

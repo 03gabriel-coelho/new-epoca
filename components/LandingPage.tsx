@@ -487,6 +487,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
     return p.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
            p.winthor_codprod.toString().includes(searchTerm);
   }).slice(0, 5);
+
+  const handleMissingProductRequest = () => {
+    const desiredProduct = searchTerm.trim();
+    const message = desiredProduct
+      ? `Olá! Não encontrei o produto "${desiredProduct}" no site e gostaria de solicitar esse item.`
+      : 'Olá! Não encontrei o produto que eu precisava no site e gostaria de solicitar esse item.';
+
+    window.open(
+      `https://api.whatsapp.com/send/?phone=5531997935059&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
   const activeChatNode = chatbotFlow[chatNode];
   const showWhatsappCta = !activeChatNode.options;
   const hasChatInteraction = chatMessages.some((message) => message.sender === 'user');
@@ -639,47 +652,64 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
 
                 {/* Suggestions Dropdown */}
-                {showSuggestions && searchTerm && suggestions.length > 0 && (
+                {showSuggestions && searchTerm && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2">
-                      <ul>
-                          <li className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
-                             Produtos Sugeridos
-                          </li>
-                          {suggestions.map((product) => (
-                              <li 
-                                  key={product.id} 
-                                  onClick={() => {
-                                      onProductClick(product.id);
-                                      setShowSuggestions(false);
-                                  }}
-                                  className="flex items-center gap-3 p-3 hover:bg-[#EEF8F1] cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
-                              >
-                                  <ProductImage
-                                    src={product.image_path}
-                                    alt={product.description}
-                                    className="w-10 h-10 rounded-md border border-slate-100"
-                                    imgClassName="w-full h-full object-contain"
-                                  />
-                                  <div className="flex-1">
-                                      <p className="text-sm font-bold text-slate-700 group-hover:text-[#13733D] line-clamp-1">{product.description}</p>
-                                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                                         <span>{product.department}</span>
-                                         <span>â€¢</span>
-                                         <span>CÃ³d: {product.winthor_codprod}</span>
-                                      </div>
-                                  </div>
-                                    <div className="text-right">
-                                    {product.listPrice && product.listPrice > product.price && (
-                                      <div className="text-[11px] text-slate-400 line-through whitespace-nowrap">R$ {product.listPrice.toFixed(2)}</div>
-                                    )}
-                                    <span className="font-bold text-[#13733D] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
-                                    <div className="mt-1">
-                                      <PixBadge />
+                      {suggestions.length > 0 ? (
+                        <ul>
+                            <li className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                               Produtos Sugeridos
+                            </li>
+                            {suggestions.map((product) => (
+                                <li 
+                                    key={product.id} 
+                                    onClick={() => {
+                                        onProductClick(product.id);
+                                        setShowSuggestions(false);
+                                    }}
+                                    className="flex items-center gap-3 p-3 hover:bg-[#EEF8F1] cursor-pointer border-b border-slate-50 last:border-0 transition-colors group"
+                                >
+                                    <ProductImage
+                                      src={product.image_path}
+                                      alt={product.description}
+                                      className="w-10 h-10 rounded-md border border-slate-100"
+                                      imgClassName="w-full h-full object-contain"
+                                    />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-slate-700 group-hover:text-[#13733D] line-clamp-1">{product.description}</p>
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                           <span>{product.department}</span>
+                                           <span>â€¢</span>
+                                           <span>CÃ³d: {product.winthor_codprod}</span>
+                                        </div>
                                     </div>
-                                  </div>
-                              </li>
-                          ))}
-                      </ul>
+                                      <div className="text-right">
+                                      {product.listPrice && product.listPrice > product.price && (
+                                        <div className="text-[11px] text-slate-400 line-through whitespace-nowrap">R$ {product.listPrice.toFixed(2)}</div>
+                                      )}
+                                      <span className="font-bold text-[#13733D] text-sm whitespace-nowrap">R$ {product.price.toFixed(2)}</span>
+                                      <div className="mt-1">
+                                        <PixBadge />
+                                      </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                      ) : (
+                        <div className="px-4 py-4 text-sm text-slate-500">
+                          Nenhum produto encontrado para essa busca.
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleMissingProductRequest}
+                        className="flex w-full items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-4 py-3 text-left transition-colors hover:bg-[#EEF8F1]"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">Não encontrou o que queria?</p>
+                          <p className="text-xs text-slate-500">Clique aqui e nos diga qual produto você está buscando.</p>
+                        </div>
+                        <MessageCircle className="h-4 w-4 shrink-0 text-[#13733D]" />
+                      </button>
                   </div>
                 )}
             </div>
