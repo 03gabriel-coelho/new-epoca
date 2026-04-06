@@ -6,9 +6,9 @@ import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
 import { SalesData, Customer, AdminPermission, AdminUser, Product, AuthUser } from '../types';
 import { getStoredAdminUsers, saveStoredAdminSession, saveStoredAdminUsers, getStoredUsers, saveStoredUsers, updateStoredUser } from '../lib/authStorage';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Line,
+  PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip
 } from 'recharts';
 import { 
   UploadCloud, Image as ImageIcon, Check, Search, X, 
@@ -18,62 +18,188 @@ import {
 import Logo from "../lib/images/logo1.webp";
 
 const COLORS = ['#059669', '#10b981', '#34d399', '#6ee7b7'];
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 0,
+});
+const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
 
 interface SalesChartsProps {
   data: SalesData[];
 }
 
-// ... existing SalesCharts component ...
-const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <Card>
-      <CardHeader>
+const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
+  const dailySalesData = data.map((item, index) => {
+    const simulatedOrders = Math.max(8, Math.round(item.amount / 380) + (index % 4));
+    const target = Math.round(item.amount * (0.92 + ((index % 5) * 0.025)));
+
+    return {
+      ...item,
+      shortDate: item.date.replace('Day ', 'D'),
+      orders: simulatedOrders,
+      avgTicket: item.amount / simulatedOrders,
+      target,
+    };
+  });
+
+  const totalSales = dailySalesData.reduce((sum, item) => sum + item.amount, 0);
+  const averageSales = dailySalesData.length ? totalSales / dailySalesData.length : 0;
+  const bestDay = dailySalesData.reduce<(typeof dailySalesData)[number] | null>(
+    (currentBest, item) => (!currentBest || item.amount > currentBest.amount ? item : currentBest),
+    null
+  );
+
+  const departmentData = salesByDept
+    .map((dept, index) => ({
+      ...dept,
+      share: 0,
+      skuMix: 42 + (index * 11),
+      margin: 16 + (index * 1.8),
+      trend: ['Alta', 'Estavel', 'Alta', 'Atencao'][index % 4],
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const departmentTotal = departmentData.reduce((sum, item) => sum + item.value, 0);
+  const enrichedDepartmentData = departmentData.map((dept) => ({
+    ...dept,
+    share: departmentTotal ? (dept.value / departmentTotal) * 100 : 0,
+  }));
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <Card className="overflow-hidden">
+      <CardHeader className="space-y-4">
         <CardTitle>Vendas Diárias (Últimos 30 dias)</CardTitle>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Media diaria</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{currencyFormatter.format(averageSales)}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Melhor dia</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{bestDay?.shortDate ?? '-'}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Pico de vendas</p>
+            <p className="mt-1 text-lg font-bold text-slate-900">{bestDay ? currencyFormatter.format(bestDay.amount) : '-'}</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="date" hide />
-            <YAxis />
-            <RechartsTooltip 
-              formatter={(value: number) => [`R$ ${value.toLocaleString()}`, 'Vendas']}
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-            />
-            <Bar dataKey="amount" fill="#0f172a" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <CardContent className="space-y-5">
+        <div className="flex items-start justify-between gap-4 rounded-2xl bg-emerald-50 px-4 py-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Acumulado</p>
+            <p className="mt-1 text-xl font-bold text-emerald-900">{compactCurrencyFormatter.format(totalSales)}</p>
+          </div>
+          <p className="text-sm text-emerald-800">Meta simulada acompanhando a curva diaria.</p>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-500">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">Dia</th>
+                <th className="px-4 py-3 text-right font-medium">Faturamento</th>
+                <th className="px-4 py-3 text-right font-medium">Pedidos</th>
+                <th className="px-4 py-3 text-right font-medium">Ticket medio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dailySalesData.slice(-7).reverse().map((item) => (
+                <tr key={item.date} className="border-t border-slate-100">
+                  <td className="px-4 py-3 font-medium text-slate-900">{item.shortDate}</td>
+                  <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.amount)}</td>
+                  <td className="px-4 py-3 text-right text-slate-700">{item.orders}</td>
+                  <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.avgTicket)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
 
-    <Card>
-      <CardHeader>
-        <CardTitle>Mix por Departamento</CardTitle>
-      </CardHeader>
-      <CardContent className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={salesByDept}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              paddingAngle={5}
-              dataKey="value"
-            >
-              {salesByDept.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+      <Card className="overflow-hidden">
+        <CardHeader className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle>Mix por Departamento</CardTitle>
+              <p className="text-sm text-slate-500">Participacao simulada do faturamento por categoria principal.</p>
+            </div>
+            <div className="rounded-2xl bg-slate-900 px-4 py-3 text-right">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">Receita mix</p>
+              <p className="mt-1 text-xl font-bold text-white">{compactCurrencyFormatter.format(departmentTotal)}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-3">
+              {enrichedDepartmentData.map((dept, index) => (
+                <div key={dept.name} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                      <p className="font-semibold text-slate-900">{dept.name}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-600">{dept.share.toFixed(1)}%</p>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${dept.share}%`, backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                    <span>{dept.skuMix} SKUs ativos</span>
+                    <span>Margem {dept.margin.toFixed(1)}%</span>
+                  </div>
+                </div>
               ))}
-            </Pie>
-            <RechartsTooltip formatter={(value: number) => `R$ ${value.toLocaleString()}`} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
-  </div>
-);
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">Departamento</th>
+                  <th className="px-4 py-3 text-right font-medium">Receita</th>
+                  <th className="px-4 py-3 text-right font-medium">Participacao</th>
+                  <th className="px-4 py-3 text-right font-medium">Tendencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {enrichedDepartmentData.map((dept) => (
+                  <tr key={dept.name} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium text-slate-900">{dept.name}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(dept.value)}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{dept.share.toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-right">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        dept.trend === 'Alta'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : dept.trend === 'Atencao'
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {dept.trend}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 const IntegrationsHealth = () => {
   const services = [

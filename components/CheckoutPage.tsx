@@ -414,7 +414,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           onClick={() => setStep(2)}
           className="h-12 px-8 rounded-full text-slate-900 font-bold text-base shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Continuar para endereço
+          Finalizar pedido
         </Button>
       </div>
     </div>
