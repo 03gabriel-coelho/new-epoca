@@ -76,10 +76,17 @@ export const salesByDept: SalesMetric[] = [
   { name: 'Alimentos', value: 58000 },
 ];
 
-export const salesHistory: SalesData[] = Array.from({ length: 30 }, (_, i) => ({
-  date: `Day ${i + 1}`,
-  amount: Math.floor(Math.random() * 5000) + 2000,
-}));
+const salesHistoryReferenceDate = new Date('2026-04-06T00:00:00');
+
+export const salesHistory: SalesData[] = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date(salesHistoryReferenceDate);
+  date.setDate(salesHistoryReferenceDate.getDate() - (29 - i));
+
+  return {
+    date: date.toISOString().slice(0, 10),
+    amount: Math.floor(Math.random() * 5000) + 2000,
+  };
+});
 
 export const vendorLogos = [
   {
@@ -296,5 +303,4 @@ export const mockSalesStatistics: SalesStatisticEntry[] = [
   { id: 'ss15', customer_id: 'c8', customer_name: 'Distribuidora Leste', state: 'Espirito Santo', city: 'Vila Velha', region: 'Litoral', channel: 'ORGANIC', revenue: 118000, orders: 26, avg_ticket: 4538.46, period_label: 'Mar/2026' },
   { id: 'ss16', customer_id: 'c8', customer_name: 'Distribuidora Leste', state: 'Espirito Santo', city: 'Vila Velha', region: 'Litoral', channel: 'SALES_ASSISTED', revenue: 83000, orders: 17, avg_ticket: 4882.35, period_label: 'Mar/2026' }
 ];
-
 

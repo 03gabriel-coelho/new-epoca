@@ -29,6 +29,15 @@ const compactCurrencyFormatter = new Intl.NumberFormat('pt-BR', {
   notation: 'compact',
   maximumFractionDigits: 1,
 });
+const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+const shortDateFormatter = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+});
 
 interface SalesChartsProps {
   data: SalesData[];
@@ -38,10 +47,12 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
   const dailySalesData = data.map((item, index) => {
     const simulatedOrders = Math.max(8, Math.round(item.amount / 380) + (index % 4));
     const target = Math.round(item.amount * (0.92 + ((index % 5) * 0.025)));
+    const parsedDate = new Date(`${item.date}T00:00:00`);
 
     return {
       ...item,
-      shortDate: item.date.replace('Day ', 'D'),
+      displayDate: Number.isNaN(parsedDate.getTime()) ? item.date : dateFormatter.format(parsedDate),
+      shortDate: Number.isNaN(parsedDate.getTime()) ? item.date : shortDateFormatter.format(parsedDate),
       orders: simulatedOrders,
       avgTicket: item.amount / simulatedOrders,
       target,
@@ -83,7 +94,7 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Melhor dia</p>
-            <p className="mt-1 text-lg font-bold text-slate-900">{bestDay?.shortDate ?? '-'}</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{bestDay?.displayDate ?? '-'}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Pico de vendas</p>
@@ -112,7 +123,7 @@ const SalesCharts: React.FC<SalesChartsProps> = ({ data }) => {
             <tbody>
               {dailySalesData.slice(-7).reverse().map((item) => (
                 <tr key={item.date} className="border-t border-slate-100">
-                  <td className="px-4 py-3 font-medium text-slate-900">{item.shortDate}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">{item.displayDate}</td>
                   <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.amount)}</td>
                   <td className="px-4 py-3 text-right text-slate-700">{item.orders}</td>
                   <td className="px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.avgTicket)}</td>
