@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { CircleF, GoogleMap, useLoadScript } from '@react-google-maps/api';
 import {
   ArrowUpRight,
   BarChart3,
@@ -22,6 +23,21 @@ const pageStyles = {
   card: 'rounded-2xl border border-[#e5eaf7] bg-white shadow-[0_12px_30px_-18px_rgba(13,28,46,0.18)]',
   softText: 'text-[#60697c]',
   title: 'font-black tracking-tight text-[#000666]',
+};
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const googleMapContainerStyle = { width: '100%', height: '100%' };
+const stateMapConfig: Record<string, { center: { lat: number; lng: number }; zoom: number }> = {
+  all: { center: { lat: -18.5, lng: -44.5 }, zoom: 5 },
+  'Minas Gerais': { center: { lat: -18.5122, lng: -44.555 }, zoom: 6.4 },
+  'Espirito Santo': { center: { lat: -19.1834, lng: -40.3089 }, zoom: 8 },
+};
+
+const cityCoordinates: Record<string, { lat: number; lng: number }> = {
+  'Belo Horizonte': { lat: -19.9167, lng: -43.9345 },
+  Uberlandia: { lat: -18.9186, lng: -48.2772 },
+  Vitoria: { lat: -20.3155, lng: -40.3128 },
+  'Vila Velha': { lat: -20.3297, lng: -40.2925 },
 };
 
 const heatmapBase = [
@@ -276,6 +292,12 @@ const selectClassName =
   'appearance-none border-none bg-transparent pr-6 font-medium text-[#0d1c2e] outline-none ring-0 focus:ring-0';
 
 const AdminStatisticsPage: React.FC = () => {
+  const { isLoaded: isGoogleMapReady, loadError } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    language: 'pt-BR',
+    region: 'BR',
+    id: 'admin-statistics-google-map',
+  });
   const [selectedPeriod, setSelectedPeriod] = useState<'Hoje' | '7 Dias' | '30 Dias'>('Hoje');
   const [selectedState, setSelectedState] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
@@ -288,6 +310,7 @@ const AdminStatisticsPage: React.FC = () => {
   const [rangeEndDate, setRangeEndDate] = useState('');
   const [draftRangeStartDate, setDraftRangeStartDate] = useState('');
   const [draftRangeEndDate, setDraftRangeEndDate] = useState('');
+  const [selectedMapPoint, setSelectedMapPoint] = useState<string | null>(null);
 
   const states = Array.from(new Set(mockSalesStatistics.map((item) => item.state))).sort((a, b) => a.localeCompare(b));
 
@@ -502,36 +525,79 @@ const AdminStatisticsPage: React.FC = () => {
   const stateMetricStates = aggregatedStates;
   const topState = stateMetricStates[0];
   const regionMax = Math.max(...aggregatedRegions.map((item) => item.revenue), 1);
+  const mapPoints = useMemo(() => {
+    const grouped = new Map<string, {
+      id: string;
+      city: string;
+      state: string;
+      region: string;
+      revenue: number;
+      orders: number;
+      customers: Set<string>;
+      lat: number;
+      lng: number;
+    }>();
 
-  const mapHotspots = heatmapBase.map((spot) => {
-    const regionData = aggregatedRegions.find((item) => item.region === spot.region);
-    const revenue = regionData?.revenue || 0;
-    const orders = regionData?.orders || 0;
-    const scale = revenue > 0 ? revenue / regionMax : 0.22;
+    scenarioData.forEach((item) => {
+      const coordinates = cityCoordinates[item.city];
+      if (!coordinates) {
+        return;
+      }
 
-    return {
-      ...spot,
-      revenue,
-      orders,
-      bubble: 44 + scale * 54,
-      core: 10 + scale * 16,
-    };
-  });
+      const current = grouped.get(item.city) || {
+        id: `${item.state}-${item.city}`,
+        city: item.city,
+        state: item.state,
+        region: item.region,
+        revenue: 0,
+        orders: 0,
+        customers: new Set<string>(),
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+      };
 
-  const activeSpot = [...mapHotspots].sort((a, b) => b.revenue - a.revenue)[0];
+      current.revenue += item.revenue;
+      current.orders += item.orders;
+      current.customers.add(item.customer_name);
+      grouped.set(item.city, current);
+    });
+
+    const points = Array.from(grouped.values())
+      .map((point) => ({
+        ...point,
+        customersCount: point.customers.size,
+      }))
+      .sort((a, b) => b.orders - a.orders);
+
+    const maxOrders = Math.max(...points.map((point) => point.orders), 1);
+
+    return points.map((point) => {
+      const scale = point.orders / maxOrders;
+      return {
+        ...point,
+        radius: 9000 + scale * 26000,
+        fillColor: point.region === 'Sudeste' ? '#006a6a' : point.region === 'Interior' ? '#ef7345' : '#4c56af',
+        fillOpacity: 0.2 + scale * 0.22,
+        strokeColor: point.region === 'Sudeste' ? '#006a6a' : point.region === 'Interior' ? '#ef7345' : '#4c56af',
+      };
+    });
+  }, [scenarioData]);
+
+  useEffect(() => {
+    if (selectedMapPoint && !mapPoints.some((point) => point.id === selectedMapPoint)) {
+      setSelectedMapPoint(null);
+    }
+  }, [mapPoints, selectedMapPoint]);
+
+  const activeMapPoint = mapPoints.find((point) => point.id === selectedMapPoint) || mapPoints[0] || null;
   const mapScopeLabel =
     selectedState === 'all'
       ? 'Mapa do Brasil'
       : selectedState === 'Minas Gerais'
         ? 'Mapa do estado de Minas Gerais'
         : 'Mapa do estado do Espirito Santo';
-
-  const mapSvg =
-    selectedState === 'all'
-      ? renderBrazilMap()
-      : selectedState === 'Minas Gerais'
-        ? renderMinasMap()
-        : renderEspiritoSantoMap();
+  const mapViewport = stateMapConfig[selectedState] || stateMapConfig.all;
+  const mapLegendLabel = selectedState === 'all' ? 'Pedidos por cidade monitorada' : `Pedidos monitorados em ${stateLabelMap[selectedState] || selectedState}`;
 
   const monthlyTrend = periodConfig.trend;
 
@@ -784,30 +850,6 @@ const AdminStatisticsPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      <div className="sticky top-0 z-20 mb-8 flex items-center justify-between bg-[#f8f9ff]/95 px-1 py-3 backdrop-blur">
-        <div className="flex w-full max-w-md items-center gap-3 rounded-full bg-[#eff4ff] px-4 py-3 text-sm text-[#767683]">
-          <Search className="h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Pesquisar relatórios..."
-            className="w-full border-none bg-transparent p-0 text-sm text-[#0d1c2e] outline-none ring-0 placeholder:text-[#767683]"
-          />
-        </div>
-
-        <div className="ml-6 flex items-center gap-5 text-[#60697c]">
-          <button className="relative transition-colors hover:text-[#000666]">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-[#ba1a1a]" />
-          </button>
-          <button className="transition-colors hover:text-[#000666]">
-            <HelpCircle className="h-5 w-5" />
-          </button>
-          <button className="transition-colors hover:text-[#000666]">
-            <Settings className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
 
       <div className="space-y-8">
         <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
@@ -1176,50 +1218,103 @@ const AdminStatisticsPage: React.FC = () => {
             <div className="relative min-h-[500px] overflow-hidden rounded-xl bg-[#eef2fb]">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,_#f5f8ff_0%,_#edf3ff_100%)]" />
               <div className="absolute inset-4 rounded-[22px] border border-white/60 bg-white/20" />
-              <div className="absolute right-1 bottom-1 overflow-hidden rounded-[18px] ">
-                {mapSvg}
-              </div>
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.22),_transparent_55%)]" />
-              <div className="absolute right-6 top-6 rounded-full border border-white/60 bg-white/75 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#5f6d86] backdrop-blur">
+              <div className="absolute right-6 top-6 z-20 rounded-full border border-white/60 bg-white/75 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#5f6d86] backdrop-blur">
                 {mapScopeLabel}
               </div>
-
-              <div className="absolute inset-0 p-12">
-                <div className="relative h-full w-full">
-                  {mapHotspots.map((spot) => (
-                    <div key={spot.region} className="absolute" style={{ top: spot.top, left: spot.left, transform: 'translate(-50%, -50%)' }}>
-                      <div
-                        className={`rounded-full ${
-                          spot.tone === 'high' ? 'bg-[#006a6a]/20' : spot.tone === 'medium' ? 'bg-[#ef7345]/20' : 'bg-[#4c56af]/20'
-                        } flex items-center justify-center`}
-                        style={{ width: `${spot.bubble}px`, height: `${spot.bubble}px` }}
-                      >
-                        <div
-                          className={`rounded-full shadow-lg ${
-                            spot.tone === 'high' ? 'bg-[#006a6a]' : spot.tone === 'medium' ? 'bg-[#ef7345]' : 'bg-[#4c56af]'
-                          }`}
-                          style={{ width: `${spot.core}px`, height: `${spot.core}px` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="absolute left-6 top-6 z-20 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.16em] text-[#60697c] backdrop-blur">
+                {mapLegendLabel}
               </div>
 
-              <div className="absolute bottom-6 left-6 rounded-xl border border-white/40 bg-white/80 p-4 shadow-lg backdrop-blur">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Destaque regional</p>
+              <div className="absolute inset-0 overflow-hidden rounded-xl">
+                {GOOGLE_MAPS_API_KEY ? (
+                  loadError ? (
+                    <div className="flex h-full items-center justify-center px-8 text-center">
+                      <div className="max-w-md rounded-3xl border border-[#dce4f8] bg-white/90 p-6 shadow-lg">
+                        <p className="text-sm font-black text-[#000666]">Nao foi possivel carregar o Google Maps</p>
+                        <p className="mt-2 text-sm text-[#60697c]">Verifique a chave da API e as permissoes do Maps JavaScript API.</p>
+                      </div>
+                    </div>
+                  ) : isGoogleMapReady ? (
+                    <GoogleMap
+                      mapContainerStyle={googleMapContainerStyle}
+                      center={mapViewport.center}
+                      zoom={mapViewport.zoom}
+                      options={{
+                        disableDefaultUI: true,
+                        zoomControl: true,
+                        clickableIcons: false,
+                        gestureHandling: 'greedy',
+                        styles: [
+                          { featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#41526d' }] },
+                          { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#b7c6df' }] },
+                          { featureType: 'landscape', elementType: 'geometry.fill', stylers: [{ color: '#edf3ff' }] },
+                          { featureType: 'poi', elementType: 'geometry.fill', stylers: [{ color: '#dfe9fb' }] },
+                          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+                          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#d7e1f3' }] },
+                          { featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: '#cfe4ff' }] },
+                        ],
+                      }}
+                    >
+                      {mapPoints.map((point) => (
+                        <CircleF
+                          key={point.id}
+                          center={{ lat: point.lat, lng: point.lng }}
+                          radius={point.radius}
+                          options={{
+                            fillColor: point.fillColor,
+                            fillOpacity: selectedMapPoint && selectedMapPoint !== point.id ? 0.1 : point.fillOpacity,
+                            strokeColor: point.strokeColor,
+                            strokeOpacity: 0.92,
+                            strokeWeight: activeMapPoint?.id === point.id ? 3 : 2,
+                            clickable: true,
+                            zIndex: activeMapPoint?.id === point.id ? 3 : 2,
+                          }}
+                          onClick={() => setSelectedMapPoint(point.id)}
+                        />
+                      ))}
+                    </GoogleMap>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="rounded-full border border-[#dce4f8] bg-white/80 px-5 py-3 text-xs font-extrabold uppercase tracking-[0.16em] text-[#60697c] shadow-sm">
+                        Carregando Google Maps...
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex h-full items-center justify-center px-8 text-center">
+                    <div className="max-w-lg rounded-[28px] border border-[#dce4f8] bg-white/90 p-6 shadow-lg">
+                      <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#60697c]">Configuracao necessaria</p>
+                      <h5 className="mt-2 text-2xl font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
+                        Google Maps pronto para ativar
+                      </h5>
+                      <p className="mt-3 text-sm leading-6 text-[#60697c]">
+                        Defina <span className="font-bold text-[#000666]">VITE_GOOGLE_MAPS_API_KEY</span> no ambiente para renderizar o mapa real com bolhas dinamicas por cidade.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="absolute bottom-6 left-6 z-20 rounded-xl border border-white/40 bg-white/80 p-4 shadow-lg backdrop-blur">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#60697c]">Destaque geográfico</p>
                 <p className="mt-1 text-lg font-black text-[#000666]" style={{ fontFamily: 'Manrope, Inter, sans-serif' }}>
-                  {activeSpot?.label || 'Sem dados'}
+                  {activeMapPoint ? `${activeMapPoint.city} • ${stateLabelMap[activeMapPoint.state] || activeMapPoint.state}` : 'Sem dados'}
                 </p>
                 <div className="mt-3 flex items-center gap-4">
                   <div>
-                    <p className="text-sm font-black text-[#006a6a]">{formatCompactCurrency(activeSpot?.revenue || 0)}</p>
+                    <p className="text-sm font-black text-[#006a6a]">{formatCompactCurrency(activeMapPoint?.revenue || 0)}</p>
                     <p className="text-[10px] text-[#60697c]">Revenue</p>
                   </div>
                   <div className="h-6 w-px bg-[#d8dfef]" />
                   <div>
-                    <p className="text-sm font-black text-[#0d1c2e]">{(activeSpot?.orders || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-sm font-black text-[#0d1c2e]">{(activeMapPoint?.orders || 0).toLocaleString('pt-BR')}</p>
                     <p className="text-[10px] text-[#60697c]">Pedidos</p>
+                  </div>
+                  <div className="h-6 w-px bg-[#d8dfef]" />
+                  <div>
+                    <p className="text-sm font-black text-[#4c56af]">{(activeMapPoint?.customersCount || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] text-[#60697c]">Clientes</p>
                   </div>
                 </div>
               </div>
