@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Desktop\\\\Projetos\\\\epoca-new-version\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\user\\\\Desktop\\\\Projetos\\\\epoca-new-version\" -Recurse -Depth 2 -Directory | ForEach-Object { $_.FullName.Substring\\(\"C:\\\\Users\\\\user\\\\Desktop\\\\Projetos\\\\epoca-new-version\".Length\\) } | Sort-Object)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

@@ -207,6 +207,7 @@ export type AdminPermission =
   | 'products'
   | 'content'
   | 'customers'
+  | 'orders'
   | 'statistics'
   | 'fraud'
   | 'settings';

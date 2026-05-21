@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Tooltip } from './ui/Layout';
 import AdminStatisticsPage from './AdminStatisticsPage';
+import AdminOrdersPage from './AdminOrdersPage';
 import ProductImage from './ui/ProductImage';
 import { mockProducts, mockCustomers, mockActivities, salesByDept, salesHistory, mockOrders, mockAdminUsers } from '../lib/mockData';
 import { SalesData, Customer, AdminPermission, AdminUser, Product, AuthUser } from '../types';
@@ -10,10 +11,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Line,
   PieChart, Pie, Cell, Legend, Tooltip as RechartsTooltip
 } from 'recharts';
-import { 
-  UploadCloud, Image as ImageIcon, Check, Search, X, 
+import {
+  UploadCloud, Image as ImageIcon, Check, Search, X,
   LayoutDashboard, ShoppingBag, Users, FileText, Settings, LogOut,
-  TrendingUp, AlertTriangle, ShieldCheck, Activity, Server, CreditCard, Video, Plus, UserPlus, Eye, Globe, BarChart3
+  TrendingUp, AlertTriangle, ShieldCheck, Activity, Server, CreditCard, Video, Plus, UserPlus, Eye, Globe, BarChart3, ClipboardList
 } from 'lucide-react';
 import Logo from "../lib/images/logo1.webp";
 
@@ -839,6 +840,7 @@ const AdminNavigationSidebar = ({ activeTab, setActiveTab, onLogout, availableTa
     { id: 'products', label: 'Catálogo ERP', icon: ShoppingBag },
     { id: 'content', label: 'Marketing / CMS', icon: ImageIcon },
     { id: 'customers', label: 'Gestão de Usuários', icon: Users },
+    { id: 'orders', label: 'Pedidos', icon: ClipboardList },
     { id: 'statistics', label: 'Estatísticas', icon: BarChart3 },
     { id: 'fraud', label: 'Monitoramento Fraude', icon: ShieldCheck },
     { id: 'settings', label: 'Configurações', icon: Settings },
@@ -1005,12 +1007,13 @@ const emptyAdminForm = () => ({
 });
 
 const ADMIN_ROLES: AdminUser['role'][] = ['ADMIN', 'SALES', 'MARKETING', 'SUPPORT'];
-const ADMIN_PERMISSION_ORDER: AdminPermission[] = ['overview', 'products', 'content', 'customers', 'statistics', 'fraud', 'settings'];
+const ADMIN_PERMISSION_ORDER: AdminPermission[] = ['overview', 'products', 'content', 'customers', 'orders', 'statistics', 'fraud', 'settings'];
 const ADMIN_PERMISSION_LABELS: Record<AdminPermission, { label: string; description: string }> = {
   overview: { label: 'Visão Geral', description: 'KPIs executivos e saúde da operação.' },
   products: { label: 'Catálogo ERP', description: 'Produtos, imagens e sincronização de catálogo.' },
   content: { label: 'Marketing / CMS', description: 'Banners e vídeo institucional.' },
   customers: { label: 'Gestão de Usuários', description: 'Clientes B2B e equipe interna.' },
+  orders: { label: 'Pedidos', description: 'Listagem e detalhes de todos os pedidos.' },
   statistics: { label: 'Estatísticas', description: 'Painel de performance comercial.' },
   fraud: { label: 'Monitoramento de Fraude', description: 'Acompanhamento ClearSale e análise antifraude.' },
   settings: { label: 'Configurações', description: 'Parâmetros operacionais do admin.' },
@@ -1023,10 +1026,10 @@ const getDefaultPermissionsByRole = (role: AdminUser['role']): AdminPermission[]
     case 'MARKETING':
       return ['overview', 'products', 'content', 'statistics'];
     case 'SUPPORT':
-      return ['overview', 'customers', 'fraud'];
+      return ['overview', 'customers', 'orders', 'fraud'];
     case 'SALES':
     default:
-      return ['overview', 'customers', 'statistics', 'fraud'];
+      return ['overview', 'customers', 'orders', 'statistics', 'fraud'];
   }
 };
 
@@ -2319,6 +2322,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ currentAdminUser, onNav
               )}
             </div>
          );
+      case 'orders':
+        return <AdminOrdersPage />;
       default:
         return <div>Em construção...</div>;
     }
